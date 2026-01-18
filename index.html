@@ -8,297 +8,78 @@ Released under the MIT License.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宙の辻 - Soranotsuji</title>
+    <title>宙の辻 (Sora no Tsuji)</title>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <style>
-        /* 全体のレイアウト設定 */
-        body { margin: 0; padding: 0; font-family: sans-serif; }
-        #map { height: 100vh; width: 100%; } /* 地図を画面いっぱいに */
-        
-        /* 操作パネルのデザイン（スマホ対応） */
-        #control-panel {
-            position: absolute; top: 10px; right: 10px; z-index: 1000;
-            background: rgba(255, 255, 255, 0.95); /* 少し透ける白 */
-            padding: 15px; border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            width: 85%; max-width: 320px;
-        }
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
 
-        /* スライダーやボタンの調整 */
-        input[type="range"] { width: 100%; margin: 10px 0; cursor: pointer; }
-        .label-group { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
-        h3 { margin: 0 0 10px 0; font-size: 16px; color: #333; }
+    <link rel="stylesheet" href="style.css">
 
-        /* 太陽・月 切り替えスイッチ */
-        .mode-switch {
-            display: flex; gap: 10px; margin-bottom: 10px; background: #e0e0e0; padding: 4px; border-radius: 5px;
-        }
-        .mode-switch label {
-            flex: 1; text-align: center; cursor: pointer; padding: 6px; border-radius: 4px; font-size: 14px; user-select: none;
-        }
-        .mode-switch input { display: none; } /* ラジオボタンの丸は隠す */
-        .mode-switch input:checked + span {
-            background: #fff; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: block;
-        }
-        .mode-switch span { display: block; width: 100%; border-radius: 4px; }
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
 
-        /* GPSボタン */
-        #gps-btn {
-            width: 100%; padding: 8px; margin-bottom: 15px;
-            background-color: #007bff; color: white; border: none; border-radius: 5px;
-            font-size: 14px; cursor: pointer; font-weight: bold;
-        }
-        #gps-btn:active { background-color: #0056b3; }
-
-        /* 区切り線 */
-        hr { border: 0; border-top: 1px solid #ddd; margin: 10px 0; }
-        
-        /* 情報表示エリア */
-        #info-text { font-size: 0.9em; line-height: 1.6; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 </head>
 <body>
 
-    <div id="control-panel">
-        <h3>🔭 宙の辻 <span style="font-size:0.8em; font-weight:normal;">- Soranotsuji</span></h3>
-        
-        <button id="gps-btn">📍 現在地を出発点にする</button>
+    <div id="map"></div>
 
-        <div class="mode-switch">
-            <label><input type="radio" name="mode" value="sun" checked><span>🌞 太陽</span></label>
-            <label><input type="radio" name="mode" value="moon"><span>🌛 月</span></label>
+    <div id="control-panel" class="control-panel">
+        <div class="panel-header" onclick="togglePanel()">
+            <span id="header-title">宙の辻 設定</span>
+            <span id="toggle-icon">▼</span>
         </div>
-
-        <div class="label-group">
-            <label>日付:</label> <input type="date" id="dateInput">
+    
+        <div id="panel-content" class="panel-content closed">
+            
+            <div class="section">
+                <div class="date-row">
+                    <input type="date" id="date-input">
+                    <span id="time-display" class="time-display">12:00</span>
+                </div>
+                <input type="range" id="time-slider" min="0" max="1439" step="1" value="720">
+                
+                <div class="shortcuts">
+                    <div class="shortcut-item">
+                        <input type="radio" name="time-jump" id="jump-sunrise" value="sunrise">
+                        <label for="jump-sunrise">日の出 <span id="time-sunrise">--:--</span></label>
+                    </div>
+                    <div class="shortcut-item">
+                        <input type="radio" name="time-jump" id="jump-sunset" value="sunset">
+                        <label for="jump-sunset">日の入り <span id="time-sunset">--:--</span></label>
+                    </div>
+                    <div class="shortcut-item">
+                        <input type="radio" name="time-jump" id="jump-moonrise" value="moonrise">
+                        <label for="jump-moonrise">月の出 <span id="time-moonrise">--:--</span></label>
+                    </div>
+                    <div class="shortcut-item">
+                        <input type="radio" name="time-jump" id="jump-moonset" value="moonset">
+                        <label for="jump-moonset">月の入り <span id="time-moonset">--:--</span></label>
+                    </div>
+                </div>
+                <div class="moon-age">月齢: <span id="moon-age-val">--.--</span></div>
+            </div>
+    
+            <div class="section">
+                <h3>表示天体</h3>
+                <ul id="celestial-list" class="celestial-list">
+                    </ul>
+            </div>
         </div>
-
-        <div class="label-group">
-            <label>時刻:</label> <span id="timeDisplay">12:00</span>
-        </div>
-        <input type="range" id="timeSlider" min="0" max="1439" value="720">
-
-        <hr>
-
-        <div id="info-text">
-            <span id="targetName">太陽</span>の方位: <b><span id="azimuth">--</span>°</b><br>
-            <span id="targetName2">太陽</span>の高度: <b><span id="altitude">--</span>°</b><br>
-            <span id="moonPhaseInfo" style="display:none; color: #555; margin-top:5px;">
-                月齢: <span id="moonPhase">--</span>
-            </span>
+    </div>
+    
+    <div id="style-palette" class="style-palette hidden">
+        <div class="palette-header">スタイル設定 <span class="close-palette" onclick="closePalette()">×</span></div>
+        <div class="palette-colors" id="palette-colors">
+            </div>
+        <div class="palette-lines" id="palette-lines">
+            <div class="line-option" onclick="applyLineStyle('solid')">実線 <span class="line-preview solid"></span></div>
+            <div class="line-option" onclick="applyLineStyle('dashed')">破線 <span class="line-preview dashed"></span></div>
         </div>
     </div>
 
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
-
-    <script>
-        // --- 1. 計算用関数（数学的な処理） ---
-        function toRadians(d) { return d * Math.PI / 180; }
-        function toDegrees(r) { return r * 180 / Math.PI; }
-
-        // 2点間の方位角を計算
-        function calculateBearing(lat1, lng1, lat2, lng2) {
-            var φ1 = toRadians(lat1), φ2 = toRadians(lat2);
-            var Δλ = toRadians(lng2 - lng1);
-            var y = Math.sin(Δλ) * Math.cos(φ2);
-            var x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-            return (toDegrees(Math.atan2(y, x)) + 360) % 360;
-        }
-
-        // ある地点から、指定した距離・角度の場所を求める（線を引くため）
-        function computeDestinationPoint(lat, lng, distanceKm, bearing) {
-            var R = 6371; // 地球半径
-            var δ = distanceKm / R;
-            var θ = toRadians(bearing);
-            var φ1 = toRadians(lat), λ1 = toRadians(lng);
-            var φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ));
-            var λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
-            return [toDegrees(φ2), toDegrees(λ2)];
-        }
-
-
-        // --- 2. 地図の初期設定 ---
-        var startLat = 35.681236; // 初期値：東京駅
-        var startLng = 139.767125;
-        
-        // 地図を作成
-        var map = L.map('map').setView([startLat, startLng], 14);
-
-        // 国土地理院の地図タイルを使用
-        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-            attribution: "<a href='https://maps.gsi.go.jp/development/ichiran.html'>国土地理院</a>"
-        }).addTo(map);
-
-        // 出発点のマーカー
-        var startMarker = L.marker([startLat, startLng]).addTo(map).bindPopup("出発点").openPopup();
-
-        // 描画用の変数を準備
-        var celestialLine = null; // 太陽・月の線
-        var destLine = null;      // 目的地の赤線
-
-
-        // --- 3. UIパーツの取得 ---
-        var dateInput = document.getElementById('dateInput');
-        var timeSlider = document.getElementById('timeSlider');
-        var timeDisplay = document.getElementById('timeDisplay');
-        var modeRadios = document.getElementsByName('mode');
-        var gpsBtn = document.getElementById('gps-btn');
-
-        // 今日の日時を初期セット
-        var now = new Date();
-        dateInput.valueAsDate = now;
-        timeSlider.value = now.getHours() * 60 + now.getMinutes();
-
-
-        // --- 4. GPSボタンの動作 ---
-        gpsBtn.addEventListener('click', function() {
-            if (!navigator.geolocation) {
-                alert("この端末ではGPSが使えません。");
-                return;
-            }
-            gpsBtn.textContent = "測位中..."; 
-            
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    // 成功時
-                    startLat = position.coords.latitude;
-                    startLng = position.coords.longitude;
-                    
-                    // 地図とマーカーを移動
-                    map.setView([startLat, startLng], 15);
-                    startMarker.setLatLng([startLat, startLng]).bindPopup("ここが現在地です").openPopup();
-                    
-                    // 目的地の線があれば消す
-                    if(destLine) { map.removeLayer(destLine); destLine = null; }
-                    
-                    // 再計算
-                    updateSimulation();
-                    gpsBtn.textContent = "📍 現在地を出発点にする";
-                },
-                function(error) {
-                    // 失敗時
-                    alert("位置情報を取得できませんでした。\n端末の設定を確認してください。");
-                    gpsBtn.textContent = "📍 現在地を出発点にする";
-                }
-            );
-        });
-
-
-        // --- 5. メイン処理：シミュレーション更新 ---
-        function updateSimulation() {
-            // 現在のモード確認 (sun or moon)
-            var currentMode = 'sun';
-            for(var i=0; i<modeRadios.length; i++){
-                if(modeRadios[i].checked) currentMode = modeRadios[i].value;
-            }
-
-            // 日時の計算
-            var selectedDate = new Date(dateInput.value);
-            var minutes = parseInt(timeSlider.value);
-            selectedDate.setHours(Math.floor(minutes / 60));
-            selectedDate.setMinutes(minutes % 60);
-            
-            // 時刻表示を更新 (00:00形式)
-            timeDisplay.textContent = ('00' + selectedDate.getHours()).slice(-2) + ':' + ('00' + selectedDate.getMinutes()).slice(-2);
-
-            // 計算結果の変数
-            var azimuth = 0, altitude = 0, color = '', labelName = '';
-
-            if (currentMode === 'sun') {
-                // 太陽モード
-                var sunPos = SunCalc.getPosition(selectedDate, startLat, startLng);
-                azimuth = (toDegrees(sunPos.azimuth) + 180) % 360;
-                altitude = toDegrees(sunPos.altitude);
-                color = '#FFD700'; // 金色
-                labelName = '太陽';
-                document.getElementById('moonPhaseInfo').style.display = 'none';
-
-            } else {
-                // 月モード
-                var moonPos = SunCalc.getMoonPosition(selectedDate, startLat, startLng);
-                azimuth = (toDegrees(moonPos.azimuth) + 180) % 360;
-                altitude = toDegrees(moonPos.altitude);
-                color = '#4da6ff'; // 青色
-                labelName = '月';
-                
-                // 月齢の表示
-                document.getElementById('moonPhaseInfo').style.display = 'block';
-                var moonIllum = SunCalc.getMoonIllumination(selectedDate);
-                var phaseText = "";
-                // 月の満ち欠け判定
-                if(moonIllum.phase < 0.05 || moonIllum.phase > 0.95) phaseText = "新月🌑";
-                else if(moonIllum.phase < 0.2) phaseText = "三日月🌙";
-                else if(moonIllum.phase < 0.3) phaseText = "上弦の月🌓";
-                else if(moonIllum.phase < 0.45) phaseText = "満ちていく月🌔";
-                else if(moonIllum.phase < 0.55) phaseText = "満月🌕";
-                else if(moonIllum.phase < 0.7) phaseText = "欠けていく月🌖";
-                else if(moonIllum.phase < 0.8) phaseText = "下弦の月🌗";
-                else phaseText = "有明の月🌘";
-                document.getElementById('moonPhase').textContent = phaseText;
-            }
-
-            // 画面の数値を更新
-            document.getElementById('targetName').textContent = labelName;
-            document.getElementById('targetName2').textContent = labelName;
-            document.getElementById('azimuth').textContent = azimuth.toFixed(1);
-            document.getElementById('altitude').textContent = altitude.toFixed(1);
-
-            // 地図上の線を引く
-            var destPoint = computeDestinationPoint(startLat, startLng, 50, azimuth); // 50km先まで
-            
-            if (celestialLine) { map.removeLayer(celestialLine); }
-
-            // 地平線より下なら暗くする演出
-            var lineOpacity = altitude > 0 ? 0.8 : 0.2;
-            var lineColor = altitude > 0 ? color : '#555'; 
-
-            celestialLine = L.polyline([[startLat, startLng], destPoint], {
-                color: lineColor, weight: 7, opacity: lineOpacity
-            }).addTo(map);
-        }
-
-
-        // --- 6. イベント設定 ---
-        
-        // スライダーや日付を変えたら再計算
-        timeSlider.addEventListener('input', updateSimulation);
-        dateInput.addEventListener('change', updateSimulation);
-        
-        // モード切替時も再計算
-        for(var i=0; i<modeRadios.length; i++){
-            modeRadios[i].addEventListener('change', updateSimulation);
-        }
-
-        // 地図クリック時（目的地設定）
-        map.on('click', function(e) {
-            var destLat = e.latlng.lat;
-            var destLng = e.latlng.lng;
-            var bearing = calculateBearing(startLat, startLng, destLat, destLng);
-
-            // 前の赤い線を消す
-            if (destLine) { map.removeLayer(destLine); }
-            
-            // 赤い線を引く
-            destLine = L.polyline(
-                [ [startLat, startLng], [destLat, destLng] ],
-                { color: 'red', weight: 4 }
-            ).addTo(map);
-            
-            // ポップアップ表示
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent("目的地の方位: <b>" + bearing.toFixed(1) + "度</b>")
-                .openOn(map);
-        });
-
-        // 最初の1回を実行
-        updateSimulation();
-
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
