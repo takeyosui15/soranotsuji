@@ -1,6 +1,6 @@
 /*
-宙の辻 - Soranotsuji
-Copyright (c) 2026 Soranotsuji Project
+宙の辻 - Sora no Tsuji
+Copyright (c) 2026 Sora no Tsuji Project
 Released under the MIT License.
 */
 // --- 1. 定数・初期設定 ---
