@@ -73,7 +73,7 @@ body, html {
 .control-panel.minimized .panel-content { display: none; }
 
 
-/* --- セクション（アコーディオン） --- */
+/* --- セクション --- */
 .section {
     border-bottom: 1px solid #eee;
 }
@@ -121,7 +121,7 @@ input[type="number"],
 .style-indicator {
     height: 34px;              
     font-size: 14px;           
-    font-family: sans-serif;   /* ★重要: フォントを揃えて見た目を統一 */
+    font-family: sans-serif;
     box-sizing: border-box;
     vertical-align: middle;
 }
@@ -138,11 +138,28 @@ input[type="number"],
     justify-content: center;
     min-width: 34px;
     color: #333;
+    transition: all 0.2s;
 }
 .nav-btn:hover { background: #ddd; }
 
 .nav-btn.small {
     padding: 0 8px;
+}
+
+/* 位置合わせ用: 先頭のボタン幅を固定して揃える */
+#btn-now, #btn-move {
+    width: 46px;
+    padding: 0;
+    justify-content: center;
+}
+
+/* Moveボタンがオンの時 (黄色) */
+.nav-btn.active {
+    background-color: #ffd700; /* Gold */
+    color: #000;
+    border-color: #e6c200;
+    font-weight: bold;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /* 日付・時刻入力 */
@@ -151,11 +168,13 @@ input[type="date"] {
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    text-align: center; /* 中央揃えを追加 */
 }
 
 #time-input {
-    width: 100px;
-    text-align: center;
+    width: auto;
+    flex-grow: 1;
+    text-align: center; /* 中央揃えを明示 */
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -211,7 +230,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 }
 .shortcut-item label { 
     cursor: pointer; 
-    font-size: 14px; /* ★ここを14pxに変更しました */
+    font-size: 14px;
     margin-left: 4px;
     display: flex;
     align-items: center;
@@ -275,7 +294,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 }
 
 .body-detail-text {
-    font-size: 11px; /* 詳細情報は小さめ維持 */
+    font-size: 11px;
     color: #555;
     margin-top: 2px;
     display: block;
@@ -322,3 +341,13 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 }
 .line-preview { width: 50px; height: 2px; background: black; display: inline-block; }
 .line-preview.dashed { background: transparent; border-top: 2px dashed black; }
+
+/* パネル内フッター */
+.panel-footer {
+    padding: 15px;
+    text-align: center;
+    font-size: 11px;
+    color: #888;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+}
