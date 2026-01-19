@@ -33,7 +33,7 @@ body, html {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     z-index: 1000;
     font-family: sans-serif;
-    font-size: 14px; /* 基本文字サイズ */
+    font-size: 14px;
     overflow: hidden;
     max-height: 90vh;
     display: flex;
@@ -87,7 +87,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     user-select: none;
-    font-size: 14px; /* 見出しも統一 */
+    font-size: 14px;
 }
 .section-header:hover { background: #eaeaea; }
 
@@ -108,19 +108,20 @@ body, html {
 }
 
 .control-row label {
-    font-size: 14px; /* ラベル文字サイズ統一 */
+    font-size: 14px;
     font-weight: bold;
     color: #333;
 }
 
-/* ★変更点: 高さ34px、文字サイズ14pxで統一 */
+/* 高さ34px、文字サイズ14pxで完全統一 */
 .nav-btn,
 input[type="date"],
 input[type="time"],
 input[type="number"],
 .style-indicator {
     height: 34px;              
-    font-size: 14px;           /* ★文字サイズ統一 */
+    font-size: 14px;           
+    font-family: sans-serif;   /* ★重要: フォントを揃えて見た目を統一 */
     box-sizing: border-box;
     vertical-align: middle;
 }
@@ -140,10 +141,8 @@ input[type="number"],
 }
 .nav-btn:hover { background: #ddd; }
 
-/* Nowボタン等のsmallクラスでも文字サイズは小さくしない */
 .nav-btn.small {
-    /* font-size: 12px; を削除 */
-    padding: 0 8px; /* パディングだけ少し狭めに */
+    padding: 0 8px;
 }
 
 /* 日付・時刻入力 */
@@ -152,7 +151,6 @@ input[type="date"] {
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-family: sans-serif; /* フォント合わせ */
 }
 
 #time-input {
@@ -161,7 +159,6 @@ input[type="date"] {
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    /* font-size: 16px; を削除し、共通の14pxを適用 */
 }
 
 /* 月齢エリア */
@@ -185,7 +182,7 @@ input[type="date"] {
     border-radius: 4px;
 }
 .moon-icon {
-    font-size: 24px; /* アイコンだけは視認性のため大きく */
+    font-size: 24px; 
     line-height: 1;
     display: flex;
     align-items: center;
@@ -214,13 +211,13 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 }
 .shortcut-item label { 
     cursor: pointer; 
-    font-size: 11px; /* ここだけは情報量が多いので小さめ維持 */
+    font-size: 14px; /* ★ここを14pxに変更しました */
     margin-left: 4px;
     display: flex;
     align-items: center;
     width: 100%;
     justify-content: space-between;
-    font-weight: normal; /* 太字解除 */
+    font-weight: normal;
 }
 
 /* 天体リスト */
@@ -273,7 +270,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 
 .body-name { 
     font-weight: bold; 
-    font-size: 14px; /* 名前も14px */
+    font-size: 14px; 
     display: block;
 }
 
