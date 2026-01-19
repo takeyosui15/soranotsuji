@@ -3,7 +3,6 @@
 Copyright (c) 2026 Sora no Tsuji Project
 Released under the MIT License.
 */
-/* 宙の辻 - Sora no Tsuji (Final Fix) */
 
 // --- 1. グローバル変数 ---
 let map; 
@@ -54,6 +53,7 @@ window.onload = function() {
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         linesLayer = L.layerGroup().addTo(map);
         
+        // 地図操作終了時に再計算
         map.on('moveend', updateCalculation);
     }
 
@@ -83,6 +83,7 @@ window.onload = function() {
 
     renderCelestialList();
     
+    // 初期描画（地図の準備を少し待つ）
     setTimeout(() => {
         if(map) map.invalidateSize();
         updateCalculation();
@@ -109,34 +110,39 @@ function updateCalculation() {
     const displayEl = document.getElementById('time-display');
     if(displayEl) displayEl.innerText = timeStr;
 
+    // 現在の日時（方位・高度計算用）
     const calcDate = new Date(`${dateStr}T${timeStr}:00`);
+    // その日の0時（日の出計算用）
     const startOfDay = new Date(calcDate);
     startOfDay.setHours(0, 0, 0, 0);
 
-    // 観測地の取得
+    // 観測地の取得 (防御的に数値変換)
     let lat = 35.681236; 
     let lng = 139.767125;
     try {
         const center = map.getCenter();
         lat = Number(center.lat);
         lng = Number(center.lng);
-    } catch(e) {}
-    if (isNaN(lat)) lat = 35.681236;
-    if (isNaN(lng)) lng = 139.767125;
+    } catch(e) {
+        console.warn("地図座標取得エラー");
+    }
 
+    // ライブラリチェック
     if (typeof Astronomy === 'undefined') return;
 
-    // Observerの作成
+    // 正規のObserver作成 (高さ0m)
     let observer;
     try {
         observer = new Astronomy.Observer(lat, lng, 0);
     } catch(e) {
+        console.error("Observer作成エラー", e);
         return;
     }
 
+    // 描画クリア
     linesLayer.clearLayers();
 
-    // 天体計算
+    // 各天体の位置計算
     bodies.forEach(body => {
         const infoEl = document.getElementById(`info-${body.id}`);
         try {
@@ -153,18 +159,18 @@ function updateCalculation() {
             if (body.visible) drawDirectionLine(lat, lng, horizon.azimuth, horizon.altitude, body);
 
         } catch (e) {
-            // skip
+            // 計算エラー時はスキップ
         }
     });
 
-    // 日の出日の入り計算
+    // 日の出・日の入り等の計算
     calculateRiseSet(calcDate, startOfDay, observer);
 }
 
 function calculateRiseSet(currentDate, startOfDay, observer) {
     try {
-        // ★修正ポイント: 引数の順番を正しくしました！
         // SearchRiseSet(body, observer, direction, date, limit_days)
+        // 引数の順番を修正済み
         const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
         const sunSet  = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
         const moonRise = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
