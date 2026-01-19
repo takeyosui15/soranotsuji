@@ -48,17 +48,55 @@ let currentRiseSetData = {};
 // --- 2. 起動処理 ---
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (表示形式変更版)");
+    console.log("宙の辻: 起動 (コントロール配置変更)");
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
         const initLat = 35.681236;
         const initLng = 139.767125;
-        map = L.map('map').setView([initLat, initLng], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+        // --- 地図レイヤーの定義 ---
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        });
+
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        });
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+        });
+
+        // 地図生成
+        map = L.map('map', {
+            center: [initLat, initLng],
+            zoom: 6,
+            layers: [osmLayer], // 初期レイヤー
+            zoomControl: false  // ★変更点: デフォルトのズームボタンを非表示にする
+        });
+
+        // レイヤー切り替えコントロール定義
+        const baseMaps = {
+            "標準": osmLayer,
+            "ダーク": darkLayer,
+            "衛星写真": satelliteLayer,
+            "地形図": topoLayer
+        };
+
+        // ★変更点: 左上に配置 (順序1: レイヤー切り替え)
+        L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+
+        // ★変更点: 左上に配置 (順序2: ズームボタン)
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+
+        // スケールは左下のまま
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
+        
         linesLayer = L.layerGroup().addTo(map);
 
         observerMarker = L.marker([initLat, initLng], { draggable: true, title: "観測地点" }).addTo(map);
@@ -265,7 +303,6 @@ function updateCalculation() {
         let riseStr = "--:--";
         let setStr  = "--:--";
 
-        // 北極星(Polaris)はスキップ
         if (body.id !== 'Polaris') {
             try {
                 const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
@@ -276,7 +313,6 @@ function updateCalculation() {
             } catch(e) { }
         }
 
-        // 周極星判定
         if (!riseStr && !setStr) {
             if (horizon.altitude > 0) {
                 riseStr = "00:00"; setStr  = "00:00";
@@ -287,8 +323,7 @@ function updateCalculation() {
         if (!riseStr) riseStr = "--:--";
         if (!setStr) setStr = "--:--";
 
-        // 3. 画面表示の更新 (ここが変更点)
-        // ひとつの文字列にまとめます
+        // 3. 画面表示の更新
         const dataEl = document.getElementById(`data-${body.id}`);
         if (dataEl) {
             dataEl.innerText = `出 ${riseStr} / 入 ${setStr} / 方位 ${horizon.azimuth.toFixed(0)}° / 高度 ${horizon.altitude.toFixed(0)}°`;
@@ -393,7 +428,6 @@ function renderCelestialList() {
         const li = document.createElement('li');
         const dashClass = body.isDashed ? 'dashed' : 'solid';
         
-        // ★変更点：データ表示用の要素をひとつに統合 (id="data-...")
         li.innerHTML = `
             <input type="checkbox" class="body-checkbox" 
                    ${body.visible ? 'checked' : ''} 
@@ -404,7 +438,9 @@ function renderCelestialList() {
                  onclick="openPalette('${body.id}')"></div>
             
             <div class="body-info">
-                <span class="body-name">${body.name}</span>
+                <div class="body-header">
+                    <span class="body-name">${body.name}</span>
+                </div>
                 <span id="data-${body.id}" class="body-detail-text">--:--</span>
             </div>
         `;
