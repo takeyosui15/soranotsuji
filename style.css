@@ -33,7 +33,7 @@ body, html {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     z-index: 1000;
     font-family: sans-serif;
-    font-size: 14px;
+    font-size: 14px; /* 基本文字サイズ */
     overflow: hidden;
     max-height: 90vh;
     display: flex;
@@ -87,6 +87,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     user-select: none;
+    font-size: 14px; /* 見出しも統一 */
 }
 .section-header:hover { background: #eaeaea; }
 
@@ -97,7 +98,7 @@ body, html {
 .section-content.closed { display: none; }
 
 
-/* --- コントロール類 --- */
+/* --- コントロールパーツの共通スタイル --- */
 .control-row {
     display: flex;
     align-items: center;
@@ -106,21 +107,64 @@ body, html {
     gap: 5px;
 }
 
+.control-row label {
+    font-size: 14px; /* ラベル文字サイズ統一 */
+    font-weight: bold;
+    color: #333;
+}
+
+/* ★変更点: 高さ34px、文字サイズ14pxで統一 */
+.nav-btn,
+input[type="date"],
+input[type="time"],
+input[type="number"],
+.style-indicator {
+    height: 34px;              
+    font-size: 14px;           /* ★文字サイズ統一 */
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+/* ボタン */
 .nav-btn {
     background: #eee;
     border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 5px 10px;
+    padding: 0 10px;
     cursor: pointer;
-    font-size: 14px;
-    min-width: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    color: #333;
 }
 .nav-btn:hover { background: #ddd; }
-.nav-btn.small { font-size: 12px; padding: 5px 8px; }
 
-input[type="date"] { flex-grow: 1; padding: 4px; }
-#time-input { width: 100px; text-align: center; padding: 5px; font-size: 16px; }
+/* Nowボタン等のsmallクラスでも文字サイズは小さくしない */
+.nav-btn.small {
+    /* font-size: 12px; を削除 */
+    padding: 0 8px; /* パディングだけ少し狭めに */
+}
 
+/* 日付・時刻入力 */
+input[type="date"] {
+    flex-grow: 1;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: sans-serif; /* フォント合わせ */
+}
+
+#time-input {
+    width: 100px;
+    text-align: center;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    /* font-size: 16px; を削除し、共通の14pxを適用 */
+}
+
+/* 月齢エリア */
 .moon-row {
     background: #f0f4f8;
     padding: 8px;
@@ -133,11 +177,27 @@ input[type="date"] { flex-grow: 1; padding: 4px; }
     justify-content: center;
     gap: 5px;
 }
-#moon-age-input { width: 50px; text-align: center; padding: 4px; }
-.moon-icon { font-size: 24px; line-height: 1; }
+#moon-age-input {
+    width: 60px;
+    text-align: center;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.moon-icon {
+    font-size: 24px; /* アイコンだけは視認性のため大きく */
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    height: 34px;
+    width: 34px;
+    justify-content: center;
+}
 
+/* スライダー */
 input[type="range"] { width: 100%; margin: 10px 0; }
 
+/* ショートカット */
 .shortcuts {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -147,7 +207,21 @@ input[type="range"] { width: 100%; margin: 10px 0; }
     padding: 5px;
     border-radius: 4px;
 }
-.shortcut-item label { cursor: pointer; font-size: 11px; }
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+}
+.shortcut-item label { 
+    cursor: pointer; 
+    font-size: 11px; /* ここだけは情報量が多いので小さめ維持 */
+    margin-left: 4px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    font-weight: normal; /* 太字解除 */
+}
 
 /* 天体リスト */
 .celestial-list { list-style: none; padding: 0; margin: 0; }
@@ -159,11 +233,17 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 }
 .celestial-list li:last-child { border-bottom: none; }
 
-.body-checkbox { transform: scale(1.2); margin-right: 10px; }
+.body-checkbox {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+/* カラーピッカー */
 .style-indicator {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #ddd;
+    width: 34px;
+    border: 1px solid #ccc;
     border-radius: 4px;
     margin-right: 10px;
     cursor: pointer;
@@ -174,7 +254,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 .style-indicator::after {
     content: '';
     position: absolute;
-    top: 50%; left: 2px; right: 2px;
+    top: 50%; left: 4px; right: 4px;
     height: 2px;
     background: currentColor;
     transform: translateY(-50%);
@@ -193,13 +273,12 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 
 .body-name { 
     font-weight: bold; 
-    font-size: 14px; 
+    font-size: 14px; /* 名前も14px */
     display: block;
 }
 
-/* ★変更箇所: 詳細情報を表示するスタイル */
 .body-detail-text {
-    font-size: 11px;
+    font-size: 11px; /* 詳細情報は小さめ維持 */
     color: #555;
     margin-top: 2px;
     display: block;
