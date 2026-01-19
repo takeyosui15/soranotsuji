@@ -7,7 +7,7 @@ Released under the MIT License.
 // --- 1. グローバル変数 ---
 let map; 
 let linesLayer; 
-let observerMarker; // ★追加: 観測地点マーカー
+let observerMarker;
 
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
@@ -50,13 +50,10 @@ let currentRiseSetData = {};
 window.onload = function() {
     console.log("宙の辻: 起動 (ピン固定モード)");
 
-    // 地図初期化
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // 東京駅付近
         const initLat = 35.681236;
         const initLng = 139.767125;
-
         map = L.map('map').setView([initLat, initLng], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -64,15 +61,8 @@ window.onload = function() {
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         linesLayer = L.layerGroup().addTo(map);
 
-        // ★変更点: 観測地点マーカーを作成
-        // draggable: true にすることで、ピンをドラッグして移動できます
         observerMarker = L.marker([initLat, initLng], { draggable: true, title: "観測地点" }).addTo(map);
-        
-        // ピンを動かし終わった時に再計算する
         observerMarker.on('dragend', updateCalculation);
-        
-        // ★重要: 地図を動かした時(moveend)の再計算は削除しました。
-        // これにより、地図を動かしても線はピンにくっついたままになります。
     }
 
     setupUIEvents();
@@ -249,7 +239,6 @@ function updateCalculation() {
     const startOfDay = new Date(calcDate);
     startOfDay.setHours(0, 0, 0, 0);
 
-    // ★変更点: 地図の中心ではなく、マーカーの位置を取得
     const markerLatLng = observerMarker.getLatLng();
     const lat = markerLatLng.lat;
     const lng = markerLatLng.lng;
@@ -348,7 +337,7 @@ function drawDirectionLine(lat, lng, azimuth, altitude, body) {
 }
 
 
-// --- 6. UI操作関数 (リスト系) ---
+// --- 6. UI操作関数 ---
 
 function jumpToEvent(eventType) {
     const data = currentRiseSetData;
@@ -397,12 +386,13 @@ function toggleVisibility(id, isChecked) {
     }
 }
 
+// ★ここが修正ポイント: 親の control-panel にクラスをトグル
 function togglePanel() {
-    const content = document.getElementById('panel-content');
+    const panel = document.getElementById('control-panel');
     const icon = document.getElementById('toggle-icon');
-    if (content && icon) {
-        content.classList.toggle('closed');
-        icon.innerText = content.classList.contains('closed') ? '▼' : '▲';
+    if (panel && icon) {
+        panel.classList.toggle('minimized');
+        icon.innerText = panel.classList.contains('minimized') ? '▼' : '▲';
     }
 }
 
