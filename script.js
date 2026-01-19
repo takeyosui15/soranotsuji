@@ -16,12 +16,12 @@ const SYNODIC_MONTH = 29.53059;
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' }, 
     { name: '桃', code: '#FFC0CB' }, 
-    { name: '橙', code: '#FFA500' },
+    { name: '橙', code: '#FFA500' }, 
     { name: '黄', code: '#FFFF00' }, 
     { name: '黄緑', code: '#ADFF2F' }, 
     { name: '緑', code: '#008000' }, 
     { name: '水', code: '#00BFFF' }, 
-    { name: '青', code: '#0000FF' },
+    { name: '青', code: '#0000FF' }, 
     { name: '藍', code: '#4B0082' }, 
     { name: '紫', code: '#800080' }, 
     { name: '茶', code: '#A52A2A' }, 
@@ -48,7 +48,7 @@ let currentRiseSetData = {};
 // --- 2. 起動処理 ---
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (ピン固定モード)");
+    console.log("宙の辻: 起動 (表示形式変更版)");
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -152,7 +152,6 @@ function addDay(days) {
     const mm = ('00' + (date.getMonth() + 1)).slice(-2);
     const dd = ('00' + date.getDate()).slice(-2);
     dInput.value = `${yyyy}-${mm}-${dd}`;
-    
     updateCalculation();
 }
 
@@ -187,7 +186,6 @@ function addMoonMonth(direction) {
     const timeStr = `${('00' + th).slice(-2)}:${('00' + tm).slice(-2)}`;
     document.getElementById('time-input').value = timeStr;
     tSlider.value = th * 60 + tm;
-    
     updateCalculation();
 }
 
@@ -252,26 +250,85 @@ function updateCalculation() {
 
     linesLayer.clearLayers();
 
+    // ★全天体ループ
     bodies.forEach(body => {
-        const infoEl = document.getElementById(`info-${body.id}`);
-        try {
-            let equatorCoords;
-            if (body.id === 'Polaris') {
-                equatorCoords = { ra: POLARIS_RA, dec: POLARIS_DEC };
-            } else {
-                equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
-            }
-            const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
-            
-            if (infoEl) infoEl.innerText = `方位:${horizon.azimuth.toFixed(1)}° / 高度:${horizon.altitude.toFixed(1)}°`;
-            
-            if (body.visible) drawDirectionLine(lat, lng, horizon.azimuth, horizon.altitude, body);
+        // 1. 位置計算
+        let equatorCoords;
+        if (body.id === 'Polaris') {
+            equatorCoords = { ra: POLARIS_RA, dec: POLARIS_DEC };
+        } else {
+            equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
+        }
+        const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
 
-        } catch (e) {}
+        // 2. 出没計算
+        let riseStr = "--:--";
+        let setStr  = "--:--";
+
+        // 北極星(Polaris)はスキップ
+        if (body.id !== 'Polaris') {
+            try {
+                const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
+                const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 1);
+                const fmt = (evt) => evt ? `${('00'+evt.date.getHours()).slice(-2)}:${('00'+evt.date.getMinutes()).slice(-2)}` : null;
+                riseStr = fmt(rise);
+                setStr  = fmt(set);
+            } catch(e) { }
+        }
+
+        // 周極星判定
+        if (!riseStr && !setStr) {
+            if (horizon.altitude > 0) {
+                riseStr = "00:00"; setStr  = "00:00";
+            } else {
+                riseStr = "--:--"; setStr  = "--:--";
+            }
+        }
+        if (!riseStr) riseStr = "--:--";
+        if (!setStr) setStr = "--:--";
+
+        // 3. 画面表示の更新 (ここが変更点)
+        // ひとつの文字列にまとめます
+        const dataEl = document.getElementById(`data-${body.id}`);
+        if (dataEl) {
+            dataEl.innerText = `出 ${riseStr} / 入 ${setStr} / 方位 ${horizon.azimuth.toFixed(0)}° / 高度 ${horizon.altitude.toFixed(0)}°`;
+        }
+
+        // 4. 線を描画
+        if (body.visible) {
+            drawDirectionLine(lat, lng, horizon.azimuth, horizon.altitude, body);
+        }
     });
 
-    calculateRiseSet(calcDate, startOfDay, observer);
+    updateShortcuts(startOfDay, observer);
     updateMoonInfo(calcDate);
+}
+
+function updateShortcuts(startOfDay, observer) {
+    try {
+        const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
+        const sunSet  = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
+        const moonRise = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
+        const moonSet  = Astronomy.SearchRiseSet('Moon', observer, -1, startOfDay, 1);
+
+        const fmt = (evt) => evt ? `${('00'+evt.date.getHours()).slice(-2)}:${('00'+evt.date.getMinutes()).slice(-2)}` : "--:--";
+
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
+        };
+        setVal('time-sunrise', fmt(sunRise));
+        setVal('time-sunset', fmt(sunSet));
+        setVal('time-moonrise', fmt(moonRise));
+        setVal('time-moonset', fmt(moonSet));
+
+        currentRiseSetData = {
+            sunrise: sunRise ? sunRise.date : null,
+            sunset: sunSet ? sunSet.date : null,
+            moonrise: moonRise ? moonRise.date : null,
+            moonset: moonSet ? moonSet.date : null
+        };
+    } catch(e) {}
 }
 
 function updateMoonInfo(date) {
@@ -285,39 +342,6 @@ function updateMoonInfo(date) {
     const iconIndex = Math.round(phase / 45) % 8;
     const icons = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
     document.getElementById('moon-icon').innerText = icons[iconIndex];
-}
-
-function calculateRiseSet(currentDate, startOfDay, observer) {
-    try {
-        const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
-        const sunSet  = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
-        const moonRise = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
-        const moonSet  = Astronomy.SearchRiseSet('Moon', observer, -1, startOfDay, 1);
-
-        const fmt = (astroTime) => {
-            if (!astroTime || !astroTime.date) return "--:--";
-            const d = astroTime.date;
-            return `${('00' + d.getHours()).slice(-2)}:${('00' + d.getMinutes()).slice(-2)}`;
-        };
-
-        const setVal = (id, val) => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = val;
-        };
-
-        setVal('time-sunrise', fmt(sunRise));
-        setVal('time-sunset', fmt(sunSet));
-        setVal('time-moonrise', fmt(moonRise));
-        setVal('time-moonset', fmt(moonSet));
-        
-        currentRiseSetData = {
-            sunrise: sunRise ? sunRise.date : null,
-            sunset: sunSet ? sunSet.date : null,
-            moonrise: moonRise ? moonRise.date : null,
-            moonset: moonSet ? moonSet.date : null
-        };
-
-    } catch(e) {}
 }
 
 function drawDirectionLine(lat, lng, azimuth, altitude, body) {
@@ -337,7 +361,16 @@ function drawDirectionLine(lat, lng, azimuth, altitude, body) {
 }
 
 
-// --- 6. UI操作関数 ---
+// --- 6. UI操作関数 (リスト系) ---
+
+function toggleSection(sectionId) {
+    const content = document.getElementById(sectionId);
+    const icon = document.getElementById('icon-' + sectionId);
+    if (content && icon) {
+        content.classList.toggle('closed');
+        icon.innerText = content.classList.contains('closed') ? '▼' : '▲';
+    }
+}
 
 function jumpToEvent(eventType) {
     const data = currentRiseSetData;
@@ -360,6 +393,7 @@ function renderCelestialList() {
         const li = document.createElement('li');
         const dashClass = body.isDashed ? 'dashed' : 'solid';
         
+        // ★変更点：データ表示用の要素をひとつに統合 (id="data-...")
         li.innerHTML = `
             <input type="checkbox" class="body-checkbox" 
                    ${body.visible ? 'checked' : ''} 
@@ -371,7 +405,7 @@ function renderCelestialList() {
             
             <div class="body-info">
                 <span class="body-name">${body.name}</span>
-                <span id="info-${body.id}" class="body-data">--</span>
+                <span id="data-${body.id}" class="body-detail-text">--:--</span>
             </div>
         `;
         list.appendChild(li);
@@ -386,7 +420,6 @@ function toggleVisibility(id, isChecked) {
     }
 }
 
-// ★ここが修正ポイント: 親の control-panel にクラスをトグル
 function togglePanel() {
     const panel = document.getElementById('control-panel');
     const icon = document.getElementById('toggle-icon');

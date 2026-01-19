@@ -35,55 +35,64 @@ Released under the MIT License.
         <div id="panel-content" class="panel-content">
             
             <div class="section">
-                <div class="control-row">
-                    <button id="btn-now" class="nav-btn small">Now</button>
-                    <button id="btn-date-prev" class="nav-btn">◀</button>
-                    <input type="date" id="date-input">
-                    <button id="btn-date-next" class="nav-btn">▶</button>
+                <div class="section-header" onclick="toggleSection('sec-datetime')">
+                    <span>日時設定</span> <span id="icon-sec-datetime">▲</span>
                 </div>
+                <div id="sec-datetime" class="section-content">
+                    <div class="control-row">
+                        <button id="btn-now" class="nav-btn small">Now</button>
+                        <button id="btn-date-prev" class="nav-btn">◀</button>
+                        <input type="date" id="date-input">
+                        <button id="btn-date-next" class="nav-btn">▶</button>
+                    </div>
 
-                <div class="control-row">
-                    <label>時刻</label>
-                    <button id="btn-time-prev" class="nav-btn">◀</button>
-                    <input type="time" id="time-input" value="12:00">
-                    <button id="btn-time-next" class="nav-btn">▶</button>
-                </div>
+                    <div class="control-row">
+                        <label>時刻</label>
+                        <button id="btn-time-prev" class="nav-btn">◀</button>
+                        <input type="time" id="time-input" value="12:00">
+                        <button id="btn-time-next" class="nav-btn">▶</button>
+                    </div>
 
-                <input type="range" id="time-slider" min="0" max="1439" step="1" value="720">
-                
-                <div class="shortcuts">
-                    <div class="shortcut-item">
-                        <input type="radio" name="time-jump" id="jump-sunrise" value="sunrise">
-                        <label for="jump-sunrise">日の出 <span id="time-sunrise">--:--</span></label>
+                    <input type="range" id="time-slider" min="0" max="1439" step="1" value="720">
+                    
+                    <div class="shortcuts">
+                        <div class="shortcut-item">
+                            <input type="radio" name="time-jump" id="jump-sunrise" value="sunrise">
+                            <label for="jump-sunrise">🌞日の出 <span id="time-sunrise">--:--</span></label>
+                        </div>
+                        <div class="shortcut-item">
+                            <input type="radio" name="time-jump" id="jump-sunset" value="sunset">
+                            <label for="jump-sunset">🌞日の入 <span id="time-sunset">--:--</span></label>
+                        </div>
+                        <div class="shortcut-item">
+                            <input type="radio" name="time-jump" id="jump-moonrise" value="moonrise">
+                            <label for="jump-moonrise">🌛月の出 <span id="time-moonrise">--:--</span></label>
+                        </div>
+                        <div class="shortcut-item">
+                            <input type="radio" name="time-jump" id="jump-moonset" value="moonset">
+                            <label for="jump-moonset">🌛月の入 <span id="time-moonset">--:--</span></label>
+                        </div>
                     </div>
-                    <div class="shortcut-item">
-                        <input type="radio" name="time-jump" id="jump-sunset" value="sunset">
-                        <label for="jump-sunset">日の入り <span id="time-sunset">--:--</span></label>
-                    </div>
-                    <div class="shortcut-item">
-                        <input type="radio" name="time-jump" id="jump-moonrise" value="moonrise">
-                        <label for="jump-moonrise">月の出 <span id="time-moonrise">--:--</span></label>
-                    </div>
-                    <div class="shortcut-item">
-                        <input type="radio" name="time-jump" id="jump-moonset" value="moonset">
-                        <label for="jump-moonset">月の入り <span id="time-moonset">--:--</span></label>
-                    </div>
-                </div>
 
-                <div class="control-row moon-row">
-                    <button id="btn-moon-prev" class="nav-btn">◀</button>
-                    <div class="moon-display">
-                        <label>月齢</label>
-                        <input type="number" id="moon-age-input" step="0.1" min="0" max="29.5">
-                        <span id="moon-icon" class="moon-icon">🌑</span>
+                    <div class="control-row moon-row">
+                        <button id="btn-moon-prev" class="nav-btn">◀</button>
+                        <div class="moon-display">
+                            <label>月齢</label>
+                            <input type="number" id="moon-age-input" step="0.1" min="0" max="29.5">
+                            <span id="moon-icon" class="moon-icon">🌑</span>
+                        </div>
+                        <button id="btn-moon-next" class="nav-btn">▶</button>
                     </div>
-                    <button id="btn-moon-next" class="nav-btn">▶</button>
                 </div>
             </div>
     
             <div class="section">
-                <h3>表示天体</h3>
-                <ul id="celestial-list" class="celestial-list"></ul>
+                <div class="section-header" onclick="toggleSection('sec-bodies')">
+                    <span>表示天体</span> <span id="icon-sec-bodies">▲</span>
+                </div>
+                <div id="sec-bodies" class="section-content">
+                    <ul id="celestial-list" class="celestial-list"></ul>
+                </div>
             </div>
         </div>
     </div>
