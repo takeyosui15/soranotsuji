@@ -1,0 +1,324 @@
+/*
+宙の辻 - Sora no Tsuji
+Copyright (c) 2026 Sora no Tsuji Project
+Released under the MIT License.
+*/
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+/* --- コントロールパネル本体 --- */
+.control-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 90%;
+    max-width: 360px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    font-family: sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+}
+
+.control-panel.minimized {
+    width: auto;
+    max-width: none;
+}
+
+.panel-header {
+    background: #2c3e50;
+    color: white;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.header-subtitle {
+    font-weight: normal;
+    font-size: 0.9em;
+}
+.control-panel.minimized .header-subtitle { display: none; }
+
+.panel-content {
+    display: block;
+    overflow-y: auto;
+    padding: 0;
+}
+.control-panel.minimized .panel-content { display: none; }
+
+
+/* --- セクション（アコーディオン） --- */
+.section {
+    border-bottom: 1px solid #eee;
+}
+.section:last-child { border-bottom: none; }
+
+.section-header {
+    padding: 10px;
+    background: #f4f4f4;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    user-select: none;
+    font-size: 14px;
+}
+.section-header:hover { background: #eaeaea; }
+
+.section-content {
+    padding: 10px;
+    display: block;
+}
+.section-content.closed { display: none; }
+
+
+/* --- コントロールパーツの共通スタイル --- */
+.control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 5px;
+}
+
+.control-row label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 高さ34px、文字サイズ14pxで完全統一 */
+.nav-btn,
+input[type="date"],
+input[type="time"],
+input[type="number"],
+.style-indicator {
+    height: 34px;              
+    font-size: 14px;           
+    font-family: sans-serif;   /* ★重要: フォントを揃えて見た目を統一 */
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+/* ボタン */
+.nav-btn {
+    background: #eee;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    color: #333;
+}
+.nav-btn:hover { background: #ddd; }
+
+.nav-btn.small {
+    padding: 0 8px;
+}
+
+/* 日付・時刻入力 */
+input[type="date"] {
+    flex-grow: 1;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#time-input {
+    width: 100px;
+    text-align: center;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 月齢エリア */
+.moon-row {
+    background: #f0f4f8;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+.moon-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+#moon-age-input {
+    width: 60px;
+    text-align: center;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.moon-icon {
+    font-size: 24px; 
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    height: 34px;
+    width: 34px;
+    justify-content: center;
+}
+
+/* スライダー */
+input[type="range"] { width: 100%; margin: 10px 0; }
+
+/* ショートカット */
+.shortcuts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 5px;
+    background: #f9f9f9;
+    padding: 5px;
+    border-radius: 4px;
+}
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+}
+.shortcut-item label { 
+    cursor: pointer; 
+    font-size: 14px; /* ★ここを14pxに変更しました */
+    margin-left: 4px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    font-weight: normal;
+}
+
+/* 天体リスト */
+.celestial-list { list-style: none; padding: 0; margin: 0; }
+.celestial-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+.celestial-list li:last-child { border-bottom: none; }
+
+.body-checkbox {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+/* カラーピッカー */
+.style-indicator {
+    width: 34px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+    position: relative;
+    background-color: #fff;
+    flex-shrink: 0;
+}
+.style-indicator::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 4px; right: 4px;
+    height: 2px;
+    background: currentColor;
+    transform: translateY(-50%);
+}
+.style-indicator.dashed::after {
+    background: transparent;
+    border-top: 2px dashed currentColor;
+}
+
+.body-info { 
+    flex-grow: 1; 
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.body-name { 
+    font-weight: bold; 
+    font-size: 14px; 
+    display: block;
+}
+
+.body-detail-text {
+    font-size: 11px; /* 詳細情報は小さめ維持 */
+    color: #555;
+    margin-top: 2px;
+    display: block;
+    line-height: 1.3;
+}
+
+/* パレット */
+.style-palette {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    z-index: 2000;
+    width: 250px;
+    border: 1px solid #ccc;
+}
+.style-palette.hidden { display: none; }
+.palette-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
+.close-palette { cursor: pointer; font-size: 20px; }
+
+.palette-colors {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+}
+.color-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+.palette-lines .line-option {
+    padding: 8px;
+    cursor: pointer;
+    border: 1px solid #eee;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.line-preview { width: 50px; height: 2px; background: black; display: inline-block; }
+.line-preview.dashed { background: transparent; border-top: 2px dashed black; }

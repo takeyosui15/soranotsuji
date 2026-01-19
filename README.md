@@ -1,4 +1,4 @@
-# 宙の辻 - Soranotsuji
+# 宙の辻 - Sora no Tsuji
 
 太陽と月の位置、そして月の満ち欠けを知るためのWebアプリケーションです。
 国土地理院の地図を使用し、GPSで現在地の情報を取得することも可能です。
@@ -14,4 +14,4 @@ https://soranotsuji.design10100.net/
 
 ## ライセンス
 MIT License
-Copyright (c) 2026 Soranotsuji Project
+Copyright (c) 2026 Sora no Tsuji Project
