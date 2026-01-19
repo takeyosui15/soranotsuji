@@ -33,11 +33,22 @@ Released under the MIT License.
         </div>
     
         <div id="panel-content" class="panel-content closed">
+            
             <div class="section">
-                <div class="date-row">
+                <div class="control-row">
+                    <button id="btn-now" class="nav-btn small">Now</button>
+                    <button id="btn-date-prev" class="nav-btn">◀</button>
                     <input type="date" id="date-input">
-                    <span id="time-display" class="time-display">12:00</span>
+                    <button id="btn-date-next" class="nav-btn">▶</button>
                 </div>
+
+                <div class="control-row">
+                    <label>時刻</label>
+                    <button id="btn-time-prev" class="nav-btn">◀</button>
+                    <input type="time" id="time-input" value="12:00">
+                    <button id="btn-time-next" class="nav-btn">▶</button>
+                </div>
+
                 <input type="range" id="time-slider" min="0" max="1439" step="1" value="720">
                 
                 <div class="shortcuts">
@@ -58,7 +69,16 @@ Released under the MIT License.
                         <label for="jump-moonset">月の入り <span id="time-moonset">--:--</span></label>
                     </div>
                 </div>
-                <div class="moon-age">月齢: <span id="moon-age-val">--.--</span></div>
+
+                <div class="control-row moon-row">
+                    <button id="btn-moon-prev" class="nav-btn">◀</button>
+                    <div class="moon-display">
+                        <label>月齢</label>
+                        <input type="number" id="moon-age-input" step="0.1" min="0" max="29.5">
+                        <span id="moon-icon" class="moon-icon">🌑</span>
+                    </div>
+                    <button id="btn-moon-next" class="nav-btn">▶</button>
+                </div>
             </div>
     
             <div class="section">

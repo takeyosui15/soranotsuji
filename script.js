@@ -10,8 +10,8 @@ let linesLayer;
 
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
+const SYNODIC_MONTH = 29.53059; // 朔望月
 
-// カラーマップ (全12色)
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' }, 
     { name: '桃', code: '#FFC0CB' }, 
@@ -27,19 +27,18 @@ const COLOR_MAP = [
     { name: '黒', code: '#000000' }
 ];
 
-// 天体リストデータ (修正: 太陽を赤、火星を橙に変更)
 let bodies = [
-    { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },  // 赤, 実線, 表示
-    { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },  // 黄, 実線, 表示
-    { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: true,  visible: false }, // 水, 破線, 非表示
-    { id: 'Venus',   name: '金星',   color: '#FFC0CB', isDashed: false, visible: true },  // 桃, 実線, 表示
-    { id: 'Mars',    name: '火星',   color: '#FFA500', isDashed: false, visible: true },  // 橙, 実線, 表示
-    { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: true },  // 茶, 実線, 表示
-    { id: 'Saturn',  name: '土星',   color: '#008000', isDashed: false, visible: true },  // 緑, 実線, 表示
-    { id: 'Uranus',  name: '天王星', color: '#0000FF', isDashed: true,  visible: false }, // 青, 破線, 非表示
-    { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: true,  visible: false }, // 藍, 破線, 非表示
-    { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: true,  visible: false }, // 紫, 破線, 非表示
-    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: true }   // 黒, 破線, 表示
+    { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
+    { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
+    { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: true,  visible: false },
+    { id: 'Venus',   name: '金星',   color: '#FFC0CB', isDashed: false, visible: true },
+    { id: 'Mars',    name: '火星',   color: '#FFA500', isDashed: false, visible: true },
+    { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: true },
+    { id: 'Saturn',  name: '土星',   color: '#008000', isDashed: false, visible: true },
+    { id: 'Uranus',  name: '天王星', color: '#0000FF', isDashed: true,  visible: false },
+    { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: true,  visible: false },
+    { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: true,  visible: false },
+    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: true }
 ];
 
 let editingBodyId = null;
@@ -54,70 +53,205 @@ window.onload = function() {
     const mapElement = document.getElementById('map');
     if (mapElement) {
         map = L.map('map').setView([35.681236, 139.767125], 6);
-        
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         linesLayer = L.layerGroup().addTo(map);
-        
-        // 地図操作終了時に再計算
         map.on('moveend', updateCalculation);
     }
 
-    // UI初期化
-    const now = new Date();
-    const dateInput = document.getElementById('date-input');
-    const timeSlider = document.getElementById('time-slider');
-    
-    if (dateInput && timeSlider) {
-        const yyyy = now.getFullYear();
-        const mm = ('00' + (now.getMonth() + 1)).slice(-2);
-        const dd = ('00' + now.getDate()).slice(-2);
-        dateInput.value = `${yyyy}-${mm}-${dd}`;
-        
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-        timeSlider.value = currentMinutes;
-    }
+    // イベント設定の呼び出し
+    setupUIEvents();
 
-    if (dateInput) dateInput.addEventListener('change', updateCalculation);
-    if (timeSlider) timeSlider.addEventListener('input', updateCalculation);
+    // 現在時刻で初期化
+    setNow();
     
-    document.querySelectorAll('input[name="time-jump"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if(e.target.checked) jumpToEvent(e.target.value);
-        });
-    });
-
     renderCelestialList();
     
-    // 初期描画（地図の準備を少し待つ）
     setTimeout(() => {
         if(map) map.invalidateSize();
         updateCalculation();
     }, 500);
 };
 
+// --- 3. UIイベント設定 ---
+function setupUIEvents() {
+    const dateInput = document.getElementById('date-input');
+    const timeInput = document.getElementById('time-input');
+    const timeSlider = document.getElementById('time-slider');
+    const moonInput = document.getElementById('moon-age-input');
 
-// --- 3. 計算ロジック ---
+    if (!dateInput || !timeInput) return;
+
+    // 日付変更
+    dateInput.addEventListener('change', updateCalculation);
+
+    // スライダー変更
+    timeSlider.addEventListener('input', () => {
+        const val = parseInt(timeSlider.value);
+        const h = Math.floor(val / 60);
+        const m = val % 60;
+        timeInput.value = `${('00' + h).slice(-2)}:${('00' + m).slice(-2)}`;
+        updateCalculation();
+    });
+
+    // 時刻入力 (type="time" なのでシンプルに)
+    timeInput.addEventListener('input', (e) => {
+        // HH:MM 形式で値が来る
+        if (!timeInput.value) return;
+        const [h, m] = timeInput.value.split(':').map(Number);
+        
+        if (!isNaN(h) && !isNaN(m)) {
+            timeSlider.value = h * 60 + m;
+            updateCalculation();
+        }
+    });
+
+    // 月齢入力
+    moonInput.addEventListener('change', (e) => {
+        const targetAge = parseFloat(e.target.value);
+        if (isNaN(targetAge)) return;
+        searchMoonAge(targetAge);
+    });
+
+    // ボタンイベント
+    document.getElementById('btn-now').onclick = setNow;
+    
+    document.getElementById('btn-date-prev').onclick = () => addDay(-1);
+    document.getElementById('btn-date-next').onclick = () => addDay(1);
+    
+    document.getElementById('btn-time-prev').onclick = () => addMinute(-1);
+    document.getElementById('btn-time-next').onclick = () => addMinute(1);
+
+    document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
+    document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
+
+    document.querySelectorAll('input[name="time-jump"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if(e.target.checked) jumpToEvent(e.target.value);
+        });
+    });
+}
+
+
+// --- 4. 操作ロジック ---
+
+function setNow() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = ('00' + (now.getMonth() + 1)).slice(-2);
+    const dd = ('00' + now.getDate()).slice(-2);
+    document.getElementById('date-input').value = `${yyyy}-${mm}-${dd}`;
+    
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const timeStr = `${('00' + h).slice(-2)}:${('00' + m).slice(-2)}`;
+    document.getElementById('time-input').value = timeStr;
+    document.getElementById('time-slider').value = h * 60 + m;
+    
+    updateCalculation();
+}
+
+function addDay(days) {
+    const dInput = document.getElementById('date-input');
+    const date = new Date(dInput.value);
+    date.setDate(date.getDate() + days);
+    
+    const yyyy = date.getFullYear();
+    const mm = ('00' + (date.getMonth() + 1)).slice(-2);
+    const dd = ('00' + date.getDate()).slice(-2);
+    dInput.value = `${yyyy}-${mm}-${dd}`;
+    
+    updateCalculation();
+}
+
+function addMinute(minutes) {
+    const slider = document.getElementById('time-slider');
+    let val = parseInt(slider.value) + minutes;
+    
+    if (val < 0) val = 1439;
+    if (val > 1439) val = 0;
+    
+    slider.value = val;
+    slider.dispatchEvent(new Event('input')); 
+}
+
+function addMoonMonth(direction) {
+    // 現在時刻から ±29.53日
+    const dInput = document.getElementById('date-input');
+    const tSlider = document.getElementById('time-slider');
+    
+    const dateStr = dInput.value;
+    const timeVal = parseInt(tSlider.value);
+    const h = Math.floor(timeVal / 60);
+    const m = timeVal % 60;
+    
+    const current = new Date(`${dateStr}T${('00' + h).slice(-2)}:${('00' + m).slice(-2)}:00`);
+    
+    const moveMs = direction * SYNODIC_MONTH * 24 * 60 * 60 * 1000;
+    const targetDate = new Date(current.getTime() + moveMs);
+    
+    const yyyy = targetDate.getFullYear();
+    const mm = ('00' + (targetDate.getMonth() + 1)).slice(-2);
+    const dd = ('00' + targetDate.getDate()).slice(-2);
+    dInput.value = `${yyyy}-${mm}-${dd}`;
+    
+    const th = targetDate.getHours();
+    const tm = targetDate.getMinutes();
+    const timeStr = `${('00' + th).slice(-2)}:${('00' + tm).slice(-2)}`;
+    document.getElementById('time-input').value = timeStr;
+    tSlider.value = th * 60 + tm;
+    
+    updateCalculation();
+}
+
+function searchMoonAge(targetAge) {
+    const targetPhase = (targetAge / SYNODIC_MONTH) * 360.0;
+    
+    const dInput = document.getElementById('date-input');
+    const tSlider = document.getElementById('time-slider');
+    const dateStr = dInput.value;
+    const timeVal = parseInt(tSlider.value);
+    const h = Math.floor(timeVal / 60);
+    const m = timeVal % 60;
+    
+    const current = new Date(`${dateStr}T${('00' + h).slice(-2)}:${('00' + m).slice(-2)}:00`);
+    
+    const result = Astronomy.SearchMoonPhase(targetPhase, current, 30);
+    
+    if (result && result.date) {
+        const d = result.date;
+        const yyyy = d.getFullYear();
+        const mm = ('00' + (d.getMonth() + 1)).slice(-2);
+        const dd = ('00' + d.getDate()).slice(-2);
+        dInput.value = `${yyyy}-${mm}-${dd}`;
+        
+        const th = d.getHours();
+        const tm = d.getMinutes();
+        const timeStr = `${('00' + th).slice(-2)}:${('00' + tm).slice(-2)}`;
+        document.getElementById('time-input').value = timeStr;
+        tSlider.value = th * 60 + tm;
+        
+        updateCalculation();
+    } else {
+        alert("計算範囲内で見つかりませんでした。");
+    }
+}
+
+
+// --- 5. 計算ロジック ---
 
 function updateCalculation() {
     if (!map || !linesLayer) return;
 
     const dInput = document.getElementById('date-input');
-    const tSlider = document.getElementById('time-slider');
-    if (!dInput || !tSlider) return;
+    const tInput = document.getElementById('time-input');
+    if (!dInput || !tInput) return;
 
     const dateStr = dInput.value;
-    if (!dateStr) return;
-    const timeVal = parseInt(tSlider.value);
-    const hours = Math.floor(timeVal / 60);
-    const minutes = timeVal % 60;
-    const timeStr = `${('00' + hours).slice(-2)}:${('00' + minutes).slice(-2)}`;
-    
-    const displayEl = document.getElementById('time-display');
-    if(displayEl) displayEl.innerText = timeStr;
+    const timeStr = tInput.value;
+    if (!dateStr || !timeStr) return;
 
     // 現在の日時（方位・高度計算用）
     const calcDate = new Date(`${dateStr}T${timeStr}:00`);
@@ -125,30 +259,22 @@ function updateCalculation() {
     const startOfDay = new Date(calcDate);
     startOfDay.setHours(0, 0, 0, 0);
 
-    // 観測地の取得 (防御的に数値変換)
+    // 観測地の取得
     let lat = 35.681236; 
     let lng = 139.767125;
     try {
         const center = map.getCenter();
         lat = Number(center.lat);
         lng = Number(center.lng);
-    } catch(e) {
-        console.warn("地図座標取得エラー");
-    }
+    } catch(e) {}
 
-    // ライブラリチェック
     if (typeof Astronomy === 'undefined') return;
 
-    // 正規のObserver作成 (高さ0m)
     let observer;
     try {
         observer = new Astronomy.Observer(lat, lng, 0);
-    } catch(e) {
-        console.error("Observer作成エラー", e);
-        return;
-    }
+    } catch(e) { return; }
 
-    // 描画クリア
     linesLayer.clearLayers();
 
     // 各天体の位置計算
@@ -167,18 +293,31 @@ function updateCalculation() {
             
             if (body.visible) drawDirectionLine(lat, lng, horizon.azimuth, horizon.altitude, body);
 
-        } catch (e) {
-            // 計算エラー時はスキップ
-        }
+        } catch (e) {}
     });
 
-    // 日の出・日の入り等の計算
+    // 日の出・日の入り等
     calculateRiseSet(calcDate, startOfDay, observer);
+    
+    // 月齢アイコン更新
+    updateMoonInfo(calcDate);
+}
+
+function updateMoonInfo(date) {
+    const phase = Astronomy.MoonPhase(date);
+    const age = (phase / 360) * SYNODIC_MONTH;
+    
+    if (document.activeElement.id !== 'moon-age-input') {
+        document.getElementById('moon-age-input').value = age.toFixed(1);
+    }
+
+    const iconIndex = Math.round(phase / 45) % 8;
+    const icons = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
+    document.getElementById('moon-icon').innerText = icons[iconIndex];
 }
 
 function calculateRiseSet(currentDate, startOfDay, observer) {
     try {
-        // SearchRiseSet(body, observer, direction, date, limit_days)
         const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
         const sunSet  = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
         const moonRise = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
@@ -200,10 +339,6 @@ function calculateRiseSet(currentDate, startOfDay, observer) {
         setVal('time-moonrise', fmt(moonRise));
         setVal('time-moonset', fmt(moonSet));
         
-        const moonPhase = Astronomy.MoonPhase(currentDate);
-        const moonAge = (moonPhase / 360) * 29.53;
-        setVal('moon-age-val', moonAge.toFixed(1));
-
         currentRiseSetData = {
             sunrise: sunRise ? sunRise.date : null,
             sunset: sunSet ? sunSet.date : null,
@@ -211,23 +346,17 @@ function calculateRiseSet(currentDate, startOfDay, observer) {
             moonset: moonSet ? moonSet.date : null
         };
 
-    } catch(e) {
-        console.error("Rise/Set Calculation Error:", e);
-    }
+    } catch(e) {}
 }
 
 function drawDirectionLine(lat, lng, azimuth, altitude, body) {
     const lengthKm = 5000;
     const rad = (90 - azimuth) * (Math.PI / 180);
-    
     const dLat = (lengthKm / 111) * Math.sin(rad);
     const dLng = (lengthKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.cos(rad);
-    
     const endPos = [lat + dLat, lng + dLng];
-
     const opacity = altitude < 0 ? 0.3 : 1.0; 
     const dashArray = body.isDashed ? '10, 10' : null;
-
     L.polyline([[lat, lng], endPos], {
         color: body.color,
         weight: 3,
@@ -237,20 +366,22 @@ function drawDirectionLine(lat, lng, azimuth, altitude, body) {
 }
 
 
-// --- 4. UI操作 ---
+// --- 6. UI操作関数 (リスト系) ---
 
 function jumpToEvent(eventType) {
     const data = currentRiseSetData;
     if (!data || !data[eventType]) return;
 
     const targetDate = data[eventType];
-    const minutes = targetDate.getHours() * 60 + targetDate.getMinutes();
+    const h = targetDate.getHours();
+    const m = targetDate.getMinutes();
     
-    const slider = document.getElementById('time-slider');
-    if(slider) {
-        slider.value = minutes;
-        updateCalculation();
-    }
+    // テキストボックス更新
+    document.getElementById('time-input').value = `${('00' + h).slice(-2)}:${('00' + m).slice(-2)}`;
+    // スライダー更新
+    document.getElementById('time-slider').value = h * 60 + m;
+    
+    updateCalculation();
 }
 
 function renderCelestialList() {
