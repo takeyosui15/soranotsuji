@@ -4,7 +4,6 @@
 Copyright (c) 2026 Sora no Tsuji Project
 Released under the MIT License.
 -->
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -21,7 +20,7 @@ Released under the MIT License.
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+    <script src="https://unpkg.com/astronomy-engine@2.0.0/astronomy.browser.min.js"></script>
 </head>
 <body>
 
@@ -34,7 +33,6 @@ Released under the MIT License.
         </div>
     
         <div id="panel-content" class="panel-content closed">
-            
             <div class="section">
                 <div class="date-row">
                     <input type="date" id="date-input">
@@ -65,16 +63,14 @@ Released under the MIT License.
     
             <div class="section">
                 <h3>表示天体</h3>
-                <ul id="celestial-list" class="celestial-list">
-                    </ul>
+                <ul id="celestial-list" class="celestial-list"></ul>
             </div>
         </div>
     </div>
     
     <div id="style-palette" class="style-palette hidden">
         <div class="palette-header">スタイル設定 <span class="close-palette" onclick="closePalette()">×</span></div>
-        <div class="palette-colors" id="palette-colors">
-            </div>
+        <div class="palette-colors" id="palette-colors"></div>
         <div class="palette-lines" id="palette-lines">
             <div class="line-option" onclick="applyLineStyle('solid')">実線 <span class="line-preview solid"></span></div>
             <div class="line-option" onclick="applyLineStyle('dashed')">破線 <span class="line-preview dashed"></span></div>

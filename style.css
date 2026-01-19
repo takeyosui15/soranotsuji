@@ -3,7 +3,25 @@
 Copyright (c) 2026 Sora no Tsuji Project
 Released under the MIT License.
 */
-/* コントロールパネルの基本設定 */
+/* --- 地図の基本設定 (ここが抜けていました！) --- */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* スクロールバーを出さない */
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0; /* コントロールパネルより下にする */
+}
+
+/* --- 以下、コントロールパネルのデザイン --- */
 .control-panel {
     position: absolute;
     top: 10px;
@@ -17,6 +35,9 @@ Released under the MIT License.
     font-family: sans-serif;
     font-size: 14px;
     overflow: hidden;
+    max-height: 90vh; /* 画面からはみ出さない制限 */
+    display: flex;
+    flex-direction: column;
 }
 
 .panel-header {
@@ -27,12 +48,12 @@ Released under the MIT License.
     display: flex;
     justify-content: space-between;
     font-weight: bold;
+    flex-shrink: 0; /* ヘッダーは縮めない */
 }
 
 .panel-content {
-    display: block; /* 初期状態は開くか閉じるかJSで制御 */
-    max-height: 70vh;
-    overflow-y: auto;
+    display: block;
+    overflow-y: auto; /* コンテンツが多い時だけスクロール */
     padding: 10px;
 }
 .panel-content.closed { display: none; }
@@ -74,6 +95,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
     margin-right: 10px;
     cursor: pointer;
     position: relative;
+    background-color: #fff; /* デフォルト背景 */
 }
 /* インジケーターの中身で線種を表現 */
 .style-indicator::after {
@@ -104,6 +126,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
     box-shadow: 0 5px 20px rgba(0,0,0,0.5);
     z-index: 2000;
     width: 250px;
+    border: 1px solid #ccc;
 }
 .style-palette.hidden { display: none; }
 .palette-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
