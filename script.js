@@ -8,6 +8,7 @@ Released under the MIT License.
 let map; 
 let linesLayer; 
 let observerMarker;
+let moveTimer = null; // 自動進行用タイマー
 
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
@@ -48,7 +49,7 @@ let currentRiseSetData = {};
 // --- 2. 起動処理 ---
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (コントロール配置変更)");
+    console.log("宙の辻: 起動");
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -77,7 +78,7 @@ window.onload = function() {
             center: [initLat, initLng],
             zoom: 6,
             layers: [osmLayer], // 初期レイヤー
-            zoomControl: false  // ★変更点: デフォルトのズームボタンを非表示にする
+            zoomControl: false  // デフォルトのズームボタンを非表示
         });
 
         // レイヤー切り替えコントロール定義
@@ -88,13 +89,11 @@ window.onload = function() {
             "地形図": topoLayer
         };
 
-        // ★変更点: 左上に配置 (順序1: レイヤー切り替え)
+        // 左上に配置
         L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
-
-        // ★変更点: 左上に配置 (順序2: ズームボタン)
         L.control.zoom({ position: 'topleft' }).addTo(map);
 
-        // スケールは左下のまま
+        // スケールは左下
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         
         linesLayer = L.layerGroup().addTo(map);
@@ -148,6 +147,7 @@ function setupUIEvents() {
     });
 
     document.getElementById('btn-now').onclick = setNow;
+    document.getElementById('btn-move').onclick = toggleMove; // Moveボタン追加
     document.getElementById('btn-date-prev').onclick = () => addDay(-1);
     document.getElementById('btn-date-next').onclick = () => addDay(1);
     document.getElementById('btn-time-prev').onclick = () => addMinute(-1);
@@ -179,6 +179,25 @@ function setNow() {
     document.getElementById('time-slider').value = h * 60 + m;
     
     updateCalculation();
+}
+
+function toggleMove() {
+    const btn = document.getElementById('btn-move');
+    
+    if (moveTimer) {
+        // オフにする
+        clearInterval(moveTimer);
+        moveTimer = null;
+        if(btn) btn.classList.remove('active');
+    } else {
+        // オンにする
+        if(btn) btn.classList.add('active');
+        
+        // 1秒ごとに時間を1分進める
+        moveTimer = setInterval(() => {
+            addMinute(1);
+        }, 1000);
+    }
 }
 
 function addDay(days) {
