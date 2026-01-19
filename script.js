@@ -11,26 +11,35 @@ let linesLayer;
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
 
+// カラーマップ (全12色)
 const COLOR_MAP = [
-    { name: '桃', code: '#FFC0CB' }, { name: '橙', code: '#FFA500' },
-    { name: '黄', code: '#FFFF00' }, { name: '黄緑', code: '#ADFF2F' },
-    { name: '緑', code: '#008000' }, { name: '青', code: '#0000FF' },
-    { name: '藍', code: '#4B0082' }, { name: '紫', code: '#800080' },
-    { name: '茶', code: '#A52A2A' }, { name: '黒', code: '#000000' }
+    { name: '赤', code: '#FF0000' }, 
+    { name: '桃', code: '#FFC0CB' }, 
+    { name: '橙', code: '#FFA500' },
+    { name: '黄', code: '#FFFF00' }, 
+    { name: '黄緑', code: '#ADFF2F' }, 
+    { name: '緑', code: '#008000' }, 
+    { name: '水', code: '#00BFFF' }, 
+    { name: '青', code: '#0000FF' },
+    { name: '藍', code: '#4B0082' }, 
+    { name: '紫', code: '#800080' }, 
+    { name: '茶', code: '#A52A2A' }, 
+    { name: '黒', code: '#000000' }
 ];
 
+// 天体リストデータ (修正: 太陽を赤、火星を橙に変更)
 let bodies = [
-    { id: 'Sun',     name: '太陽',   color: '#FFA500', isDashed: false, visible: true },
-    { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
-    { id: 'Mercury', name: '水星',   color: '#0000FF', isDashed: true,  visible: false },
-    { id: 'Venus',   name: '金星',   color: '#FFFF00', isDashed: false, visible: true },
-    { id: 'Mars',    name: '火星',   color: '#FF0000', isDashed: false, visible: true },
-    { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: false },
-    { id: 'Saturn',  name: '土星',   color: '#ADFF2F', isDashed: false, visible: false },
-    { id: 'Uranus',  name: '天王星', color: '#0000FF', isDashed: true,  visible: false },
-    { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: true,  visible: false },
-    { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: true,  visible: false },
-    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: true }
+    { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },  // 赤, 実線, 表示
+    { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },  // 黄, 実線, 表示
+    { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: true,  visible: false }, // 水, 破線, 非表示
+    { id: 'Venus',   name: '金星',   color: '#FFC0CB', isDashed: false, visible: true },  // 桃, 実線, 表示
+    { id: 'Mars',    name: '火星',   color: '#FFA500', isDashed: false, visible: true },  // 橙, 実線, 表示
+    { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: true },  // 茶, 実線, 表示
+    { id: 'Saturn',  name: '土星',   color: '#008000', isDashed: false, visible: true },  // 緑, 実線, 表示
+    { id: 'Uranus',  name: '天王星', color: '#0000FF', isDashed: true,  visible: false }, // 青, 破線, 非表示
+    { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: true,  visible: false }, // 藍, 破線, 非表示
+    { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: true,  visible: false }, // 紫, 破線, 非表示
+    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: true }   // 黒, 破線, 表示
 ];
 
 let editingBodyId = null;
@@ -170,7 +179,6 @@ function updateCalculation() {
 function calculateRiseSet(currentDate, startOfDay, observer) {
     try {
         // SearchRiseSet(body, observer, direction, date, limit_days)
-        // 引数の順番を修正済み
         const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
         const sunSet  = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
         const moonRise = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
