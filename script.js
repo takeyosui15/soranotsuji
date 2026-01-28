@@ -59,7 +59,7 @@ const COLOR_MAP = [
     { name: '黒', code: '#000000' }
 ];
 
-// 表示天体リスト
+// 表示天体リスト (初期設定: 全て実線、太陽と月以外は非表示)
 let bodies = [
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
@@ -214,7 +214,7 @@ function setupUIEvents() {
             navigator.geolocation.getCurrentPosition((pos) => {
                 startLatLng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 map.setView(startLatLng, 10);
-                updateLocationDisplay(); // 標高も自動更新
+                updateLocationDisplay(); 
                 updateCalculation();
             }, (err) => {
                 alert('位置情報を取得できませんでした。');
@@ -362,7 +362,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     endMarker.bindPopup(createPopupContent("目的地", endLatLng, "観測点から", distKm, endElev));
 }
 
-// --- 5. D/P (Diamond/Pearl) 機能 ---
+// --- 5. D/P (Diamond/Pearl) 機能 (10分刻みマーカー付き) ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -392,6 +392,8 @@ function updateDPLines() {
         if (!body.visible) return;
 
         const path = [];
+        
+        // 1分刻みで1日分計算
         for (let m = 0; m < 1440; m++) {
             const time = new Date(baseDate.getTime() + m * 60000);
             
@@ -410,10 +412,12 @@ function updateDPLines() {
             if (hor.altitude > -2) { 
                 const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
                 if (dist > 0 && dist <= 350000) {
-                    path.push({ dist: dist, az: hor.azimuth });
+                    // ★ 時刻情報(time) も保存
+                    path.push({ dist: dist, az: hor.azimuth, time: time });
                 }
             }
         }
+        
         drawDPPath(path, body.color);
     });
 }
@@ -446,11 +450,13 @@ function drawDPPath(points, color) {
         const p = points[i];
         const obsAz = (p.az + 180) % 360;
         
+        // 座標計算
         const dLat = (p.dist * Math.cos(obsAz * Math.PI / 180)) / 111132.954; 
         const dLng = (p.dist * Math.sin(obsAz * Math.PI / 180)) / (111132.954 * Math.cos(targetPt.lat * Math.PI / 180));
         
         const pt = [targetPt.lat + dLat, targetPt.lng + dLng];
 
+        // ライン分断処理
         if (currentSegment.length > 0) {
             const prev = points[i-1];
             if (Math.abs(p.az - prev.az) > 5) { 
@@ -459,20 +465,49 @@ function drawDPPath(points, color) {
             }
         }
         currentSegment.push(pt);
+
+        // ★ 10分刻みのマーカー & 時刻表示
+        if (p.time.getMinutes() % 10 === 0) {
+            const hh = p.time.getHours();
+            const mm = ('0' + p.time.getMinutes()).slice(-2);
+            const timeStr = `${hh}:${mm}`;
+
+            // 位置マーカー(ドット)
+            L.circleMarker(pt, {
+                radius: 4,
+                color: color,
+                fillColor: color,
+                fillOpacity: 1.0,
+                weight: 1
+            }).addTo(dpLayer);
+
+            // 時刻テキスト (縁取り付きで見やすく)
+            const textStyle = `font-size: 14px; font-weight: bold; color: ${color}; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; white-space: nowrap;`;
+            
+            L.marker(pt, {
+                icon: L.divIcon({
+                    className: 'dp-label-icon', // style.cssに無いクラス名(透明divになる)
+                    html: `<div style="${textStyle}">${timeStr}</div>`,
+                    iconSize: [null, null],
+                    iconAnchor: [-10, 7] // ドットの右横に配置
+                })
+            }).addTo(dpLayer);
+        }
     }
     if (currentSegment.length > 0) segments.push(currentSegment);
 
+    // ライン描画
     segments.forEach(seg => {
         L.polyline(seg, {
             color: color,
             weight: 2,
             opacity: 0.8,
-            dashArray: '5, 5'
+            dashArray: '5, 5' // 破線
         }).addTo(dpLayer);
     });
 }
 
-// --- 6. 標高グラフ機能 (5秒間隔) ---
+// --- 6. 標高グラフ機能 ---
 
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
@@ -680,40 +715,26 @@ async function getElevation(lat, lng) {
     return null; 
 }
 
-// ★ 固定座標天体(スバル・北極星)の出没計算ヘルパー
 function searchStarRiseSet(ra, dec, observer, startOfDay) {
     let rise = null;
     let set = null;
-    
-    // 00:00から24:00まで10分刻みで検索
     const start = startOfDay.getTime();
     let prevAlt = null;
-    
     for (let m = 0; m <= 1440; m += 10) {
         const time = new Date(start + m * 60000);
-        // Horizon計算 (リフラクション込み)
         const hor = Astronomy.Horizon(time, observer, ra, dec, 'normal');
         const alt = hor.altitude;
-        
         if (prevAlt !== null) {
-            // 0度をまたいだか
             if (prevAlt < 0 && alt >= 0) {
-                // Rise: 線形補間
                 rise = getCrossingTime(start + (m-10)*60000, start + m*60000, prevAlt, alt);
             } else if (prevAlt >= 0 && alt < 0) {
-                // Set
                 set = getCrossingTime(start + (m-10)*60000, start + m*60000, prevAlt, alt);
             }
         }
         prevAlt = alt;
     }
-    
     const fmt = (d) => d ? `${('00'+d.getHours()).slice(-2)}:${('00'+d.getMinutes()).slice(-2)}` : "--:--";
-    
-    return {
-        rise: fmt(rise),
-        set: fmt(set)
-    };
+    return { rise: fmt(rise), set: fmt(set) };
 }
 
 function getCrossingTime(t1, t2, alt1, alt2) {
@@ -773,7 +794,6 @@ function addMinute(minutes) {
     const slider = document.getElementById('time-slider');
     if(!slider) return;
     let val = parseInt(slider.value) + minutes;
-    if (val < 1440) val = val; // 修正不要
     if (val < 0) val = 1439;
     if (val > 1439) val = 0;
     slider.value = val;
@@ -864,8 +884,6 @@ function updateCalculation() {
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
         let riseStr = "--:--";
         let setStr  = "--:--";
-        
-        // ★修正: スバルと北極星も計算
         if (body.id === 'Polaris' || body.id === 'Subaru') {
             let r = (body.id === 'Polaris') ? POLARIS_RA : SUBARU_RA;
             let d = (body.id === 'Polaris') ? POLARIS_DEC : SUBARU_DEC;
@@ -881,17 +899,13 @@ function updateCalculation() {
                 setStr  = fmt(set);
             } catch(e) { }
         }
-
         if (!riseStr) riseStr = "--:--";
         if (!setStr) setStr = "--:--";
-        
-        // 北極星などの「沈まない」ケースの判定強化 (Horizonチェック)
         if (riseStr === "--:--" && setStr === "--:--") {
              if (horizon.altitude > 0) {
-                 riseStr = "00:00"; setStr = "00:00"; // 終日出ている
+                 riseStr = "00:00"; setStr = "00:00"; 
              }
         }
-
         const dataEl = document.getElementById(`data-${body.id}`);
         if (dataEl) {
             dataEl.innerText = `出 ${riseStr} / 入 ${setStr} / 方位 ${horizon.azimuth.toFixed(0)}° / 高度 ${horizon.altitude.toFixed(0)}°`;
