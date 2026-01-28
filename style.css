@@ -208,7 +208,16 @@ body, html {
     white-space: nowrap;
 }
 
-/* ヘッダー右側のコントロール群 (修正: margin-left: 10px) */
+/* ロゴ画像のスタイル */
+.header-logo {
+    height: 20px;       /* 20pxに変更 */
+    width: auto;        
+    vertical-align: middle; 
+    margin-right: 8px;  
+    margin-bottom: 2px; /* 微調整 */
+}
+
+/* ヘッダー右側のコントロール群 (margin-left: 10px) */
 .header-controls {
     display: flex;
     align-items: center;

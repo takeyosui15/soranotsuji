@@ -11,6 +11,8 @@ Released under the MIT License.
     <meta name="description" content="宙の辻(Sora no Tsuji)は、天体シミュレーションと地図情報を組み合わせたWebアプリです。太陽や月、星々の動きを地図上で可視化し、ダイヤモンド富士やパール富士が見える位置（辻）を計算します。">
     <title>宙の辻 (Sora no Tsuji)</title>
     
+    <link rel="icon" href="logoICO.png" type="image/png">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
@@ -41,7 +43,10 @@ Released under the MIT License.
 
     <div id="control-panel" class="control-panel minimized">
         <div class="panel-header" onclick="togglePanel()">
-            <span id="header-title">宙の辻<span class="header-subtitle"> - Sora no Tsuji</span></span>
+            <span id="header-title">
+                <img src="logoICO.png" alt="ロゴ" class="header-logo">
+                宙の辻<span class="header-subtitle"> - Sora no Tsuji</span>
+            </span>
             <div class="header-controls">
                 <span id="btn-help" title="ヘルプ">?</span>
                 <span id="toggle-icon">▼</span>

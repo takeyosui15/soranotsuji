@@ -457,10 +457,8 @@ function toggleDP() {
     }
 }
 
-// 日付ごとの計算を行うヘルパー
 function calculateDPPathPoints(targetDate, body, observer) {
     const path = [];
-    // 1分刻みで1日分計算
     const startOfDay = new Date(targetDate.getTime());
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -499,7 +497,6 @@ function updateDPLines() {
     const dateStr = dInput.value;
     const baseDate = new Date(dateStr + "T00:00:00");
     
-    // 前日と翌日
     const datePrev = new Date(baseDate.getTime() - 24 * 60 * 60 * 1000);
     const dateNext = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
 
@@ -508,16 +505,12 @@ function updateDPLines() {
     bodies.forEach(body => {
         if (!body.visible) return;
 
-        // 計算
         const pointsPrev = calculateDPPathPoints(datePrev, body, observer);
         const pointsNext = calculateDPPathPoints(dateNext, body, observer);
         const pointsCurr = calculateDPPathPoints(baseDate, body, observer);
 
-        // 描画 (前後1日は点線・マーカーなし)
         drawDPPath(pointsPrev, body.color, '1, 5', false);
         drawDPPath(pointsNext, body.color, '1, 5', false);
-        
-        // 当日は破線(5,5)・マーカーあり
         drawDPPath(pointsCurr, body.color, '5, 5', true);
     });
 }
@@ -610,7 +603,6 @@ function drawDPPath(points, color, dashArray, withMarkers) {
         }
         currentSegment.push(pt);
 
-        // マーカー描画は withMarkers フラグが true の時のみ
         if (withMarkers && p.time.getMinutes() % 10 === 0) {
             const hh = p.time.getHours();
             const mm = ('0' + p.time.getMinutes()).slice(-2);
@@ -643,7 +635,7 @@ function drawDPPath(points, color, dashArray, withMarkers) {
             color: color,
             weight: 2,
             opacity: 0.8,
-            dashArray: dashArray // 引数で受け取ったスタイル
+            dashArray: dashArray 
         }).addTo(dpLayer);
     });
 }
