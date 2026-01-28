@@ -155,7 +155,6 @@ window.onload = function() {
 
 // --- 3. UIイベント設定 ---
 function setupUIEvents() {
-    // ヘルプボタン
     const btnHelp = document.getElementById('btn-help');
     if(btnHelp) btnHelp.onclick = toggleHelp;
 
@@ -443,7 +442,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     ));
 }
 
-// --- 6. D/P (Diamond/Pearl) 機能 ---
+// --- 5. D/P 機能 (Vincenty法 + 前後1日表示) ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -458,6 +457,40 @@ function toggleDP() {
     }
 }
 
+// 日付ごとの計算を行うヘルパー
+function calculateDPPathPoints(targetDate, body, observer) {
+    const path = [];
+    // 1分刻みで1日分計算
+    const startOfDay = new Date(targetDate.getTime());
+    startOfDay.setHours(0, 0, 0, 0);
+
+    for (let m = 0; m < 1440; m++) {
+        const time = new Date(startOfDay.getTime() + m * 60000);
+        
+        let r, d;
+        if (body.id === 'Polaris') {
+            r = POLARIS_RA; d = POLARIS_DEC;
+        } else if (body.id === 'Subaru') {
+            r = SUBARU_RA; d = SUBARU_DEC;
+        } else if (body.id === 'MyStar') {
+            r = myStarRA; d = myStarDec;
+        } else {
+            const eq = Astronomy.Equator(body.id, time, observer, false, true);
+            r = eq.ra; d = eq.dec;
+        }
+
+        const hor = Astronomy.Horizon(time, observer, r, d, 'normal');
+        
+        if (hor.altitude > -2) { 
+            const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
+            if (dist > 0 && dist <= 350000) {
+                path.push({ dist: dist, az: hor.azimuth, time: time });
+            }
+        }
+    }
+    return path;
+}
+
 function updateDPLines() {
     if (!isDPActive) return;
     dpLayer.clearLayers();
@@ -466,37 +499,26 @@ function updateDPLines() {
     const dateStr = dInput.value;
     const baseDate = new Date(dateStr + "T00:00:00");
     
+    // 前日と翌日
+    const datePrev = new Date(baseDate.getTime() - 24 * 60 * 60 * 1000);
+    const dateNext = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
+
     const observer = new Astronomy.Observer(endLatLng.lat, endLatLng.lng, endElev);
 
     bodies.forEach(body => {
         if (!body.visible) return;
 
-        const path = [];
-        for (let m = 0; m < 1440; m++) {
-            const time = new Date(baseDate.getTime() + m * 60000);
-            
-            let r, d;
-            if (body.id === 'Polaris') {
-                r = POLARIS_RA; d = POLARIS_DEC;
-            } else if (body.id === 'Subaru') {
-                r = SUBARU_RA; d = SUBARU_DEC;
-            } else if (body.id === 'MyStar') {
-                r = myStarRA; d = myStarDec;
-            } else {
-                const eq = Astronomy.Equator(body.id, time, observer, false, true);
-                r = eq.ra; d = eq.dec;
-            }
+        // 計算
+        const pointsPrev = calculateDPPathPoints(datePrev, body, observer);
+        const pointsNext = calculateDPPathPoints(dateNext, body, observer);
+        const pointsCurr = calculateDPPathPoints(baseDate, body, observer);
 
-            const hor = Astronomy.Horizon(time, observer, r, d, 'normal');
-            
-            if (hor.altitude > -2) { 
-                const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
-                if (dist > 0 && dist <= 350000) {
-                    path.push({ dist: dist, az: hor.azimuth, time: time });
-                }
-            }
-        }
-        drawDPPath(path, body.color);
+        // 描画 (前後1日は点線・マーカーなし)
+        drawDPPath(pointsPrev, body.color, '1, 5', false);
+        drawDPPath(pointsNext, body.color, '1, 5', false);
+        
+        // 当日は破線(5,5)・マーカーあり
+        drawDPPath(pointsCurr, body.color, '5, 5', true);
     });
 }
 
@@ -513,7 +535,59 @@ function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     return d;
 }
 
-function drawDPPath(points, color) {
+function getDestinationVincenty(lat1, lon1, az, dist) {
+    const a = 6378137;
+    const b = 6356752.314245;
+    const f = 1 / 298.257223563;
+
+    const toRad = Math.PI / 180;
+    const toDeg = 180 / Math.PI;
+
+    const alpha1 = az * toRad;
+    const sinAlpha1 = Math.sin(alpha1);
+    const cosAlpha1 = Math.cos(alpha1);
+
+    const tanU1 = (1 - f) * Math.tan(lat1 * toRad);
+    const cosU1 = 1 / Math.sqrt((1 + tanU1 * tanU1));
+    const sinU1 = tanU1 * cosU1;
+
+    const sigma1 = Math.atan2(tanU1, cosAlpha1);
+    const sinAlpha = cosU1 * sinAlpha1;
+    const cosSqAlpha = 1 - sinAlpha * sinAlpha;
+    const uSq = cosSqAlpha * (a * a - b * b) / (b * b);
+
+    const A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+    const B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+
+    let sigma = dist / (b * A);
+    let sigmaP = 2 * Math.PI;
+    let cos2SigmaM, sinSigma, cosSigma, deltaSigma;
+
+    let iterLimit = 100;
+    do {
+        cos2SigmaM = Math.cos(2 * sigma1 + sigma);
+        sinSigma = Math.sin(sigma);
+        cosSigma = Math.cos(sigma);
+        deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+        sigmaP = sigma;
+        sigma = dist / (b * A) + deltaSigma;
+    } while (Math.abs(sigma - sigmaP) > 1e-12 && --iterLimit > 0);
+
+    if (iterLimit === 0) return { lat: lat1, lng: lon1 };
+
+    const tmp = sinU1 * sinSigma - cosU1 * cosSigma * cosAlpha1;
+    const lat2 = Math.atan2(sinU1 * cosSigma + cosU1 * sinSigma * cosAlpha1, (1 - f) * Math.sqrt(sinAlpha * sinAlpha + tmp * tmp));
+    const lambda = Math.atan2(sinSigma * sinAlpha1, cosU1 * cosSigma - sinU1 * sinSigma * cosAlpha1);
+    const C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
+    const L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+    
+    return {
+        lat: lat2 * toDeg,
+        lng: lon1 + L * toDeg
+    };
+}
+
+function drawDPPath(points, color, dashArray, withMarkers) {
     if (points.length === 0) return;
     const targetPt = L.latLng(endLatLng);
     
@@ -524,10 +598,8 @@ function drawDPPath(points, color) {
         const p = points[i];
         const obsAz = (p.az + 180) % 360;
         
-        const dLat = (p.dist * Math.cos(obsAz * Math.PI / 180)) / 111132.954; 
-        const dLng = (p.dist * Math.sin(obsAz * Math.PI / 180)) / (111132.954 * Math.cos(targetPt.lat * Math.PI / 180));
-        
-        const pt = [targetPt.lat + dLat, targetPt.lng + dLng];
+        const dest = getDestinationVincenty(targetPt.lat, targetPt.lng, obsAz, p.dist);
+        const pt = [dest.lat, dest.lng];
 
         if (currentSegment.length > 0) {
             const prev = points[i-1];
@@ -538,7 +610,8 @@ function drawDPPath(points, color) {
         }
         currentSegment.push(pt);
 
-        if (p.time.getMinutes() % 10 === 0) {
+        // マーカー描画は withMarkers フラグが true の時のみ
+        if (withMarkers && p.time.getMinutes() % 10 === 0) {
             const hh = p.time.getHours();
             const mm = ('0' + p.time.getMinutes()).slice(-2);
             const timeStr = `${hh}:${mm}`;
@@ -570,12 +643,12 @@ function drawDPPath(points, color) {
             color: color,
             weight: 2,
             opacity: 0.8,
-            dashArray: '5, 5'
+            dashArray: dashArray // 引数で受け取ったスタイル
         }).addTo(dpLayer);
     });
 }
 
-// --- 7. 標高グラフ機能 ---
+// --- 6. 標高グラフ機能 ---
 
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
@@ -750,7 +823,7 @@ function drawProfileGraph() {
     }
 }
 
-// --- 8. 共通ヘルパー ---
+// --- 7. 共通ヘルパー ---
 
 function fitBoundsToLocations() {
     if(!map) return;
