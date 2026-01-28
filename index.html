@@ -26,6 +26,18 @@ Released under the MIT License.
 
     <div id="map"></div>
 
+    <div id="elevation-panel" class="hidden">
+        <canvas id="elevation-canvas"></canvas>
+        <div id="elevation-info">Start -> End (100m間隔)</div>
+        
+        <div id="progress-overlay" class="hidden">
+            <div class="progress-label">データ取得中... <span id="progress-text">0%</span></div>
+            <div class="progress-track">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
     <div id="control-panel" class="control-panel minimized">
         <div class="panel-header" onclick="togglePanel()">
             <span id="header-title">宙の辻<span class="header-subtitle"> - Sora no Tsuji</span></span>
@@ -49,6 +61,11 @@ Released under the MIT License.
                         <div class="spacer-btn"></div>
                         <input type="radio" name="loc-mode" id="radio-end" value="end">
                         <input type="text" id="input-end-latlng" placeholder="目的地 (緯度,経度 または 地名)">
+                    </div>
+
+                    <div class="control-row">
+                        <div class="spacer-btn"></div>
+                        <button id="btn-elevation" class="nav-btn" style="width: 100%;">⛰ 標高グラフ表示</button>
                     </div>
                 </div>
             </div>

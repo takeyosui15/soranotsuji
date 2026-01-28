@@ -18,7 +18,86 @@ body, html {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 0;
+    z-index: 0; /* 地図は一番下 */
+}
+
+/* --- 断面標高図パネル --- */
+#elevation-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 25%; /* 画面の1/4 */
+    background-color: rgba(30, 30, 30, 0.9);
+    border-top: 1px solid #555;
+    z-index: 900; /* 地図より上、コントロールより下 */
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#elevation-panel.hidden {
+    display: none;
+}
+
+#elevation-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#elevation-info {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    color: #ccc;
+    font-size: 12px;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 5px;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* プログレスバー (オーバーレイ) */
+#progress-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3); /* 半透明で透けて見える */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* 下のグラフを見やすく */
+}
+
+#progress-overlay.hidden {
+    display: none;
+}
+
+.progress-label {
+    color: #fff;
+    margin-bottom: 5px;
+    font-size: 14px;
+    text-shadow: 0 1px 2px #000;
+}
+
+.progress-track {
+    width: 80%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #ffd700;
+    transition: width 0.2s;
 }
 
 /* --- コントロールパネル本体 --- */
@@ -31,7 +110,7 @@ body, html {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 1000;
+    z-index: 1000; /* 一番上 */
     font-family: sans-serif;
     font-size: 14px;
     overflow: hidden;
@@ -159,7 +238,7 @@ select,
     flex-shrink: 0;
 }
 
-/* Moveボタンがオンの時 (黄色) */
+/* Moveボタン/標高ボタンがオンの時 (黄色) */
 .nav-btn.active {
     background-color: #ffd700; /* Gold */
     color: #000;
