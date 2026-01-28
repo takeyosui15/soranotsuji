@@ -29,16 +29,21 @@ let fetchTimer = null;
 // D/P機能用
 let isDPActive = false;
 
-// 北極星・すばる (J2000)
+// 北極星・すばる・My天体(初期値:アルニラム)
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
 const SUBARU_RA = 3.79;
 const SUBARU_DEC = 24.12;
-const SYNODIC_MONTH = 29.53059; 
+const ALNILAM_RA = 5.603; // オリオン座イプシロン星 (アルニラム)
+const ALNILAM_DEC = -1.202;
 
-// 定数 (地球半径m, 大気差係数)
+const SYNODIC_MONTH = 29.53059; 
 const EARTH_RADIUS = 6371000;
 const REFRACTION_K = 0.13;
+
+// My天体変数
+let myStarRA = ALNILAM_RA;
+let myStarDec = ALNILAM_DEC;
 
 // カラーパレット定義
 const COLOR_MAP = [
@@ -59,7 +64,7 @@ const COLOR_MAP = [
     { name: '黒', code: '#000000' }
 ];
 
-// 表示天体リスト (初期設定: 全て実線、太陽と月以外は非表示)
+// 表示天体リスト
 let bodies = [
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
@@ -72,7 +77,9 @@ let bodies = [
     { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: false, visible: false },
     { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: false, visible: false },
     { id: 'Polaris', name: '北極星', color: '#000000', isDashed: false, visible: false },
-    { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: false }
+    { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: false },
+    // My天体 (visible初期値: false)
+    { id: 'MyStar',  name: 'My天体', color: '#DDA0DD', isDashed: false, visible: false, isCustom: true }
 ];
 
 let editingBodyId = null;
@@ -82,6 +89,8 @@ let currentRiseSetData = {};
 
 window.onload = function() {
     console.log("宙の辻: 起動");
+
+    loadMyStarSettings();
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -110,7 +119,7 @@ window.onload = function() {
             zoomControl: false
         });
 
-        // 国土地理院の著作権表示を追加
+        // 国土地理院の著作権表示
         map.attributionControl.addAttribution('標高データ: &copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>');
 
         // レイヤー切り替えコントロール
@@ -132,12 +141,23 @@ window.onload = function() {
     // 初期表示設定
     document.getElementById('input-start-elev').value = startElev;
     document.getElementById('input-end-elev').value = endElev;
+    document.getElementById('input-mystar-radec').value = `${myStarRA},${myStarDec}`;
     
+    // My天体UI初期化
+    const myBody = bodies.find(b => b.id === 'MyStar');
+    if(myBody) {
+        document.getElementById('chk-mystar').checked = myBody.visible;
+        const indicator = document.getElementById('style-MyStar');
+        if(indicator) {
+            indicator.style.color = myBody.color;
+            indicator.className = `style-indicator ${myBody.isDashed ? 'dashed' : 'solid'}`;
+        }
+    }
+
     updateLocationDisplay();
     setNow();
-    renderCelestialList();
+    renderCelestialList(); 
     
-    // ウィンドウリサイズ時にグラフを再描画
     window.addEventListener('resize', () => {
         if(isElevationActive) drawProfileGraph();
     });
@@ -191,10 +211,19 @@ function setupUIEvents() {
     const btnMove = document.getElementById('btn-move');
     if(btnMove) btnMove.onclick = toggleMove;
 
+    // 日付操作
+    document.getElementById('btn-month-prev').onclick = () => addMonth(-1);
     document.getElementById('btn-date-prev').onclick = () => addDay(-1);
     document.getElementById('btn-date-next').onclick = () => addDay(1);
+    document.getElementById('btn-month-next').onclick = () => addMonth(1);
+
+    // 時間操作
+    document.getElementById('btn-hour-prev').onclick = () => addMinute(-60);
     document.getElementById('btn-time-prev').onclick = () => addMinute(-1);
     document.getElementById('btn-time-next').onclick = () => addMinute(1);
+    document.getElementById('btn-hour-next').onclick = () => addMinute(60);
+
+    // 月齢操作
     document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
     document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
 
@@ -300,6 +329,42 @@ function setupUIEvents() {
             }
         });
     }
+
+    // --- My天体関連 ---
+    const btnMyReg = document.getElementById('btn-mystar-reg');
+    const inputMyRaDec = document.getElementById('input-mystar-radec');
+    const chkMyStar = document.getElementById('chk-mystar');
+
+    if(btnMyReg && inputMyRaDec) {
+        btnMyReg.onclick = () => {
+            const val = inputMyRaDec.value.trim();
+            if(!val) {
+                myStarRA = ALNILAM_RA;
+                myStarDec = ALNILAM_DEC;
+                inputMyRaDec.value = `${myStarRA},${myStarDec}`;
+                localStorage.removeItem('soranotsuji_mystar');
+            } else {
+                const coords = parseInput(val);
+                if(coords) {
+                    myStarRA = coords.lat;
+                    myStarDec = coords.lng;
+                    localStorage.setItem('soranotsuji_mystar', JSON.stringify({ra: myStarRA, dec: myStarDec}));
+                } else {
+                    alert("形式エラー: RA,Dec (例: 5.603,-1.202)");
+                    return;
+                }
+            }
+            // My天体の座標更新を反映
+            updateCalculation();
+            if(isDPActive) updateDPLines();
+        };
+    }
+
+    if(chkMyStar) {
+        chkMyStar.addEventListener('change', (e) => {
+            toggleVisibility('MyStar', e.target.checked);
+        });
+    }
 }
 
 // --- 4. 地図クリック処理 & 位置情報表示 ---
@@ -314,6 +379,22 @@ function onMapClick(e) {
         if(isDPActive) updateDPLines();
     }
     updateLocationDisplay(true);
+}
+
+function calculateBearing(startLat, startLng, destLat, destLng) {
+    const toRad = deg => deg * Math.PI / 180;
+    const toDeg = rad => rad * 180 / Math.PI;
+    
+    const lat1 = toRad(startLat);
+    const lat2 = toRad(destLat);
+    const dLng = toRad(destLng - startLng);
+
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) -
+              Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    
+    let brng = toDeg(Math.atan2(y, x));
+    return (brng + 360) % 360;
 }
 
 async function updateLocationDisplay(fetchElevation = true) {
@@ -348,21 +429,29 @@ async function updateLocationDisplay(fetchElevation = true) {
         opacity: 0.8
     }).addTo(locationLayer);
 
-    const createPopupContent = (title, pos, distLabel, distVal, elevVal) => {
+    const azToDest = calculateBearing(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng);
+    const azToStart = calculateBearing(endLatLng.lat, endLatLng.lng, startLatLng.lat, startLatLng.lng);
+
+    const createPopupContent = (title, pos, distLabel, distVal, elevVal, azLabel, azVal) => {
         return `
             <b>${title}</b><br>
-            Lat: ${pos.lat.toFixed(5)}<br>
-            Lng: ${pos.lng.toFixed(5)}<br>
-            Elev: ${elevVal} m<br>
-            ${distLabel}: ${distVal} km
+            緯度: ${pos.lat.toFixed(5)}<br>
+            経度: ${pos.lng.toFixed(5)}<br>
+            標高: ${elevVal} m<br>
+            ${distLabel}: ${distVal} km<br>
+            ${azLabel}: ${azVal.toFixed(1)}°
         `;
     };
 
-    startMarker.bindPopup(createPopupContent("観測点", startLatLng, "目的地まで", distKm, startElev));
-    endMarker.bindPopup(createPopupContent("目的地", endLatLng, "観測点から", distKm, endElev));
+    startMarker.bindPopup(createPopupContent(
+        "観測点", startLatLng, "目的地まで", distKm, startElev, "目的地の方位", azToDest
+    ));
+    endMarker.bindPopup(createPopupContent(
+        "目的地", endLatLng, "観測点から", distKm, endElev, "観測点の方位", azToStart
+    ));
 }
 
-// --- 5. D/P (Diamond/Pearl) 機能 (10分刻みマーカー付き) ---
+// --- 5. D/P (Diamond/Pearl) 機能 ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -387,13 +476,10 @@ function updateDPLines() {
     
     const observer = new Astronomy.Observer(endLatLng.lat, endLatLng.lng, endElev);
 
-    // 全天体ループ
     bodies.forEach(body => {
         if (!body.visible) return;
 
         const path = [];
-        
-        // 1分刻みで1日分計算
         for (let m = 0; m < 1440; m++) {
             const time = new Date(baseDate.getTime() + m * 60000);
             
@@ -402,6 +488,8 @@ function updateDPLines() {
                 r = POLARIS_RA; d = POLARIS_DEC;
             } else if (body.id === 'Subaru') {
                 r = SUBARU_RA; d = SUBARU_DEC;
+            } else if (body.id === 'MyStar') {
+                r = myStarRA; d = myStarDec;
             } else {
                 const eq = Astronomy.Equator(body.id, time, observer, false, true);
                 r = eq.ra; d = eq.dec;
@@ -412,12 +500,10 @@ function updateDPLines() {
             if (hor.altitude > -2) { 
                 const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
                 if (dist > 0 && dist <= 350000) {
-                    // ★ 時刻情報(time) も保存
                     path.push({ dist: dist, az: hor.azimuth, time: time });
                 }
             }
         }
-        
         drawDPPath(path, body.color);
     });
 }
@@ -450,13 +536,11 @@ function drawDPPath(points, color) {
         const p = points[i];
         const obsAz = (p.az + 180) % 360;
         
-        // 座標計算
         const dLat = (p.dist * Math.cos(obsAz * Math.PI / 180)) / 111132.954; 
         const dLng = (p.dist * Math.sin(obsAz * Math.PI / 180)) / (111132.954 * Math.cos(targetPt.lat * Math.PI / 180));
         
         const pt = [targetPt.lat + dLat, targetPt.lng + dLng];
 
-        // ライン分断処理
         if (currentSegment.length > 0) {
             const prev = points[i-1];
             if (Math.abs(p.az - prev.az) > 5) { 
@@ -466,13 +550,11 @@ function drawDPPath(points, color) {
         }
         currentSegment.push(pt);
 
-        // ★ 10分刻みのマーカー & 時刻表示
         if (p.time.getMinutes() % 10 === 0) {
             const hh = p.time.getHours();
             const mm = ('0' + p.time.getMinutes()).slice(-2);
             const timeStr = `${hh}:${mm}`;
 
-            // 位置マーカー(ドット)
             L.circleMarker(pt, {
                 radius: 4,
                 color: color,
@@ -481,28 +563,26 @@ function drawDPPath(points, color) {
                 weight: 1
             }).addTo(dpLayer);
 
-            // 時刻テキスト (縁取り付きで見やすく)
             const textStyle = `font-size: 14px; font-weight: bold; color: ${color}; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; white-space: nowrap;`;
             
             L.marker(pt, {
                 icon: L.divIcon({
-                    className: 'dp-label-icon', // style.cssに無いクラス名(透明divになる)
+                    className: 'dp-label-icon', 
                     html: `<div style="${textStyle}">${timeStr}</div>`,
                     iconSize: [null, null],
-                    iconAnchor: [-10, 7] // ドットの右横に配置
+                    iconAnchor: [-10, 7] 
                 })
             }).addTo(dpLayer);
         }
     }
     if (currentSegment.length > 0) segments.push(currentSegment);
 
-    // ライン描画
     segments.forEach(seg => {
         L.polyline(seg, {
             color: color,
             weight: 2,
             opacity: 0.8,
-            dashArray: '5, 5' // 破線
+            dashArray: '5, 5'
         }).addTo(dpLayer);
     });
 }
@@ -743,6 +823,21 @@ function getCrossingTime(t1, t2, alt1, alt2) {
     return new Date(t);
 }
 
+function loadMyStarSettings() {
+    const data = localStorage.getItem('soranotsuji_mystar');
+    if(data) {
+        try {
+            const parsed = JSON.parse(data);
+            if(parsed.ra !== undefined && parsed.dec !== undefined) {
+                myStarRA = parsed.ra;
+                myStarDec = parsed.dec;
+            }
+        } catch(e) {
+            console.error("MyStar storage parse error", e);
+        }
+    }
+}
+
 // --- 以下、日時計算系ロジック (既存) ---
 
 function setNow() {
@@ -775,6 +870,20 @@ function toggleMove() {
         if(btn) btn.classList.add('active');
         moveTimer = setInterval(() => { addMinute(1); }, 1000);
     }
+}
+
+function addMonth(months) {
+    const dInput = document.getElementById('date-input');
+    if(!dInput) return;
+    const date = new Date(dInput.value);
+    date.setMonth(date.getMonth() + months);
+    
+    const yyyy = date.getFullYear();
+    const mm = ('00' + (date.getMonth() + 1)).slice(-2);
+    const dd = ('00' + date.getDate()).slice(-2);
+    dInput.value = `${yyyy}-${mm}-${dd}`;
+    updateCalculation();
+    if(isDPActive) updateDPLines();
 }
 
 function addDay(days) {
@@ -878,15 +987,19 @@ function updateCalculation() {
             equatorCoords = { ra: POLARIS_RA, dec: POLARIS_DEC };
         } else if (body.id === 'Subaru') {
             equatorCoords = { ra: SUBARU_RA, dec: SUBARU_DEC };
+        } else if (body.id === 'MyStar') {
+            equatorCoords = { ra: myStarRA, dec: myStarDec };
         } else {
             equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
         }
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
         let riseStr = "--:--";
         let setStr  = "--:--";
-        if (body.id === 'Polaris' || body.id === 'Subaru') {
-            let r = (body.id === 'Polaris') ? POLARIS_RA : SUBARU_RA;
-            let d = (body.id === 'Polaris') ? POLARIS_DEC : SUBARU_DEC;
+        if (body.id === 'Polaris' || body.id === 'Subaru' || body.id === 'MyStar') {
+            let r, d;
+            if(body.id === 'Polaris') { r=POLARIS_RA; d=POLARIS_DEC; }
+            else if(body.id === 'Subaru') { r=SUBARU_RA; d=SUBARU_DEC; }
+            else { r=myStarRA; d=myStarDec; }
             const times = searchStarRiseSet(r, d, observer, startOfDay);
             riseStr = times.rise;
             setStr = times.set;
@@ -996,6 +1109,7 @@ function renderCelestialList() {
     if (!list) return;
     list.innerHTML = '';
     bodies.forEach(body => {
+        if(body.isCustom) return; 
         const li = document.createElement('li');
         const dashClass = body.isDashed ? 'dashed' : 'solid';
         li.innerHTML = `
@@ -1055,12 +1169,20 @@ function applyColor(colorCode) {
     if (!editingBodyId) return;
     const body = bodies.find(b => b.id === editingBodyId);
     body.color = colorCode;
+    if(editingBodyId === 'MyStar') {
+        const ind = document.getElementById('style-MyStar');
+        if(ind) ind.style.color = colorCode;
+    }
     finishStyleEdit();
 }
 function applyLineStyle(styleType) {
     if (!editingBodyId) return;
     const body = bodies.find(b => b.id === editingBodyId);
     body.isDashed = (styleType === 'dashed');
+    if(editingBodyId === 'MyStar') {
+        const ind = document.getElementById('style-MyStar');
+        if(ind) ind.className = `style-indicator ${body.isDashed ? 'dashed' : 'solid'}`;
+    }
     finishStyleEdit();
 }
 function finishStyleEdit() {

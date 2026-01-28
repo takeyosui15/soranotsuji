@@ -95,16 +95,20 @@ Released under the MIT License.
                 <div id="sec-datetime" class="section-content">
                     <div class="control-row">
                         <button id="btn-now" class="nav-btn small">Now</button>
+                        <button id="btn-month-prev" class="nav-btn">◀◀</button>
                         <button id="btn-date-prev" class="nav-btn">◀</button>
                         <input type="date" id="date-input">
                         <button id="btn-date-next" class="nav-btn">▶</button>
+                        <button id="btn-month-next" class="nav-btn">▶▶</button>
                     </div>
 
                     <div class="control-row">
                         <button id="btn-move" class="nav-btn small">Mov</button>
+                        <button id="btn-hour-prev" class="nav-btn">◀◀</button>
                         <button id="btn-time-prev" class="nav-btn">◀</button>
                         <input type="time" id="time-input" value="12:00">
                         <button id="btn-time-next" class="nav-btn">▶</button>
+                        <button id="btn-hour-next" class="nav-btn">▶▶</button>
                     </div>
 
                     <input type="range" id="time-slider" min="0" max="1439" step="1" value="720">
@@ -136,6 +140,28 @@ Released under the MIT License.
                             <span id="moon-icon" class="moon-icon">🌑</span>
                         </div>
                         <button id="btn-moon-next" class="nav-btn">▶</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-header" onclick="toggleSection('sec-mystar')">
+                    <span>My天体</span> <span id="icon-sec-mystar">▲</span>
+                </div>
+                <div id="sec-mystar" class="section-content">
+                    <div class="control-row">
+                        <button id="btn-mystar-reg" class="nav-btn small">登録</button>
+                        <input type="text" id="input-mystar-radec" placeholder="赤経,赤緯">
+                    </div>
+                    <div class="celestial-list" style="margin-top: 5px; border-bottom: none;">
+                        <li style="border-bottom: none; padding-bottom: 0;">
+                            <input type="checkbox" id="chk-mystar" class="body-checkbox">
+                            <div id="style-MyStar" class="style-indicator solid" style="color: #DDA0DD;" onclick="openPalette('MyStar')"></div>
+                            <div class="body-info">
+                                <span class="body-name">My天体</span>
+                                <span id="data-MyStar" class="body-detail-text">--:--</span>
+                            </div>
+                        </li>
                     </div>
                 </div>
             </div>

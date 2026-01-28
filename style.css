@@ -188,7 +188,6 @@ body, html {
     color: #333;
 }
 
-/* UIパーツ共通 */
 .nav-btn,
 input[type="date"],
 input[type="time"],
@@ -207,12 +206,12 @@ select,
     background: #eee;
     border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 0 10px;
+    padding: 0 6px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 34px;
+    min-width: 30px;
     color: #333;
     transition: all 0.2s;
 }
@@ -222,31 +221,52 @@ select,
     padding: 0 8px;
 }
 
-/* ボタンサイズ調整 */
-#btn-now, #btn-move, #btn-gps, #btn-dp {
+/* --- ボタンサイズ調整 (修正箇所) --- */
+
+/* 1. 先頭の機能ボタン (Now, Mov, GPS, D/P, Reg) */
+#btn-now, #btn-move, #btn-gps, #btn-dp, #btn-mystar-reg {
     width: 46px;
+    min-width: 46px;
     padding: 0;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-/* 左側のボタングループ (GPS/Radio) */
+/* 2. 矢印ボタン群 (日付・時刻操作) */
+/* これらを全て同じ固定幅にすることで、1段目と2段目のズレを解消します */
+#btn-month-prev, #btn-date-prev, #btn-date-next, #btn-month-next,
+#btn-hour-prev, #btn-time-prev, #btn-time-next, #btn-hour-next {
+    width: 34px;      /* 固定幅 */
+    min-width: 34px;  /* 縮小禁止 */
+    padding: 0;       /* パディングなしで中央揃え */
+    justify-content: center;
+    flex-shrink: 0;   /* Flexboxによる変形を禁止 */
+}
+
+/* 月齢ボタンも揃えておくと綺麗です */
+#btn-moon-prev, #btn-moon-next {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .btn-group-left {
     display: flex;
     align-items: center;
     gap: 5px;
-    width: 70px; /* 固定幅 */
+    width: 70px;
     flex-shrink: 0;
 }
 
-/* 空白スペース (ボタン+ラジオ分) */
 .spacer-group {
     width: 70px; 
     flex-shrink: 0;
 }
 
-/* ラベル ("観測点:", "目的地:" 等) */
 .input-label {
-    width: 65px; /* 固定幅 */
+    width: 65px;
     flex-shrink: 0;
     text-align: right;
     margin-right: 5px;
@@ -267,19 +287,19 @@ select {
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    min-width: 0;
 }
 
 input[type="date"], input[type="text"] {
     text-align: center;
 }
 
-/* 標高入力用 */
 input[type="number"] {
     flex-grow: 1;
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    text-align: right; /* 数字は見やすく右寄せ */
+    text-align: right; 
 }
 
 #time-input {
@@ -289,6 +309,7 @@ input[type="number"] {
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    min-width: 0;
 }
 
 .moon-row {
