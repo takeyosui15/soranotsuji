@@ -118,6 +118,8 @@ body, html {
 input[type="date"],
 input[type="time"],
 input[type="number"],
+input[type="text"],
+select,
 .style-indicator {
     height: 34px;              
     font-size: 14px;           
@@ -146,11 +148,15 @@ input[type="number"],
     padding: 0 8px;
 }
 
-/* 位置合わせ用: 先頭のボタン幅を固定して揃える */
-#btn-now, #btn-move {
+/* 位置合わせ用 */
+#btn-now, #btn-move, #btn-gps {
     width: 46px;
     padding: 0;
     justify-content: center;
+}
+.spacer-btn {
+    width: 46px;
+    flex-shrink: 0;
 }
 
 /* Moveボタンがオンの時 (黄色) */
@@ -162,19 +168,24 @@ input[type="number"],
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* 日付・時刻入力 */
-input[type="date"] {
+/* 日付・時刻・テキスト入力 */
+input[type="date"],
+input[type="text"],
+select {
     flex-grow: 1;
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    text-align: center; /* 中央揃えを追加 */
+}
+
+input[type="date"], input[type="text"] {
+    text-align: center;
 }
 
 #time-input {
     width: auto;
     flex-grow: 1;
-    text-align: center; /* 中央揃えを明示 */
+    text-align: center;
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
