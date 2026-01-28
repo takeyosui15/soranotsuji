@@ -69,7 +69,6 @@ window.onload = function() {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // --- 地図レイヤーの定義 ---
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
@@ -86,7 +85,6 @@ window.onload = function() {
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
         });
 
-        // 地図生成
         map = L.map('map', {
             center: [startLatLng.lat, startLatLng.lng],
             zoom: 9,
@@ -94,16 +92,16 @@ window.onload = function() {
             zoomControl: false
         });
 
-        // コントロール配置
+        // ★追加: 国土地理院の著作権表示
+        map.attributionControl.addAttribution('標高データ: &copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>');
+
         L.control.layers({ "標準": osmLayer, "ダーク": darkLayer, "衛星写真": satelliteLayer, "地形図": topoLayer }, null, { position: 'topleft' }).addTo(map);
         L.control.zoom({ position: 'topleft' }).addTo(map);
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         
-        // レイヤー初期化
         linesLayer = L.layerGroup().addTo(map);
         locationLayer = L.layerGroup().addTo(map);
 
-        // 地図クリックイベント (地点設定)
         map.on('click', onMapClick);
     }
 
@@ -127,7 +125,6 @@ function setupUIEvents() {
     const timeSlider = document.getElementById('time-slider');
     const moonInput = document.getElementById('moon-age-input');
 
-    // 日時関連
     if (dateInput) dateInput.addEventListener('change', updateCalculation);
     
     if (timeSlider) {
@@ -158,7 +155,6 @@ function setupUIEvents() {
         });
     }
 
-    // ボタンイベント
     const btnNow = document.getElementById('btn-now');
     if(btnNow) btnNow.onclick = setNow;
     
@@ -178,9 +174,6 @@ function setupUIEvents() {
         });
     });
 
-    // --- 位置情報関連イベント ---
-    
-    // GPSボタン
     const btnGps = document.getElementById('btn-gps');
     if(btnGps) {
         btnGps.onclick = () => {
@@ -199,12 +192,10 @@ function setupUIEvents() {
         };
     }
 
-    // テキストボックス入力 (補完機能付き)
     const inputStart = document.getElementById('input-start-latlng');
     const inputEnd = document.getElementById('input-end-latlng');
 
     const parseInput = (val) => {
-        // (35.xxx, 139.xxx) のような形式から数字を抽出
         const clean = val.replace(/[\(\)\s]/g, ''); 
         const parts = clean.split(',');
         if (parts.length === 2) {
@@ -232,12 +223,10 @@ function setupUIEvents() {
             if(coords) {
                 endLatLng = coords;
                 updateLocationDisplay();
-                // 目的地が変わっても天体計算(観測地)は変わらないが、描画更新のため呼ぶ
             }
         });
     }
 
-    // 目的地リストボックス
     const selectDest = document.getElementById('select-dest');
     if(selectDest) {
         selectDest.addEventListener('change', () => {
@@ -253,63 +242,77 @@ function setupUIEvents() {
     }
 }
 
-// --- 4. 地図クリック処理 & 位置情報表示 ---
+// --- 4. 地図クリック処理 & 位置情報表示 (標高対応) ---
 
 function onMapClick(e) {
-    // ラジオボタンの状態を確認
     const modeStart = document.getElementById('radio-start').checked;
     
     if (modeStart) {
         startLatLng = e.latlng;
-        updateCalculation(); // 観測地変更なので天体計算も更新
+        updateCalculation(); 
     } else {
         endLatLng = e.latlng;
     }
     updateLocationDisplay();
 }
 
-function updateLocationDisplay() {
+async function getElevation(lat, lng) {
+    try {
+        const url = `https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=${lng}&lat=${lat}&outtype=JSON`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data && data.elevation !== undefined) {
+            if (data.elevation === "-----") return 0;
+            return data.elevation;
+        }
+    } catch(e) {
+        console.error("Elevation fetch error:", e);
+    }
+    return null; 
+}
+
+async function updateLocationDisplay() {
     if (!locationLayer || !map) return;
     locationLayer.clearLayers();
 
-    // テキストボックスの表示更新
     const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
     document.getElementById('input-start-latlng').value = fmt(startLatLng);
     document.getElementById('input-end-latlng').value = fmt(endLatLng);
 
-    // 2点間の距離計算
     const startPt = L.latLng(startLatLng);
     const endPt = L.latLng(endLatLng);
     const distMeters = startPt.distanceTo(endPt);
     const distKm = (distMeters / 1000).toFixed(2);
 
-    // 出発地マーカー (青)
     const startMarker = L.marker(startLatLng).addTo(locationLayer);
-    startMarker.bindPopup(`
-        <b>出発地</b><br>
-        緯度: ${startLatLng.lat.toFixed(6)}<br>
-        経度: ${startLatLng.lng.toFixed(6)}<br>
-        標高: --- m<br>
-        目的地まで: ${distKm} km
-    `);
-
-    // 目的地マーカー (赤) - 色を変えるためにIcon設定したいが、簡易的に標準マーカーを使用
-    // 必要ならカスタムアイコンを適用可能
     const endMarker = L.marker(endLatLng).addTo(locationLayer);
-    endMarker.bindPopup(`
-        <b>目的地</b><br>
-        緯度: ${endLatLng.lat.toFixed(6)}<br>
-        経度: ${endLatLng.lng.toFixed(6)}<br>
-        標高: --- m<br>
-        出発地から: ${distKm} km
-    `);
-
-    // 直線 (黒色の実線)
+    
     L.polyline([startLatLng, endLatLng], {
         color: 'black',
         weight: 3,
         opacity: 0.8
     }).addTo(locationLayer);
+
+    const createPopupContent = (title, pos, distLabel, distVal, elevVal) => {
+        const elevStr = (elevVal !== null) ? `${elevVal} m` : "--- m";
+        return `
+            <b>${title}</b><br>
+            緯度: ${pos.lat.toFixed(6)}<br>
+            経度: ${pos.lng.toFixed(6)}<br>
+            標高: ${elevStr}<br>
+            ${distLabel}: ${distVal} km
+        `;
+    };
+
+    startMarker.bindPopup(createPopupContent("出発地", startLatLng, "目的地まで", distKm, "取得中..."));
+    endMarker.bindPopup(createPopupContent("目的地", endLatLng, "出発地から", distKm, "取得中..."));
+
+    const startElev = await getElevation(startLatLng.lat, startLatLng.lng);
+    const endElev = await getElevation(endLatLng.lat, endLatLng.lng);
+
+    startMarker.setPopupContent(createPopupContent("出発地", startLatLng, "目的地まで", distKm, startElev));
+    endMarker.setPopupContent(createPopupContent("目的地", endLatLng, "出発地から", distKm, endElev));
 }
 
 // --- 5. 操作ロジック (既存) ---
