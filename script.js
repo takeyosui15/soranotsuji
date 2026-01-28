@@ -63,16 +63,16 @@ const COLOR_MAP = [
 let bodies = [
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
-    { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: false, visible: true },
-    { id: 'Venus',   name: '金星',   color: '#FFC0CB', isDashed: false, visible: true },
-    { id: 'Mars',    name: '火星',   color: '#FFA500', isDashed: false, visible: true },
-    { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: true },
-    { id: 'Saturn',  name: '土星',   color: '#008000', isDashed: false, visible: true },
-    { id: 'Uranus',  name: '天王星', color: '#ADFF2F', isDashed: true,  visible: false },
-    { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: true,  visible: false },
-    { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: true,  visible: false },
-    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: false },
-    { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: true }
+    { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: false, visible: false },
+    { id: 'Venus',   name: '金星',   color: '#FFC0CB', isDashed: false, visible: false },
+    { id: 'Mars',    name: '火星',   color: '#FFA500', isDashed: false, visible: false },
+    { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: false },
+    { id: 'Saturn',  name: '土星',   color: '#008000', isDashed: false, visible: false },
+    { id: 'Uranus',  name: '天王星', color: '#ADFF2F', isDashed: false, visible: false },
+    { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: false, visible: false },
+    { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: false, visible: false },
+    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: false, visible: false },
+    { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: false }
 ];
 
 let editingBodyId = null;
@@ -130,11 +130,10 @@ window.onload = function() {
     setupUIEvents();
     
     // 初期表示設定
-    // 標高入力欄にも初期値を反映
     document.getElementById('input-start-elev').value = startElev;
     document.getElementById('input-end-elev').value = endElev;
     
-    updateLocationDisplay(); // マーカー等を描画
+    updateLocationDisplay();
     setNow();
     renderCelestialList();
     
@@ -143,7 +142,6 @@ window.onload = function() {
         if(isElevationActive) drawProfileGraph();
     });
 
-    // 少し待ってから初期計算（地図のサイズ確定待ち）
     setTimeout(() => {
         if(map) map.invalidateSize();
         updateCalculation();
@@ -157,12 +155,10 @@ function setupUIEvents() {
     const timeSlider = document.getElementById('time-slider');
     const moonInput = document.getElementById('moon-age-input');
 
-    // 日時変更時の処理
     if (dateInput) dateInput.addEventListener('change', () => {
         updateCalculation();
         if(isDPActive) updateDPLines();
     });
-
     if (timeSlider) {
         timeSlider.addEventListener('input', () => {
             const val = parseInt(timeSlider.value);
@@ -172,7 +168,6 @@ function setupUIEvents() {
             updateCalculation();
         });
     }
-
     if (timeInput) {
         timeInput.addEventListener('input', () => {
             if (!timeInput.value) return;
@@ -183,7 +178,6 @@ function setupUIEvents() {
             }
         });
     }
-
     if (moonInput) {
         moonInput.addEventListener('change', (e) => {
             const targetAge = parseFloat(e.target.value);
@@ -191,7 +185,6 @@ function setupUIEvents() {
         });
     }
 
-    // 各種ボタン
     const btnNow = document.getElementById('btn-now');
     if(btnNow) btnNow.onclick = setNow;
     
@@ -235,12 +228,10 @@ function setupUIEvents() {
     const btnDP = document.getElementById('btn-dp');
     if(btnDP) btnDP.onclick = toggleDP;
 
-    // --- テキスト入力 (緯度経度/地名) ---
     const inputStart = document.getElementById('input-start-latlng');
     const inputEnd = document.getElementById('input-end-latlng');
 
     const parseInput = (val) => {
-        // カンマがあれば座標とみなす
         if (val.indexOf(',') === -1) return null;
         const clean = val.replace(/[\(\)\s]/g, ''); 
         const parts = clean.split(',');
@@ -255,8 +246,6 @@ function setupUIEvents() {
     const handleLocationInput = async (val, isStart) => {
         if(!val) return;
         let coords = parseInput(val);
-        
-        // 座標でなければ地名検索
         if (!coords) {
             const results = await searchLocation(val);
             if(results && results.length > 0) {
@@ -269,7 +258,6 @@ function setupUIEvents() {
                 return;
             }
         }
-
         if(coords) {
             if(isStart) {
                 startLatLng = coords;
@@ -280,7 +268,7 @@ function setupUIEvents() {
                 document.getElementById('radio-end').checked = true;
                 if(isDPActive) updateDPLines();
             }
-            updateLocationDisplay(); // 標高も更新される
+            updateLocationDisplay(); 
             fitBoundsToLocations();
         }
     };
@@ -288,7 +276,6 @@ function setupUIEvents() {
     if(inputStart) inputStart.addEventListener('change', () => handleLocationInput(inputStart.value, true));
     if(inputEnd) inputEnd.addEventListener('change', () => handleLocationInput(inputEnd.value, false));
 
-    // --- テキスト入力 (標高) ---
     const inputStartElev = document.getElementById('input-start-elev');
     const inputEndElev = document.getElementById('input-end-elev');
 
@@ -297,8 +284,7 @@ function setupUIEvents() {
             const val = parseFloat(inputStartElev.value);
             if(!isNaN(val)) {
                 startElev = val;
-                updateCalculation(); // 観測点標高が変わると天体位置に影響
-                // API取得せずに表示更新
+                updateCalculation(); 
                 updateLocationDisplay(false); 
             }
         });
@@ -309,7 +295,7 @@ function setupUIEvents() {
             const val = parseFloat(inputEndElev.value);
             if(!isNaN(val)) {
                 endElev = val;
-                if(isDPActive) updateDPLines(); // 目的地標高が変わるとD/Pラインに影響
+                if(isDPActive) updateDPLines(); 
                 updateLocationDisplay(false);
             }
         });
@@ -320,7 +306,6 @@ function setupUIEvents() {
 
 function onMapClick(e) {
     const modeStart = document.getElementById('radio-start').checked;
-    
     if (modeStart) {
         startLatLng = e.latlng;
         updateCalculation(); 
@@ -328,52 +313,41 @@ function onMapClick(e) {
         endLatLng = e.latlng;
         if(isDPActive) updateDPLines();
     }
-    // クリック時はAPIから標高を再取得する
     updateLocationDisplay(true);
 }
 
-// マーカーとラインの描画、テキストボックスの更新
-// fetchElevation: trueならAPIから標高取得、falseなら現在の変数を使用
 async function updateLocationDisplay(fetchElevation = true) {
     if (!locationLayer || !map) return;
     locationLayer.clearLayers();
 
-    // 緯度経度テキストボックス
     const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
     document.getElementById('input-start-latlng').value = fmt(startLatLng);
     document.getElementById('input-end-latlng').value = fmt(endLatLng);
 
-    // 標高取得 (APIコール)
     if (fetchElevation) {
         const sElev = await getElevation(startLatLng.lat, startLatLng.lng);
         const eElev = await getElevation(endLatLng.lat, endLatLng.lng);
-        // 取得できた場合のみ更新
         if(sElev !== null) startElev = sElev;
         if(eElev !== null) endElev = eElev;
     }
 
-    // 標高テキストボックス
     document.getElementById('input-start-elev').value = startElev;
     document.getElementById('input-end-elev').value = endElev;
 
-    // 距離計算
     const startPt = L.latLng(startLatLng);
     const endPt = L.latLng(endLatLng);
     const distMeters = startPt.distanceTo(endPt);
     const distKm = (distMeters / 1000).toFixed(2);
 
-    // マーカー
     const startMarker = L.marker(startLatLng).addTo(locationLayer);
     const endMarker = L.marker(endLatLng).addTo(locationLayer);
     
-    // 直線
     L.polyline([startLatLng, endLatLng], {
         color: 'black',
         weight: 3,
         opacity: 0.8
     }).addTo(locationLayer);
 
-    // ポップアップ
     const createPopupContent = (title, pos, distLabel, distVal, elevVal) => {
         return `
             <b>${title}</b><br>
@@ -388,7 +362,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     endMarker.bindPopup(createPopupContent("目的地", endLatLng, "観測点から", distKm, endElev));
 }
 
-// --- 5. D/P (Diamond/Pearl) 機能 (標高考慮版) ---
+// --- 5. D/P (Diamond/Pearl) 機能 ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -411,44 +385,39 @@ function updateDPLines() {
     const dateStr = dInput.value;
     const baseDate = new Date(dateStr + "T00:00:00");
     
-    // 天体位置計算用のObserver
-    // 本来は観測点が変わればObserverも変わるが、D/Pライン計算の基準として
-    // 「目的地(山頂)」を基準点とし、そこから見える天体の高度を逆算する。
     const observer = new Astronomy.Observer(endLatLng.lat, endLatLng.lng, endElev);
 
-    const sunPath = [];
-    const moonPath = [];
+    // 全天体ループ
+    bodies.forEach(body => {
+        if (!body.visible) return;
 
-    // 1分刻みで1日分計算
-    for (let m = 0; m < 1440; m++) {
-        const time = new Date(baseDate.getTime() + m * 60000);
-        
-        // 太陽
-        const sunPos = Astronomy.Equator('Sun', time, observer, false, true);
-        const sunHor = Astronomy.Horizon(time, observer, sunPos.ra, sunPos.dec, 'normal');
-        if (sunHor.altitude > -2) { 
-            const dist = calculateDistanceForAltitudes(sunHor.altitude, startElev, endElev);
-            if (dist > 0 && dist <= 350000) {
-                sunPath.push({ dist: dist, az: sunHor.azimuth });
+        const path = [];
+        for (let m = 0; m < 1440; m++) {
+            const time = new Date(baseDate.getTime() + m * 60000);
+            
+            let r, d;
+            if (body.id === 'Polaris') {
+                r = POLARIS_RA; d = POLARIS_DEC;
+            } else if (body.id === 'Subaru') {
+                r = SUBARU_RA; d = SUBARU_DEC;
+            } else {
+                const eq = Astronomy.Equator(body.id, time, observer, false, true);
+                r = eq.ra; d = eq.dec;
+            }
+
+            const hor = Astronomy.Horizon(time, observer, r, d, 'normal');
+            
+            if (hor.altitude > -2) { 
+                const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
+                if (dist > 0 && dist <= 350000) {
+                    path.push({ dist: dist, az: hor.azimuth });
+                }
             }
         }
-
-        // 月
-        const moonPos = Astronomy.Equator('Moon', time, observer, false, true);
-        const moonHor = Astronomy.Horizon(time, observer, moonPos.ra, moonPos.dec, 'normal');
-        if (moonHor.altitude > -2) {
-            const dist = calculateDistanceForAltitudes(moonHor.altitude, startElev, endElev);
-            if (dist > 0 && dist <= 350000) {
-                moonPath.push({ dist: dist, az: moonHor.azimuth });
-            }
-        }
-    }
-
-    drawDPPath(sunPath, 'red');
-    drawDPPath(moonPath, 'yellow');
+        drawDPPath(path, body.color);
+    });
 }
 
-// 2点の標高差を考慮して、天体がその見かけの高度に見える距離を逆算
 function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     const altRad = celestialAltDeg * Math.PI / 180;
     const a = (1 - REFRACTION_K) / (2 * EARTH_RADIUS);
@@ -475,10 +444,8 @@ function drawDPPath(points, color) {
 
     for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        // 観測者は天体の方位の反対側にいる
         const obsAz = (p.az + 180) % 360;
         
-        // 距離と方位から座標を計算 (簡易)
         const dLat = (p.dist * Math.cos(obsAz * Math.PI / 180)) / 111132.954; 
         const dLng = (p.dist * Math.sin(obsAz * Math.PI / 180)) / (111132.954 * Math.cos(targetPt.lat * Math.PI / 180));
         
@@ -486,7 +453,6 @@ function drawDPPath(points, color) {
 
         if (currentSegment.length > 0) {
             const prev = points[i-1];
-            // 時間経過で方位が大きく飛ぶ場合は線を切る
             if (Math.abs(p.az - prev.az) > 5) { 
                 segments.push(currentSegment);
                 currentSegment = [];
@@ -500,12 +466,13 @@ function drawDPPath(points, color) {
         L.polyline(seg, {
             color: color,
             weight: 2,
-            opacity: 0.6
+            opacity: 0.8,
+            dashArray: '5, 5'
         }).addTo(dpLayer);
     });
 }
 
-// --- 6. 標高グラフ機能 (5秒間隔 & 詳細進捗表示) ---
+// --- 6. 標高グラフ機能 (5秒間隔) ---
 
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
@@ -586,7 +553,7 @@ function processFetchQueue() {
         drawProfileGraph();
         
         if (isElevationActive) {
-            fetchTimer = setTimeout(processFetchQueue, 5000); // 5秒間隔
+            fetchTimer = setTimeout(processFetchQueue, 5000); 
         }
     });
 }
@@ -596,7 +563,6 @@ async function fetchElevationSingle(lat, lng) {
     return val !== null ? val : 0;
 }
 
-// 進捗表示更新 (完了数 / 全体数, 残り時間)
 function updateProgress(percent, current, total) {
     const bar = document.getElementById('progress-bar');
     const text = document.getElementById('progress-text');
@@ -647,7 +613,6 @@ function drawProfileGraph() {
     const toX = (dist) => padLeft + (dist / maxDist) * graphW;
     const toY = (elev) => padTop + graphH - ((elev - yMin) / (yMax - yMin)) * graphH;
 
-    // グリッド線
     ctx.strokeStyle = '#444';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -662,7 +627,6 @@ function drawProfileGraph() {
     }
     ctx.stroke();
 
-    // グラフ線
     if (fetchedPoints.length > 1) {
         ctx.beginPath();
         ctx.moveTo(toX(fetchedPoints[0].dist), toY(fetchedPoints[0].elev));
@@ -691,7 +655,6 @@ function fitBoundsToLocations() {
     map.fitBounds(bounds, { padding: [50, 50] });
 }
 
-// Nominatim (地名検索)
 async function searchLocation(query) {
     try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
@@ -704,7 +667,6 @@ async function searchLocation(query) {
     }
 }
 
-// 国土地理院 (標高API)
 async function getElevation(lat, lng) {
     try {
         const url = `https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=${lng}&lat=${lat}&outtype=JSON`;
@@ -716,6 +678,48 @@ async function getElevation(lat, lng) {
         }
     } catch(e) { console.error(e); }
     return null; 
+}
+
+// ★ 固定座標天体(スバル・北極星)の出没計算ヘルパー
+function searchStarRiseSet(ra, dec, observer, startOfDay) {
+    let rise = null;
+    let set = null;
+    
+    // 00:00から24:00まで10分刻みで検索
+    const start = startOfDay.getTime();
+    let prevAlt = null;
+    
+    for (let m = 0; m <= 1440; m += 10) {
+        const time = new Date(start + m * 60000);
+        // Horizon計算 (リフラクション込み)
+        const hor = Astronomy.Horizon(time, observer, ra, dec, 'normal');
+        const alt = hor.altitude;
+        
+        if (prevAlt !== null) {
+            // 0度をまたいだか
+            if (prevAlt < 0 && alt >= 0) {
+                // Rise: 線形補間
+                rise = getCrossingTime(start + (m-10)*60000, start + m*60000, prevAlt, alt);
+            } else if (prevAlt >= 0 && alt < 0) {
+                // Set
+                set = getCrossingTime(start + (m-10)*60000, start + m*60000, prevAlt, alt);
+            }
+        }
+        prevAlt = alt;
+    }
+    
+    const fmt = (d) => d ? `${('00'+d.getHours()).slice(-2)}:${('00'+d.getMinutes()).slice(-2)}` : "--:--";
+    
+    return {
+        rise: fmt(rise),
+        set: fmt(set)
+    };
+}
+
+function getCrossingTime(t1, t2, alt1, alt2) {
+    const ratio = (0 - alt1) / (alt2 - alt1);
+    const t = t1 + (t2 - t1) * ratio;
+    return new Date(t);
 }
 
 // --- 以下、日時計算系ロジック (既存) ---
@@ -769,6 +773,7 @@ function addMinute(minutes) {
     const slider = document.getElementById('time-slider');
     if(!slider) return;
     let val = parseInt(slider.value) + minutes;
+    if (val < 1440) val = val; // 修正不要
     if (val < 0) val = 1439;
     if (val > 1439) val = 0;
     slider.value = val;
@@ -844,7 +849,6 @@ function updateCalculation() {
     if (typeof Astronomy === 'undefined') return;
     let observer;
     try {
-        // 観測点標高も考慮
         observer = new Astronomy.Observer(lat, lng, startElev);
     } catch(e) { return; }
     linesLayer.clearLayers();
@@ -860,7 +864,15 @@ function updateCalculation() {
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
         let riseStr = "--:--";
         let setStr  = "--:--";
-        if (body.id !== 'Polaris' && body.id !== 'Subaru') {
+        
+        // ★修正: スバルと北極星も計算
+        if (body.id === 'Polaris' || body.id === 'Subaru') {
+            let r = (body.id === 'Polaris') ? POLARIS_RA : SUBARU_RA;
+            let d = (body.id === 'Polaris') ? POLARIS_DEC : SUBARU_DEC;
+            const times = searchStarRiseSet(r, d, observer, startOfDay);
+            riseStr = times.rise;
+            setStr = times.set;
+        } else {
             try {
                 const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
                 const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 1);
@@ -869,15 +881,17 @@ function updateCalculation() {
                 setStr  = fmt(set);
             } catch(e) { }
         }
-        if (!riseStr && !setStr) {
-            if (horizon.altitude > 0) {
-                riseStr = "00:00"; setStr  = "00:00";
-            } else {
-                riseStr = "--:--"; setStr  = "--:--";
-            }
-        }
+
         if (!riseStr) riseStr = "--:--";
         if (!setStr) setStr = "--:--";
+        
+        // 北極星などの「沈まない」ケースの判定強化 (Horizonチェック)
+        if (riseStr === "--:--" && setStr === "--:--") {
+             if (horizon.altitude > 0) {
+                 riseStr = "00:00"; setStr = "00:00"; // 終日出ている
+             }
+        }
+
         const dataEl = document.getElementById(`data-${body.id}`);
         if (dataEl) {
             dataEl.innerText = `出 ${riseStr} / 入 ${setStr} / 方位 ${horizon.azimuth.toFixed(0)}° / 高度 ${horizon.altitude.toFixed(0)}°`;
@@ -992,6 +1006,7 @@ function toggleVisibility(id, isChecked) {
     if (body) {
         body.visible = isChecked;
         updateCalculation();
+        if (isDPActive) updateDPLines();
     }
 }
 function togglePanel() {
@@ -1037,5 +1052,6 @@ function applyLineStyle(styleType) {
 function finishStyleEdit() {
     renderCelestialList();
     updateCalculation();
+    if(isDPActive) updateDPLines();
     closePalette();
 }
