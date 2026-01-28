@@ -51,20 +51,38 @@ Released under the MIT License.
                     <span>位置情報</span> <span id="icon-sec-location">▲</span>
                 </div>
                 <div id="sec-location" class="section-content">
+                    
                     <div class="control-row">
-                        <button id="btn-gps" class="nav-btn small" title="現在地を取得">GPS</button>
-                        <input type="radio" name="loc-mode" id="radio-start" value="start" checked>
-                        <input type="text" id="input-start-latlng" placeholder="出発地 (緯度,経度 または 地名)">
+                        <div class="btn-group-left">
+                            <button id="btn-gps" class="nav-btn small" title="現在地を取得">GPS</button>
+                            <input type="radio" name="loc-mode" id="radio-start" value="start" checked>
+                        </div>
+                        <label class="input-label">観測点:</label>
+                        <input type="text" id="input-start-latlng" placeholder="緯度,経度 または 地名">
                     </div>
 
                     <div class="control-row">
-                        <div class="spacer-btn"></div>
-                        <input type="radio" name="loc-mode" id="radio-end" value="end">
-                        <input type="text" id="input-end-latlng" placeholder="目的地 (緯度,経度 または 地名)">
+                        <div class="spacer-group"></div>
+                        <label class="input-label">観測点高:</label>
+                        <input type="number" id="input-start-elev" placeholder="標高 m" step="0.1">
                     </div>
 
                     <div class="control-row">
-                        <div class="spacer-btn"></div>
+                        <div class="btn-group-left">
+                            <button id="btn-dp" class="nav-btn small" title="D/Pライン表示">D/P</button>
+                            <input type="radio" name="loc-mode" id="radio-end" value="end">
+                        </div>
+                        <label class="input-label">目的地:</label>
+                        <input type="text" id="input-end-latlng" placeholder="緯度,経度 または 地名">
+                    </div>
+
+                    <div class="control-row">
+                        <div class="spacer-group"></div>
+                        <label class="input-label">目的地高:</label>
+                        <input type="number" id="input-end-elev" placeholder="標高 m" step="0.1">
+                    </div>
+
+                    <div class="control-row">
                         <button id="btn-elevation" class="nav-btn" style="width: 100%;">⛰ 標高グラフ表示</button>
                     </div>
                 </div>

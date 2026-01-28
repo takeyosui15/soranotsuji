@@ -8,11 +8,17 @@ Released under the MIT License.
 let map; 
 let linesLayer; 
 let locationLayer; 
-let moveTimer = null; 
+let dpLayer; // D/Pライン用レイヤー
+let moveTimer = null; // 自動進行用タイマー
 
-// 位置情報管理
+// 位置情報管理 (緯度経度 + 標高)
+// 初期値: 東京タワー (標高150m: メインデッキ)
 let startLatLng = { lat: 35.65858, lng: 139.74543 }; 
+let startElev = 150.0; 
+
+// 初期値: 富士山 (標高3776m)
 let endLatLng = { lat: 35.360776, lng: 138.727299 }; 
+let endElev = 3776.0; 
 
 // 標高グラフ用
 let isElevationActive = false;
@@ -20,14 +26,21 @@ let elevationDataPoints = [];
 let fetchIndex = 0;
 let fetchTimer = null;
 
-// 北極星・すばる
+// D/P機能用
+let isDPActive = false;
+
+// 北極星・すばる (J2000)
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
 const SUBARU_RA = 3.79;
 const SUBARU_DEC = 24.12;
 const SYNODIC_MONTH = 29.53059; 
 
-// カラーパレット
+// 定数 (地球半径m, 大気差係数)
+const EARTH_RADIUS = 6371000;
+const REFRACTION_K = 0.13;
+
+// カラーパレット定義
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' }, 
     { name: '桃', code: '#FFC0CB' }, 
@@ -46,7 +59,7 @@ const COLOR_MAP = [
     { name: '黒', code: '#000000' }
 ];
 
-// 天体リスト
+// 表示天体リスト
 let bodies = [
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
@@ -72,19 +85,24 @@ window.onload = function() {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
+        // --- 地図レイヤーの定義 ---
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
+
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         });
+
         const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         });
+
         const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
         });
 
+        // 地図生成
         map = L.map('map', {
             center: [startLatLng.lat, startLatLng.lng],
             zoom: 9,
@@ -92,28 +110,40 @@ window.onload = function() {
             zoomControl: false
         });
 
+        // 国土地理院の著作権表示を追加
         map.attributionControl.addAttribution('標高データ: &copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>');
 
+        // レイヤー切り替えコントロール
         L.control.layers({ "標準": osmLayer, "ダーク": darkLayer, "衛星写真": satelliteLayer, "地形図": topoLayer }, null, { position: 'topleft' }).addTo(map);
         L.control.zoom({ position: 'topleft' }).addTo(map);
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         
+        // レイヤー初期化
         linesLayer = L.layerGroup().addTo(map);
         locationLayer = L.layerGroup().addTo(map);
+        dpLayer = L.layerGroup().addTo(map);
 
+        // 地図クリックイベント
         map.on('click', onMapClick);
     }
 
     setupUIEvents();
     
-    updateLocationDisplay();
+    // 初期表示設定
+    // 標高入力欄にも初期値を反映
+    document.getElementById('input-start-elev').value = startElev;
+    document.getElementById('input-end-elev').value = endElev;
+    
+    updateLocationDisplay(); // マーカー等を描画
     setNow();
     renderCelestialList();
     
+    // ウィンドウリサイズ時にグラフを再描画
     window.addEventListener('resize', () => {
         if(isElevationActive) drawProfileGraph();
     });
 
+    // 少し待ってから初期計算（地図のサイズ確定待ち）
     setTimeout(() => {
         if(map) map.invalidateSize();
         updateCalculation();
@@ -127,7 +157,12 @@ function setupUIEvents() {
     const timeSlider = document.getElementById('time-slider');
     const moonInput = document.getElementById('moon-age-input');
 
-    if (dateInput) dateInput.addEventListener('change', updateCalculation);
+    // 日時変更時の処理
+    if (dateInput) dateInput.addEventListener('change', () => {
+        updateCalculation();
+        if(isDPActive) updateDPLines();
+    });
+
     if (timeSlider) {
         timeSlider.addEventListener('input', () => {
             const val = parseInt(timeSlider.value);
@@ -137,6 +172,7 @@ function setupUIEvents() {
             updateCalculation();
         });
     }
+
     if (timeInput) {
         timeInput.addEventListener('input', () => {
             if (!timeInput.value) return;
@@ -147,6 +183,7 @@ function setupUIEvents() {
             }
         });
     }
+
     if (moonInput) {
         moonInput.addEventListener('change', (e) => {
             const targetAge = parseFloat(e.target.value);
@@ -154,6 +191,7 @@ function setupUIEvents() {
         });
     }
 
+    // 各種ボタン
     const btnNow = document.getElementById('btn-now');
     if(btnNow) btnNow.onclick = setNow;
     
@@ -177,25 +215,32 @@ function setupUIEvents() {
     if(btnGps) {
         btnGps.onclick = () => {
             if (!navigator.geolocation) {
-                alert('GPS非対応です');
+                alert('お使いのブラウザは位置情報をサポートしていません。');
                 return;
             }
             navigator.geolocation.getCurrentPosition((pos) => {
                 startLatLng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 map.setView(startLatLng, 10);
-                updateLocationDisplay();
+                updateLocationDisplay(); // 標高も自動更新
                 updateCalculation();
-            }, () => alert('GPS取得失敗'));
+            }, (err) => {
+                alert('位置情報を取得できませんでした。');
+            });
         };
     }
 
     const btnElev = document.getElementById('btn-elevation');
     if(btnElev) btnElev.onclick = toggleElevation;
 
+    const btnDP = document.getElementById('btn-dp');
+    if(btnDP) btnDP.onclick = toggleDP;
+
+    // --- テキスト入力 (緯度経度/地名) ---
     const inputStart = document.getElementById('input-start-latlng');
     const inputEnd = document.getElementById('input-end-latlng');
 
     const parseInput = (val) => {
+        // カンマがあれば座標とみなす
         if (val.indexOf(',') === -1) return null;
         const clean = val.replace(/[\(\)\s]/g, ''); 
         const parts = clean.split(',');
@@ -210,6 +255,8 @@ function setupUIEvents() {
     const handleLocationInput = async (val, isStart) => {
         if(!val) return;
         let coords = parseInput(val);
+        
+        // 座標でなければ地名検索
         if (!coords) {
             const results = await searchLocation(val);
             if(results && results.length > 0) {
@@ -222,6 +269,7 @@ function setupUIEvents() {
                 return;
             }
         }
+
         if(coords) {
             if(isStart) {
                 startLatLng = coords;
@@ -230,17 +278,234 @@ function setupUIEvents() {
             } else {
                 endLatLng = coords;
                 document.getElementById('radio-end').checked = true;
+                if(isDPActive) updateDPLines();
             }
-            updateLocationDisplay();
+            updateLocationDisplay(); // 標高も更新される
             fitBoundsToLocations();
         }
     };
 
     if(inputStart) inputStart.addEventListener('change', () => handleLocationInput(inputStart.value, true));
     if(inputEnd) inputEnd.addEventListener('change', () => handleLocationInput(inputEnd.value, false));
+
+    // --- テキスト入力 (標高) ---
+    const inputStartElev = document.getElementById('input-start-elev');
+    const inputEndElev = document.getElementById('input-end-elev');
+
+    if(inputStartElev) {
+        inputStartElev.addEventListener('change', () => {
+            const val = parseFloat(inputStartElev.value);
+            if(!isNaN(val)) {
+                startElev = val;
+                updateCalculation(); // 観測点標高が変わると天体位置に影響
+                // API取得せずに表示更新
+                updateLocationDisplay(false); 
+            }
+        });
+    }
+
+    if(inputEndElev) {
+        inputEndElev.addEventListener('change', () => {
+            const val = parseFloat(inputEndElev.value);
+            if(!isNaN(val)) {
+                endElev = val;
+                if(isDPActive) updateDPLines(); // 目的地標高が変わるとD/Pラインに影響
+                updateLocationDisplay(false);
+            }
+        });
+    }
 }
 
-// --- 4. 標高グラフ機能 ---
+// --- 4. 地図クリック処理 & 位置情報表示 ---
+
+function onMapClick(e) {
+    const modeStart = document.getElementById('radio-start').checked;
+    
+    if (modeStart) {
+        startLatLng = e.latlng;
+        updateCalculation(); 
+    } else {
+        endLatLng = e.latlng;
+        if(isDPActive) updateDPLines();
+    }
+    // クリック時はAPIから標高を再取得する
+    updateLocationDisplay(true);
+}
+
+// マーカーとラインの描画、テキストボックスの更新
+// fetchElevation: trueならAPIから標高取得、falseなら現在の変数を使用
+async function updateLocationDisplay(fetchElevation = true) {
+    if (!locationLayer || !map) return;
+    locationLayer.clearLayers();
+
+    // 緯度経度テキストボックス
+    const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
+    document.getElementById('input-start-latlng').value = fmt(startLatLng);
+    document.getElementById('input-end-latlng').value = fmt(endLatLng);
+
+    // 標高取得 (APIコール)
+    if (fetchElevation) {
+        const sElev = await getElevation(startLatLng.lat, startLatLng.lng);
+        const eElev = await getElevation(endLatLng.lat, endLatLng.lng);
+        // 取得できた場合のみ更新
+        if(sElev !== null) startElev = sElev;
+        if(eElev !== null) endElev = eElev;
+    }
+
+    // 標高テキストボックス
+    document.getElementById('input-start-elev').value = startElev;
+    document.getElementById('input-end-elev').value = endElev;
+
+    // 距離計算
+    const startPt = L.latLng(startLatLng);
+    const endPt = L.latLng(endLatLng);
+    const distMeters = startPt.distanceTo(endPt);
+    const distKm = (distMeters / 1000).toFixed(2);
+
+    // マーカー
+    const startMarker = L.marker(startLatLng).addTo(locationLayer);
+    const endMarker = L.marker(endLatLng).addTo(locationLayer);
+    
+    // 直線
+    L.polyline([startLatLng, endLatLng], {
+        color: 'black',
+        weight: 3,
+        opacity: 0.8
+    }).addTo(locationLayer);
+
+    // ポップアップ
+    const createPopupContent = (title, pos, distLabel, distVal, elevVal) => {
+        return `
+            <b>${title}</b><br>
+            Lat: ${pos.lat.toFixed(5)}<br>
+            Lng: ${pos.lng.toFixed(5)}<br>
+            Elev: ${elevVal} m<br>
+            ${distLabel}: ${distVal} km
+        `;
+    };
+
+    startMarker.bindPopup(createPopupContent("観測点", startLatLng, "目的地まで", distKm, startElev));
+    endMarker.bindPopup(createPopupContent("目的地", endLatLng, "観測点から", distKm, endElev));
+}
+
+// --- 5. D/P (Diamond/Pearl) 機能 (標高考慮版) ---
+
+function toggleDP() {
+    const btn = document.getElementById('btn-dp');
+    isDPActive = !isDPActive;
+    
+    if (isDPActive) {
+        btn.classList.add('active');
+        updateDPLines();
+    } else {
+        btn.classList.remove('active');
+        dpLayer.clearLayers();
+    }
+}
+
+function updateDPLines() {
+    if (!isDPActive) return;
+    dpLayer.clearLayers();
+
+    const dInput = document.getElementById('date-input');
+    const dateStr = dInput.value;
+    const baseDate = new Date(dateStr + "T00:00:00");
+    
+    // 天体位置計算用のObserver
+    // 本来は観測点が変わればObserverも変わるが、D/Pライン計算の基準として
+    // 「目的地(山頂)」を基準点とし、そこから見える天体の高度を逆算する。
+    const observer = new Astronomy.Observer(endLatLng.lat, endLatLng.lng, endElev);
+
+    const sunPath = [];
+    const moonPath = [];
+
+    // 1分刻みで1日分計算
+    for (let m = 0; m < 1440; m++) {
+        const time = new Date(baseDate.getTime() + m * 60000);
+        
+        // 太陽
+        const sunPos = Astronomy.Equator('Sun', time, observer, false, true);
+        const sunHor = Astronomy.Horizon(time, observer, sunPos.ra, sunPos.dec, 'normal');
+        if (sunHor.altitude > -2) { 
+            const dist = calculateDistanceForAltitudes(sunHor.altitude, startElev, endElev);
+            if (dist > 0 && dist <= 350000) {
+                sunPath.push({ dist: dist, az: sunHor.azimuth });
+            }
+        }
+
+        // 月
+        const moonPos = Astronomy.Equator('Moon', time, observer, false, true);
+        const moonHor = Astronomy.Horizon(time, observer, moonPos.ra, moonPos.dec, 'normal');
+        if (moonHor.altitude > -2) {
+            const dist = calculateDistanceForAltitudes(moonHor.altitude, startElev, endElev);
+            if (dist > 0 && dist <= 350000) {
+                moonPath.push({ dist: dist, az: moonHor.azimuth });
+            }
+        }
+    }
+
+    drawDPPath(sunPath, 'red');
+    drawDPPath(moonPath, 'yellow');
+}
+
+// 2点の標高差を考慮して、天体がその見かけの高度に見える距離を逆算
+function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
+    const altRad = celestialAltDeg * Math.PI / 180;
+    const a = (1 - REFRACTION_K) / (2 * EARTH_RADIUS);
+    const b = Math.tan(altRad);
+    const c = -(hTarget - hObs);
+
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return -1; 
+
+    const d1 = (-b + Math.sqrt(disc)) / (2 * a);
+    const d2 = (-b - Math.sqrt(disc)) / (2 * a);
+
+    if (d1 > 0) return d1;
+    if (d2 > 0) return d2;
+    return -1;
+}
+
+function drawDPPath(points, color) {
+    if (points.length === 0) return;
+    const targetPt = L.latLng(endLatLng);
+    
+    let segments = [];
+    let currentSegment = [];
+
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        // 観測者は天体の方位の反対側にいる
+        const obsAz = (p.az + 180) % 360;
+        
+        // 距離と方位から座標を計算 (簡易)
+        const dLat = (p.dist * Math.cos(obsAz * Math.PI / 180)) / 111132.954; 
+        const dLng = (p.dist * Math.sin(obsAz * Math.PI / 180)) / (111132.954 * Math.cos(targetPt.lat * Math.PI / 180));
+        
+        const pt = [targetPt.lat + dLat, targetPt.lng + dLng];
+
+        if (currentSegment.length > 0) {
+            const prev = points[i-1];
+            // 時間経過で方位が大きく飛ぶ場合は線を切る
+            if (Math.abs(p.az - prev.az) > 5) { 
+                segments.push(currentSegment);
+                currentSegment = [];
+            }
+        }
+        currentSegment.push(pt);
+    }
+    if (currentSegment.length > 0) segments.push(currentSegment);
+
+    segments.forEach(seg => {
+        L.polyline(seg, {
+            color: color,
+            weight: 2,
+            opacity: 0.6
+        }).addTo(dpLayer);
+    });
+}
+
+// --- 6. 標高グラフ機能 (5秒間隔 & 詳細進捗表示) ---
 
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
@@ -249,7 +514,7 @@ function toggleElevation() {
     isElevationActive = !isElevationActive;
     
     if (isElevationActive) {
-        btn.classList.add('active'); // 黄色
+        btn.classList.add('active'); 
         panel.classList.remove('hidden');
         startElevationFetch();
     } else {
@@ -265,7 +530,6 @@ function startElevationFetch() {
     fetchIndex = 0;
     const overlay = document.getElementById('progress-overlay');
     overlay.classList.remove('hidden');
-    // 初期表示
     updateProgress(0, 0, elevationDataPoints.length);
     
     processFetchQueue();
@@ -300,7 +564,6 @@ function generateProfilePoints(intervalMeters) {
             fetched: false
         });
     }
-    
     drawProfileGraph(); 
 }
 
@@ -319,15 +582,11 @@ function processFetchQueue() {
         
         fetchIndex++;
         const percent = Math.floor((fetchIndex / elevationDataPoints.length) * 100);
-        
-        // 進捗更新 (完了数と残り時間を渡す)
         updateProgress(percent, fetchIndex, elevationDataPoints.length);
-        
         drawProfileGraph();
         
-        // ★修正箇所: 5秒 (5000ms) 待機
         if (isElevationActive) {
-            fetchTimer = setTimeout(processFetchQueue, 5000); 
+            fetchTimer = setTimeout(processFetchQueue, 5000); // 5秒間隔
         }
     });
 }
@@ -337,14 +596,13 @@ async function fetchElevationSingle(lat, lng) {
     return val !== null ? val : 0;
 }
 
-// ★修正: 完了数と全体数を受け取り、残り時間を計算して表示
+// 進捗表示更新 (完了数 / 全体数, 残り時間)
 function updateProgress(percent, current, total) {
     const bar = document.getElementById('progress-bar');
     const text = document.getElementById('progress-text');
     if(bar) bar.style.width = percent + "%";
     
     if(text) {
-        // 残り時間 = (全体 - 完了) * 5秒
         const remainingTime = (total - current) * 5;
         text.innerText = `${percent}% : ${current} / ${total} ( 残り ${remainingTime} s )`;
     }
@@ -389,6 +647,7 @@ function drawProfileGraph() {
     const toX = (dist) => padLeft + (dist / maxDist) * graphW;
     const toY = (elev) => padTop + graphH - ((elev - yMin) / (yMax - yMin)) * graphH;
 
+    // グリッド線
     ctx.strokeStyle = '#444';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -403,6 +662,7 @@ function drawProfileGraph() {
     }
     ctx.stroke();
 
+    // グラフ線
     if (fetchedPoints.length > 1) {
         ctx.beginPath();
         ctx.moveTo(toX(fetchedPoints[0].dist), toY(fetchedPoints[0].elev));
@@ -423,19 +683,7 @@ function drawProfileGraph() {
     }
 }
 
-
-// --- 5. 以下、既存機能 ---
-
-function onMapClick(e) {
-    const modeStart = document.getElementById('radio-start').checked;
-    if (modeStart) {
-        startLatLng = e.latlng;
-        updateCalculation(); 
-    } else {
-        endLatLng = e.latlng;
-    }
-    updateLocationDisplay();
-}
+// --- 7. 共通ヘルパー ---
 
 function fitBoundsToLocations() {
     if(!map) return;
@@ -443,6 +691,7 @@ function fitBoundsToLocations() {
     map.fitBounds(bounds, { padding: [50, 50] });
 }
 
+// Nominatim (地名検索)
 async function searchLocation(query) {
     try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
@@ -455,6 +704,7 @@ async function searchLocation(query) {
     }
 }
 
+// 国土地理院 (標高API)
 async function getElevation(lat, lng) {
     try {
         const url = `https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=${lng}&lat=${lat}&outtype=JSON`;
@@ -468,37 +718,7 @@ async function getElevation(lat, lng) {
     return null; 
 }
 
-async function updateLocationDisplay() {
-    if (!locationLayer || !map) return;
-    locationLayer.clearLayers();
-
-    const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
-    document.getElementById('input-start-latlng').value = fmt(startLatLng);
-    document.getElementById('input-end-latlng').value = fmt(endLatLng);
-
-    const startPt = L.latLng(startLatLng);
-    const endPt = L.latLng(endLatLng);
-    const distKm = (startPt.distanceTo(endPt) / 1000).toFixed(2);
-
-    const startMarker = L.marker(startLatLng).addTo(locationLayer);
-    const endMarker = L.marker(endLatLng).addTo(locationLayer);
-    
-    L.polyline([startLatLng, endLatLng], { color: 'black', weight: 3, opacity: 0.8 }).addTo(locationLayer);
-
-    const createPopupContent = (title, pos, distLabel, distVal, elevVal) => {
-        const elevStr = (elevVal !== null) ? `${elevVal} m` : "--- m";
-        return `<b>${title}</b><br>Lat: ${pos.lat.toFixed(5)}<br>Lng: ${pos.lng.toFixed(5)}<br>Elev: ${elevStr}<br>${distLabel}: ${distVal} km`;
-    };
-
-    startMarker.bindPopup(createPopupContent("出発地", startLatLng, "目的地まで", distKm, "取得中..."));
-    endMarker.bindPopup(createPopupContent("目的地", endLatLng, "出発地から", distKm, "取得中..."));
-
-    const startElev = await getElevation(startLatLng.lat, startLatLng.lng);
-    const endElev = await getElevation(endLatLng.lat, endLatLng.lng);
-
-    startMarker.setPopupContent(createPopupContent("出発地", startLatLng, "目的地まで", distKm, startElev));
-    endMarker.setPopupContent(createPopupContent("目的地", endLatLng, "出発地から", distKm, endElev));
-}
+// --- 以下、日時計算系ロジック (既存) ---
 
 function setNow() {
     const now = new Date();
@@ -517,6 +737,7 @@ function setNow() {
     if(tSlider) tSlider.value = h * 60 + m;
     
     updateCalculation();
+    if(isDPActive) updateDPLines();
 }
 
 function toggleMove() {
@@ -541,6 +762,7 @@ function addDay(days) {
     const dd = ('00' + date.getDate()).slice(-2);
     dInput.value = `${yyyy}-${mm}-${dd}`;
     updateCalculation();
+    if(isDPActive) updateDPLines();
 }
 
 function addMinute(minutes) {
@@ -574,6 +796,7 @@ function addMoonMonth(direction) {
     document.getElementById('time-input').value = timeStr;
     tSlider.value = th * 60 + tm;
     updateCalculation();
+    if(isDPActive) updateDPLines();
 }
 
 function searchMoonAge(targetAge) {
@@ -599,6 +822,7 @@ function searchMoonAge(targetAge) {
         document.getElementById('time-input').value = timeStr;
         tSlider.value = th * 60 + tm;
         updateCalculation();
+        if(isDPActive) updateDPLines();
     } else {
         alert("計算範囲内で見つかりませんでした。");
     }
@@ -620,7 +844,8 @@ function updateCalculation() {
     if (typeof Astronomy === 'undefined') return;
     let observer;
     try {
-        observer = new Astronomy.Observer(lat, lng, 0);
+        // 観測点標高も考慮
+        observer = new Astronomy.Observer(lat, lng, startElev);
     } catch(e) { return; }
     linesLayer.clearLayers();
     bodies.forEach(body => {
@@ -718,7 +943,6 @@ function drawDirectionLine(lat, lng, azimuth, altitude, body) {
     }).addTo(linesLayer);
 }
 
-// リスト操作系関数は省略なし
 function toggleSection(sectionId) {
     const content = document.getElementById(sectionId);
     const icon = document.getElementById('icon-' + sectionId);
