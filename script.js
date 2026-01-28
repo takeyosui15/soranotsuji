@@ -10,24 +10,6 @@ let linesLayer;
 let locationLayer; 
 let moveTimer = null; 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// 位置情報管理用
-let startLatLng = { lat: 35.65858, lng: 139.74543 }; // 初期値: 東京タワー
-let endLatLng = { lat: 35.360776, lng: 138.727299 }; // 初期値: 富士山
-
->>>>>>> develop
-// 北極星 (Polaris) の座標 (J2000)
-const POLARIS_RA = 2.5303; 
-const POLARIS_DEC = 89.2641; 
-
-// すばる (Pleiades / M45) の座標 (J2000)
-<<<<<<< HEAD
-// RA: 3h 47m 24s -> 3.79h, Dec: +24° 07' -> 24.12°
-=======
->>>>>>> develop
-=======
 // 位置情報管理
 let startLatLng = { lat: 35.65858, lng: 139.74543 }; 
 let endLatLng = { lat: 35.360776, lng: 138.727299 }; 
@@ -41,20 +23,11 @@ let fetchTimer = null;
 // 北極星・すばる
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
->>>>>>> develop
 const SUBARU_RA = 3.79;
 const SUBARU_DEC = 24.12;
 const SYNODIC_MONTH = 29.53059; 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-// カラーパレット定義 (追加: 薄紫, こげ茶, 白)
-=======
-// カラーパレット定義
->>>>>>> develop
-=======
 // カラーパレット
->>>>>>> develop
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' }, 
     { name: '桃', code: '#FFC0CB' }, 
@@ -66,16 +39,6 @@ const COLOR_MAP = [
     { name: '青', code: '#0000FF' }, 
     { name: '藍', code: '#4B0082' }, 
     { name: '紫', code: '#800080' }, 
-<<<<<<< HEAD
-    { name: '薄紫', code: '#DDA0DD' }, // 追加
-    { name: '茶', code: '#A52A2A' }, 
-    { name: 'こげ茶', code: '#654321' }, // 追加
-    { name: '白', code: '#FFFFFF' }, // 追加
-    { name: '黒', code: '#000000' }
-];
-
-// 表示天体リスト (ご指定の設定に変更)
-=======
     { name: '薄紫', code: '#DDA0DD' },
     { name: '茶', code: '#A52A2A' }, 
     { name: 'こげ茶', code: '#654321' },
@@ -83,48 +46,19 @@ const COLOR_MAP = [
     { name: '黒', code: '#000000' }
 ];
 
-<<<<<<< HEAD
-// 表示天体リスト
->>>>>>> develop
-=======
 // 天体リスト
->>>>>>> develop
 let bodies = [
-    // 太陽：赤、実線、既定表示
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
-    // 月：黄、実線、既定表示
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
-<<<<<<< HEAD
-    // 水星：水、実線、既定表示
     { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: false, visible: true },
-    // 金星：桃、実線、既定表示
-=======
-    { id: 'Mercury', name: '水星',   color: '#00BFFF', isDashed: false, visible: true },
->>>>>>> develop
     { id: 'Venus',   name: '金星',   color: '#FFC0CB', isDashed: false, visible: true },
-    // 火星：橙、実線、既定表示
     { id: 'Mars',    name: '火星',   color: '#FFA500', isDashed: false, visible: true },
-    // 木星：茶、実線、既定表示
     { id: 'Jupiter', name: '木星',   color: '#A52A2A', isDashed: false, visible: true },
-    // 土星：緑、実線、既定表示
     { id: 'Saturn',  name: '土星',   color: '#008000', isDashed: false, visible: true },
-<<<<<<< HEAD
-    // 天王星：黄緑、破線、既定非表示
     { id: 'Uranus',  name: '天王星', color: '#ADFF2F', isDashed: true,  visible: false },
-    // 海王星：藍、破線、既定非表示
-=======
-    { id: 'Uranus',  name: '天王星', color: '#ADFF2F', isDashed: true,  visible: false },
->>>>>>> develop
     { id: 'Neptune', name: '海王星', color: '#4B0082', isDashed: true,  visible: false },
-    // 冥王星：紫、破線、既定非表示
     { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: true,  visible: false },
-<<<<<<< HEAD
-    // 北極星：黒、破線、既定非表示
     { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: false },
-    // すばる：青、実線、既定表示 (追加)
-=======
-    { id: 'Polaris', name: '北極星', color: '#000000', isDashed: true,  visible: false },
->>>>>>> develop
     { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: true }
 ];
 
@@ -694,10 +628,6 @@ function updateCalculation() {
         if (body.id === 'Polaris') {
             equatorCoords = { ra: POLARIS_RA, dec: POLARIS_DEC };
         } else if (body.id === 'Subaru') {
-<<<<<<< HEAD
-            // すばる (M45) の座標計算
-=======
->>>>>>> develop
             equatorCoords = { ra: SUBARU_RA, dec: SUBARU_DEC };
         } else {
             equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
@@ -705,14 +635,6 @@ function updateCalculation() {
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
         let riseStr = "--:--";
         let setStr  = "--:--";
-<<<<<<< HEAD
-
-<<<<<<< HEAD
-        // 北極星とすばるは、固定座標として簡易的に扱うため、出没時間計算をスキップ
-=======
->>>>>>> develop
-=======
->>>>>>> develop
         if (body.id !== 'Polaris' && body.id !== 'Subaru') {
             try {
                 const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
