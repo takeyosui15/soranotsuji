@@ -92,7 +92,6 @@ window.onload = function() {
             zoomControl: false
         });
 
-        // ★追加: 国土地理院の著作権表示
         map.attributionControl.addAttribution('標高データ: &copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>');
 
         L.control.layers({ "標準": osmLayer, "ダーク": darkLayer, "衛星写真": satelliteLayer, "地形図": topoLayer }, null, { position: 'topleft' }).addTo(map);
@@ -192,10 +191,13 @@ function setupUIEvents() {
         };
     }
 
+    // --- テキストボックス入力 (座標パース または 地名検索) ---
     const inputStart = document.getElementById('input-start-latlng');
     const inputEnd = document.getElementById('input-end-latlng');
 
     const parseInput = (val) => {
+        // カンマが含まれていれば座標とみなす
+        if (val.indexOf(',') === -1) return null;
         const clean = val.replace(/[\(\)\s]/g, ''); 
         const parts = clean.split(',');
         if (parts.length === 2) {
@@ -206,43 +208,54 @@ function setupUIEvents() {
         return null;
     };
 
+    const handleLocationInput = async (val, isStart) => {
+        if(!val) return;
+        
+        let coords = parseInput(val);
+        
+        // 座標としてパースできなければ地名検索 (Nominatim)
+        if (!coords) {
+            const results = await searchLocation(val);
+            if(results && results.length > 0) {
+                // 検索結果の1件目を使用
+                coords = { 
+                    lat: parseFloat(results[0].lat), 
+                    lng: parseFloat(results[0].lon) 
+                };
+            } else {
+                alert("場所が見つかりませんでした: " + val);
+                return;
+            }
+        }
+
+        if(coords) {
+            if(isStart) {
+                startLatLng = coords;
+                document.getElementById('radio-start').checked = true; // ラジオ自動切り替え
+                updateCalculation(); // 観測地更新
+            } else {
+                endLatLng = coords;
+                document.getElementById('radio-end').checked = true; // ラジオ自動切り替え
+            }
+            updateLocationDisplay();
+            fitBoundsToLocations(); // 地図範囲の自動調整
+        }
+    };
+
     if(inputStart) {
         inputStart.addEventListener('change', () => {
-            const coords = parseInput(inputStart.value);
-            if(coords) {
-                startLatLng = coords;
-                updateLocationDisplay();
-                updateCalculation();
-            }
+            handleLocationInput(inputStart.value, true);
         });
     }
 
     if(inputEnd) {
         inputEnd.addEventListener('change', () => {
-            const coords = parseInput(inputEnd.value);
-            if(coords) {
-                endLatLng = coords;
-                updateLocationDisplay();
-            }
-        });
-    }
-
-    const selectDest = document.getElementById('select-dest');
-    if(selectDest) {
-        selectDest.addEventListener('change', () => {
-            const val = selectDest.value;
-            if(val) {
-                const coords = parseInput(val);
-                if(coords) {
-                    endLatLng = coords;
-                    updateLocationDisplay();
-                }
-            }
+            handleLocationInput(inputEnd.value, false);
         });
     }
 }
 
-// --- 4. 地図クリック処理 & 位置情報表示 (標高対応) ---
+// --- 4. 地図クリック処理 & 位置情報表示 ---
 
 function onMapClick(e) {
     const modeStart = document.getElementById('radio-start').checked;
@@ -254,6 +267,26 @@ function onMapClick(e) {
         endLatLng = e.latlng;
     }
     updateLocationDisplay();
+}
+
+// 両地点が収まるように地図を調整
+function fitBoundsToLocations() {
+    if(!map) return;
+    const bounds = L.latLngBounds([startLatLng, endLatLng]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+}
+
+// Nominatim APIで地名検索
+async function searchLocation(query) {
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    } catch(e) {
+        console.error("Search error:", e);
+        return null;
+    }
 }
 
 async function getElevation(lat, lng) {
@@ -277,6 +310,7 @@ async function updateLocationDisplay() {
     locationLayer.clearLayers();
 
     const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
+    
     document.getElementById('input-start-latlng').value = fmt(startLatLng);
     document.getElementById('input-end-latlng').value = fmt(endLatLng);
 
