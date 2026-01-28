@@ -1,6 +1,6 @@
 <!--
 宙の辻 - Sora no Tsuji
-Copyright (c) 2026 Sora no Tsuji Project
+Copyright (c) 2026- Sora no Tsuji Project
 Released under the MIT License.
 -->
 <!DOCTYPE html>
@@ -8,6 +8,7 @@ Released under the MIT License.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="宙の辻(Sora no Tsuji)は、天体シミュレーションと地図情報を組み合わせたWebアプリです。太陽や月、星々の動きを地図上で可視化し、ダイヤモンド富士やパール富士が見える位置（辻）を計算します。">
     <title>宙の辻 (Sora no Tsuji)</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -41,7 +42,10 @@ Released under the MIT License.
     <div id="control-panel" class="control-panel minimized">
         <div class="panel-header" onclick="togglePanel()">
             <span id="header-title">宙の辻<span class="header-subtitle"> - Sora no Tsuji</span></span>
-            <span id="toggle-icon">▼</span>
+            <div class="header-controls">
+                <span id="btn-help" title="ヘルプ">?</span>
+                <span id="toggle-icon">▼</span>
+            </div>
         </div>
     
         <div id="panel-content" class="panel-content">
@@ -69,7 +73,7 @@ Released under the MIT License.
 
                     <div class="control-row">
                         <div class="btn-group-left">
-                            <button id="btn-dp" class="nav-btn small" title="D/Pライン表示">D/P</button>
+                            <button id="btn-dp" class="nav-btn small" title="辻ライン(D/P)表示">辻</button>
                             <input type="radio" name="loc-mode" id="radio-end" value="end">
                         </div>
                         <label class="input-label">目的地:</label>
@@ -176,7 +180,7 @@ Released under the MIT License.
             </div>
 
             <div class="panel-footer">
-                &copy; 2026 Sora no Tsuji Project
+                &copy; 2026- Sora no Tsuji Project
             </div>
         </div>
     </div>
@@ -187,6 +191,57 @@ Released under the MIT License.
         <div class="palette-lines" id="palette-lines">
             <div class="line-option" onclick="applyLineStyle('solid')">実線 <span class="line-preview solid"></span></div>
             <div class="line-option" onclick="applyLineStyle('dashed')">破線 <span class="line-preview dashed"></span></div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="hidden">
+        <div class="help-content">
+            <div class="help-header">
+                <h2>宙の辻 - ヘルプ</h2>
+                <span class="close-help" onclick="toggleHelp()">×</span>
+            </div>
+            <div class="help-body">
+                <h3>概要</h3>
+                <p>「宙の辻 (Sora no Tsuji)」は、地図上の任意の場所における天体の動きをシミュレーションするアプリです。ダイヤモンド富士やパール富士など、地上の特定の場所（辻）と天体が交差する瞬間を探索できます。</p>
+                
+                <h3>位置情報の設定</h3>
+                <ul>
+                    <li><strong>GPSボタン:</strong> 現在地を観測点に設定します。</li>
+                    <li><strong>観測点/目的地:</strong> 緯度,経度を直接入力するか、「東京タワー」「富士山」などの地名を入力してEnterキーを押すと検索・設定できます。</li>
+                    <li><strong>標高:</strong> 地図をクリックまたは地名を検索すると、国土地理院のAPIから自動で標高を取得します。手動で数値を修正してシミュレーションすることも可能です。</li>
+                </ul>
+
+                <h3>日時設定</h3>
+                <ul>
+                    <li><strong>Now:</strong> 現在時刻にリセットします。</li>
+                    <li><strong>Mov:</strong> 時間を自動で進めます（アニメーション）。</li>
+                    <li><strong>月齢:</strong> 月齢の数値を変更して、満月や新月の日にジャンプできます。</li>
+                </ul>
+
+                <h3>「辻」機能 (ダイヤモンド・パール)</h3>
+                <p>「辻」ボタンをオン（黄色）にすると、目的地（山頂など）と観測点を結ぶライン上で、天体が山頂と重なる位置を計算し、地図上に破線で表示します。
+                <br>※太陽（赤）、月（黄）、および表示中の惑星やMy天体について計算されます。</p>
+                <p>破線上には、10分刻みで「●」マーカーと時刻が表示され、いつ・どこで見られるかが一目でわかります。</p>
+
+                <h3>My天体</h3>
+                <p>お好みの恒星などの座標（赤経, 赤緯）を登録して表示できます。初期値はオリオン座のアルニラムです。</p>
+
+                <h3>注意事項・免責事項</h3>
+                <ul>
+                    <li>本サイトでの表示内容は、その情報の正確性を保証するものではありません。</li>
+                    <li>本サイトは、国土地理院などの無料サービスで成り立っています。本サイト、または、本サイトから参照されるサイトに高負荷がかかることを禁止事項といたします。</li>
+                    <li>本サイトを利用したことにより生じたいかなる損害についても責任を負いません。</li>
+                </ul>
+
+                <h3>謝辞</h3>
+                <p>本サイトを制作するにあたって利用した <a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener noreferrer">Astronomy Engine Project</a>、並びに、AIのGeminiさんに、並々ならぬ感謝の意を表します。</p>
+
+                <h3>お知らせ</h3>
+                <ul>
+                    <li>本サイトに関するご意見・ご感想は、<a href="https://note.com/takeyosui" target="_blank" rel="noopener noreferrer">たけちゃん</a>まで、お知らせください。</li>
+                    <li>本サイトがもし、お気に召しましたら、<a href="https://note.com/takeyosui/n/n6a5b93f7c5fe" target="_blank" rel="noopener noreferrer">こちら</a>で、寄付ができる様になっております。不束者ですが、どうぞ宜しくお願い申し上げます。</li>
+                </ul>
+            </div>
         </div>
     </div>
 

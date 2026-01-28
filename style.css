@@ -1,6 +1,6 @@
 /*
 宙の辻 - Sora no Tsuji
-Copyright (c) 2026 Sora no Tsuji Project
+Copyright (c) 2026- Sora no Tsuji Project
 Released under the MIT License.
 */
 
@@ -100,6 +100,76 @@ body, html {
     transition: width 0.2s;
 }
 
+/* --- ヘルプモーダル --- */
+#help-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#help-modal.hidden {
+    display: none;
+}
+
+.help-content {
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80%;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    font-family: sans-serif;
+}
+
+.help-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2c3e50;
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.help-header h2 { margin: 0; font-size: 18px; }
+
+.close-help {
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.help-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.help-body h3 {
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+    margin-top: 20px;
+    font-size: 16px;
+    color: #2c3e50;
+}
+.help-body h3:first-child { margin-top: 0; }
+
+.help-body ul { padding-left: 20px; }
+.help-body li { margin-bottom: 5px; }
+
+
 /* --- コントロールパネル --- */
 .control-panel {
     position: absolute;
@@ -136,6 +206,30 @@ body, html {
     font-weight: bold;
     flex-shrink: 0;
     white-space: nowrap;
+}
+
+/* ヘッダー右側のコントロール群 (修正: margin-left: 10px) */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px; 
+}
+
+#btn-help {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid white;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+#btn-help:hover {
+    background: rgba(255,255,255,0.2);
 }
 
 .header-subtitle {
@@ -221,9 +315,7 @@ select,
     padding: 0 8px;
 }
 
-/* --- ボタンサイズ調整 (修正箇所) --- */
-
-/* 1. 先頭の機能ボタン (Now, Mov, GPS, D/P, Reg) */
+/* ボタンサイズ調整 (固定) */
 #btn-now, #btn-move, #btn-gps, #btn-dp, #btn-mystar-reg {
     width: 46px;
     min-width: 46px;
@@ -232,18 +324,15 @@ select,
     flex-shrink: 0;
 }
 
-/* 2. 矢印ボタン群 (日付・時刻操作) */
-/* これらを全て同じ固定幅にすることで、1段目と2段目のズレを解消します */
 #btn-month-prev, #btn-date-prev, #btn-date-next, #btn-month-next,
 #btn-hour-prev, #btn-time-prev, #btn-time-next, #btn-hour-next {
-    width: 34px;      /* 固定幅 */
-    min-width: 34px;  /* 縮小禁止 */
-    padding: 0;       /* パディングなしで中央揃え */
+    width: 34px;      
+    min-width: 34px;  
+    padding: 0;       
     justify-content: center;
-    flex-shrink: 0;   /* Flexboxによる変形を禁止 */
+    flex-shrink: 0;   
 }
 
-/* 月齢ボタンも揃えておくと綺麗です */
 #btn-moon-prev, #btn-moon-next {
     width: 34px;
     min-width: 34px;

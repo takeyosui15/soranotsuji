@@ -1,6 +1,6 @@
 /*
 宙の辻 - Sora no Tsuji
-Copyright (c) 2026 Sora no Tsuji Project
+Copyright (c) 2026- Sora no Tsuji Project
 Released under the MIT License.
 */
 
@@ -8,15 +8,12 @@ Released under the MIT License.
 let map; 
 let linesLayer; 
 let locationLayer; 
-let dpLayer; // D/Pライン用レイヤー
-let moveTimer = null; // 自動進行用タイマー
+let dpLayer; 
+let moveTimer = null; 
 
-// 位置情報管理 (緯度経度 + 標高)
-// 初期値: 東京タワー (標高150m: メインデッキ)
+// 位置情報管理
 let startLatLng = { lat: 35.65858, lng: 139.74543 }; 
 let startElev = 150.0; 
-
-// 初期値: 富士山 (標高3776m)
 let endLatLng = { lat: 35.360776, lng: 138.727299 }; 
 let endElev = 3776.0; 
 
@@ -34,7 +31,7 @@ const POLARIS_RA = 2.5303;
 const POLARIS_DEC = 89.2641; 
 const SUBARU_RA = 3.79;
 const SUBARU_DEC = 24.12;
-const ALNILAM_RA = 5.603; // オリオン座イプシロン星 (アルニラム)
+const ALNILAM_RA = 5.603; 
 const ALNILAM_DEC = -1.202;
 
 const SYNODIC_MONTH = 29.53059; 
@@ -45,7 +42,7 @@ const REFRACTION_K = 0.13;
 let myStarRA = ALNILAM_RA;
 let myStarDec = ALNILAM_DEC;
 
-// カラーパレット定義
+// カラーパレット
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' }, 
     { name: '桃', code: '#FFC0CB' }, 
@@ -78,7 +75,6 @@ let bodies = [
     { id: 'Pluto',   name: '冥王星', color: '#800080', isDashed: false, visible: false },
     { id: 'Polaris', name: '北極星', color: '#000000', isDashed: false, visible: false },
     { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: false },
-    // My天体 (visible初期値: false)
     { id: 'MyStar',  name: 'My天体', color: '#DDA0DD', isDashed: false, visible: false, isCustom: true }
 ];
 
@@ -94,24 +90,19 @@ window.onload = function() {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // --- 地図レイヤーの定義 ---
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
-
         const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         });
-
         const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         });
-
         const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
         });
 
-        // 地図生成
         map = L.map('map', {
             center: [startLatLng.lat, startLatLng.lng],
             zoom: 9,
@@ -119,31 +110,25 @@ window.onload = function() {
             zoomControl: false
         });
 
-        // 国土地理院の著作権表示
         map.attributionControl.addAttribution('標高データ: &copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>');
 
-        // レイヤー切り替えコントロール
         L.control.layers({ "標準": osmLayer, "ダーク": darkLayer, "衛星写真": satelliteLayer, "地形図": topoLayer }, null, { position: 'topleft' }).addTo(map);
         L.control.zoom({ position: 'topleft' }).addTo(map);
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         
-        // レイヤー初期化
         linesLayer = L.layerGroup().addTo(map);
         locationLayer = L.layerGroup().addTo(map);
         dpLayer = L.layerGroup().addTo(map);
 
-        // 地図クリックイベント
         map.on('click', onMapClick);
     }
 
     setupUIEvents();
     
-    // 初期表示設定
     document.getElementById('input-start-elev').value = startElev;
     document.getElementById('input-end-elev').value = endElev;
     document.getElementById('input-mystar-radec').value = `${myStarRA},${myStarDec}`;
     
-    // My天体UI初期化
     const myBody = bodies.find(b => b.id === 'MyStar');
     if(myBody) {
         document.getElementById('chk-mystar').checked = myBody.visible;
@@ -170,6 +155,10 @@ window.onload = function() {
 
 // --- 3. UIイベント設定 ---
 function setupUIEvents() {
+    // ヘルプボタン
+    const btnHelp = document.getElementById('btn-help');
+    if(btnHelp) btnHelp.onclick = toggleHelp;
+
     const dateInput = document.getElementById('date-input');
     const timeInput = document.getElementById('time-input');
     const timeSlider = document.getElementById('time-slider');
@@ -211,19 +200,16 @@ function setupUIEvents() {
     const btnMove = document.getElementById('btn-move');
     if(btnMove) btnMove.onclick = toggleMove;
 
-    // 日付操作
     document.getElementById('btn-month-prev').onclick = () => addMonth(-1);
     document.getElementById('btn-date-prev').onclick = () => addDay(-1);
     document.getElementById('btn-date-next').onclick = () => addDay(1);
     document.getElementById('btn-month-next').onclick = () => addMonth(1);
 
-    // 時間操作
     document.getElementById('btn-hour-prev').onclick = () => addMinute(-60);
     document.getElementById('btn-time-prev').onclick = () => addMinute(-1);
     document.getElementById('btn-time-next').onclick = () => addMinute(1);
     document.getElementById('btn-hour-next').onclick = () => addMinute(60);
 
-    // 月齢操作
     document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
     document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
 
@@ -330,7 +316,6 @@ function setupUIEvents() {
         });
     }
 
-    // --- My天体関連 ---
     const btnMyReg = document.getElementById('btn-mystar-reg');
     const inputMyRaDec = document.getElementById('input-mystar-radec');
     const chkMyStar = document.getElementById('chk-mystar');
@@ -354,7 +339,6 @@ function setupUIEvents() {
                     return;
                 }
             }
-            // My天体の座標更新を反映
             updateCalculation();
             if(isDPActive) updateDPLines();
         };
@@ -367,7 +351,15 @@ function setupUIEvents() {
     }
 }
 
-// --- 4. 地図クリック処理 & 位置情報表示 ---
+// --- 4. ヘルプ機能 ---
+function toggleHelp() {
+    const modal = document.getElementById('help-modal');
+    if(modal) {
+        modal.classList.toggle('hidden');
+    }
+}
+
+// --- 5. 地図クリック処理 & 位置情報表示 ---
 
 function onMapClick(e) {
     const modeStart = document.getElementById('radio-start').checked;
@@ -451,7 +443,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     ));
 }
 
-// --- 5. D/P (Diamond/Pearl) 機能 ---
+// --- 6. D/P (Diamond/Pearl) 機能 ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -517,12 +509,8 @@ function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     const disc = b * b - 4 * a * c;
     if (disc < 0) return -1; 
 
-    const d1 = (-b + Math.sqrt(disc)) / (2 * a);
-    const d2 = (-b - Math.sqrt(disc)) / (2 * a);
-
-    if (d1 > 0) return d1;
-    if (d2 > 0) return d2;
-    return -1;
+    const d = (-b + Math.sqrt(disc)) / (2 * a);
+    return d;
 }
 
 function drawDPPath(points, color) {
@@ -587,7 +575,7 @@ function drawDPPath(points, color) {
     });
 }
 
-// --- 6. 標高グラフ機能 ---
+// --- 7. 標高グラフ機能 ---
 
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
@@ -762,7 +750,7 @@ function drawProfileGraph() {
     }
 }
 
-// --- 7. 共通ヘルパー ---
+// --- 8. 共通ヘルパー ---
 
 function fitBoundsToLocations() {
     if(!map) return;
