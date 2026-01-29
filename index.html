@@ -184,6 +184,17 @@ Released under the MIT License.
                 </div>
             </div>
 
+            <div class="visitor-counter">
+                <div class="counter-row">
+                    <span>本日: <span id="cnt-today">-</span></span>
+                    <span>昨日: <span id="cnt-yesterday">-</span></span>
+                </div>
+                <div class="counter-row">
+                    <span class="clickable-stat" onclick="showGraph('current')">今年: <span id="cnt-year">-</span></span>
+                    <span class="clickable-stat" onclick="showGraph('last')">昨年: <span id="cnt-last">-</span></span>
+                </div>
+            </div>
+
             <div class="panel-footer">
                 &copy; 2026- Sora no Tsuji Project
             </div>
@@ -259,6 +270,18 @@ Released under the MIT License.
                     <li>本サイトに関するご意見・ご感想は、<a href="https://note.com/takeyosui" target="_blank" rel="noopener noreferrer">たけちゃん</a>まで、お知らせください。</li>
                     <li>本サイトがもし、お気に召しましたら、<a href="https://note.com/takeyosui/n/n6a5b93f7c5fe" target="_blank" rel="noopener noreferrer">こちら</a>で、寄付ができる様になっております。不束者ですが、どうぞ宜しくお願い申し上げます。</li>
                 </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="graph-modal" class="hidden">
+        <div class="help-content graph-content">
+            <div class="help-header">
+                <h2 id="graph-title">訪問者数推移</h2>
+                <span class="close-help" onclick="closeGraph()">×</span>
+            </div>
+            <div class="help-body">
+                <canvas id="visitor-canvas" height="300"></canvas>
             </div>
         </div>
     </div>

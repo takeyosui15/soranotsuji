@@ -574,3 +574,39 @@ input[type="range"] { width: 100%; margin: 10px 0; }
     border-top: 1px solid #eee;
     background: #fafafa;
 }
+
+/* --- 訪問者カウンター --- */
+.visitor-counter {
+    padding: 10px;
+    background: #f0f4f8;
+    border-top: 1px solid #ddd;
+    font-size: 11px;
+    color: #555;
+}
+
+.counter-row {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 4px;
+}
+.counter-row:last-child { margin-bottom: 0; }
+
+.clickable-stat {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #2c3e50;
+}
+.clickable-stat:hover {
+    color: #007bff;
+}
+
+/* グラフモーダル調整 */
+.graph-content {
+    width: 95%;
+    max-width: 800px;
+    height: auto;
+}
+#visitor-canvas {
+    width: 100%;
+    background: #fff;
+}

@@ -11,6 +11,11 @@ let locationLayer;
 let dpLayer; 
 let moveTimer = null; 
 
+// GASのウェブアプリURL (★ここにGASのURLを貼り付けてください！)
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb1WQcRrRVi2Qpd_i60NvJWx6BB6Qxpb-30GD7TSzZptpRYxYL/exec"; 
+
+let visitorData = null; // 取得したカウンターデータを保持
+
 // 位置情報管理
 let startLatLng = { lat: 35.65858, lng: 139.74543 }; 
 let startElev = 150.0; 
@@ -23,8 +28,8 @@ let elevationDataPoints = [];
 let fetchIndex = 0;
 let fetchTimer = null;
 
-// D/P機能用
-let isDPActive = false;
+// D/P機能用 (初期値を true に変更)
+let isDPActive = true;
 
 // 北極星・すばる・My天体(初期値:アルニラム)
 const POLARIS_RA = 2.5303; 
@@ -139,8 +144,14 @@ window.onload = function() {
         }
     }
 
+    // 辻ボタンの初期状態反映
+    if (isDPActive) {
+        const btn = document.getElementById('btn-dp');
+        if (btn) btn.classList.add('active');
+    }
+
     updateLocationDisplay();
-    setNow();
+    setNow(); 
     renderCelestialList(); 
     
     window.addEventListener('resize', () => {
@@ -150,6 +161,9 @@ window.onload = function() {
     setTimeout(() => {
         if(map) map.invalidateSize();
         updateCalculation();
+        
+        // ★ カウンター初期化処理を開始
+        initVisitorCounter();
     }, 500);
 };
 
@@ -1243,4 +1257,122 @@ function finishStyleEdit() {
     updateCalculation();
     if(isDPActive) updateDPLines();
     closePalette();
+}
+
+// --- 9. 訪問者カウンター機能 ---
+
+function initVisitorCounter() {
+    // ローカルストレージチェック
+    const lastVisit = localStorage.getItem('soranotsuji_last_visit');
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${('00'+(today.getMonth()+1)).slice(-2)}-${('00'+today.getDate()).slice(-2)}`;
+    
+    let action = 'get'; // 基本はデータ取得のみ
+
+    // 日付が変わっていたらカウントアップ要求
+    if (lastVisit !== todayStr) {
+        action = 'visit';
+        localStorage.setItem('soranotsuji_last_visit', todayStr);
+    }
+
+    // GASへ通信
+    fetch(`${GAS_API_URL}?action=${action}`)
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+                console.error("Counter Error:", data.error);
+                return;
+            }
+            visitorData = data;
+            updateCounterDisplay();
+        })
+        .catch(err => console.error("Fetch Error:", err));
+}
+
+function updateCounterDisplay() {
+    if (!visitorData) return;
+    document.getElementById('cnt-today').innerText = visitorData.today;
+    document.getElementById('cnt-yesterday').innerText = visitorData.yesterday;
+    document.getElementById('cnt-year').innerText = visitorData.yearTotal;
+    document.getElementById('cnt-last').innerText = visitorData.lastYearTotal;
+}
+
+// グラフ表示
+function showGraph(type) {
+    if (!visitorData || !visitorData.dailyLog) return;
+    
+    const modal = document.getElementById('graph-modal');
+    modal.classList.remove('hidden');
+    
+    const canvas = document.getElementById('visitor-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // キャンバスサイズ調整
+    const w = canvas.clientWidth;
+    const h = 300; 
+    canvas.width = w;
+    canvas.height = h;
+    
+    ctx.clearRect(0, 0, w, h);
+    
+    let data = visitorData.dailyLog;
+    if (data.length === 0) return;
+
+    document.getElementById('graph-title').innerText = 
+        (type === 'current') ? "今年の訪問者数推移" : "昨年の訪問者数推移 (データなし)";
+
+    if (type !== 'current') {
+        ctx.fillStyle = "#666";
+        ctx.textAlign = "center";
+        ctx.fillText("データがありません", w/2, h/2);
+        return;
+    }
+
+    // グラフ描画 (折れ線)
+    const padding = 40;
+    const graphW = w - padding * 2;
+    const graphH = h - padding * 2;
+    
+    // 最大値検索
+    let maxVal = 0;
+    data.forEach(d => { if(d.count > maxVal) maxVal = d.count; });
+    if(maxVal < 10) maxVal = 10; // 最低でも目盛り10
+
+    // 枠線
+    ctx.strokeStyle = "#ccc";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, h - padding);
+    ctx.lineTo(w - padding, h - padding);
+    ctx.stroke();
+
+    // プロット
+    ctx.strokeStyle = "#007bff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    const daysInYear = 365;
+    
+    data.forEach((d, i) => {
+        const x = padding + (i / (data.length - 1 || 1)) * graphW;
+        const y = (h - padding) - (d.count / maxVal) * graphH;
+        
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        
+        ctx.fillStyle = "#007bff";
+        ctx.fillRect(x - 2, y - 2, 4, 4);
+    });
+    ctx.stroke();
+    
+    // 最大値ラベル
+    ctx.fillStyle = "#333";
+    ctx.textAlign = "right";
+    ctx.fillText(maxVal, padding - 5, padding + 10);
+    ctx.fillText("0", padding - 5, h - padding);
+}
+
+function closeGraph() {
+    document.getElementById('graph-modal').classList.add('hidden');
 }
