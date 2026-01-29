@@ -100,8 +100,9 @@ body, html {
     transition: width 0.2s;
 }
 
-/* --- ヘルプモーダル --- */
-#help-modal {
+/* --- モーダル共通 (ヘルプ & グラフ) --- */
+/* 修正箇所: #graph-modal を追加しました */
+#help-modal, #graph-modal {
     position: absolute;
     top: 0;
     left: 0;
@@ -114,7 +115,8 @@ body, html {
     align-items: center;
 }
 
-#help-modal.hidden {
+/* 修正箇所: #graph-modal.hidden を追加しました */
+#help-modal.hidden, #graph-modal.hidden {
     display: none;
 }
 
@@ -210,14 +212,14 @@ body, html {
 
 /* ロゴ画像のスタイル */
 .header-logo {
-    height: 20px;       /* 20pxに変更 */
+    height: 20px;       
     width: auto;        
     vertical-align: middle; 
     margin-right: 8px;  
-    margin-bottom: 2px; /* 微調整 */
+    margin-bottom: 2px; 
 }
 
-/* ヘッダー右側のコントロール群 (margin-left: 10px) */
+/* ヘッダー右側のコントロール群 */
 .header-controls {
     display: flex;
     align-items: center;
@@ -324,7 +326,7 @@ select,
     padding: 0 8px;
 }
 
-/* ボタンサイズ調整 (固定) */
+/* ボタンサイズ調整 */
 #btn-now, #btn-move, #btn-gps, #btn-dp, #btn-mystar-reg {
     width: 46px;
     min-width: 46px;
