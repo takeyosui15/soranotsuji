@@ -54,4 +54,4 @@
 
 ---
 Copyright (c) 2026- Sora no Tsuji Project.
-Released under the MIT License.
+Released under the GNU General Public License v3.0 (GPLv3).
