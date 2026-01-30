@@ -56,7 +56,9 @@ const ALNILAM_DEC = -1.202;
 
 const SYNODIC_MONTH = 29.53059; 
 const EARTH_RADIUS = 6371000;
-const REFRACTION_K = 0.13;
+
+// ★変更点1: 大気差係数を0に変更 (幾何学的計算のため)
+const REFRACTION_K = 0; 
 
 // My天体変数
 let myStarRA = ALNILAM_RA;
@@ -107,33 +109,47 @@ window.onload = function() {
     console.log("宙の辻: 起動");
 
     loadMyStarSettings();
-    loadLocationSettings(); // 位置情報の読み込み
+    loadLocationSettings(); 
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
+        // ★変更点2: 国土地理院の地図レイヤーを使用
+        const gsiStdLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
+            maxZoom: 18
+        });
+        
+        const gsiPhotoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
+            maxZoom: 18
+        });
+        
+        const gsiPaleLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
+            maxZoom: 18
+        });
+
+        // 検索や海外用にOSMも残す
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        });
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        });
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        });
-        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
         });
 
         map = L.map('map', {
             center: [startLatLng.lat, startLatLng.lng],
-            zoom: 9,
-            layers: [osmLayer],
+            zoom: 9, 
+            layers: [gsiStdLayer], // デフォルトを地理院地図(標準)に
             zoomControl: false
         });
 
         map.attributionControl.addAttribution('標高データ: &copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>');
 
-        L.control.layers({ "標準": osmLayer, "ダーク": darkLayer, "衛星写真": satelliteLayer, "地形図": topoLayer }, null, { position: 'topleft' }).addTo(map);
+        L.control.layers({ 
+            "標準(地理院)": gsiStdLayer, 
+            "写真(地理院)": gsiPhotoLayer,
+            "淡色(地理院)": gsiPaleLayer,
+            "OSM": osmLayer 
+        }, null, { position: 'topleft' }).addTo(map);
+
         L.control.zoom({ position: 'topleft' }).addTo(map);
         L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
         
@@ -160,7 +176,6 @@ window.onload = function() {
         }
     }
 
-    // 辻ボタンの初期状態反映
     if (isDPActive) {
         const btn = document.getElementById('btn-dp');
         if (btn) btn.classList.add('active');
@@ -177,8 +192,6 @@ window.onload = function() {
     setTimeout(() => {
         if(map) map.invalidateSize();
         updateCalculation();
-        
-        // ★ カウンター初期化処理を開始
         initVisitorCounter();
     }, 500);
 };
@@ -272,7 +285,6 @@ function setupUIEvents() {
     const btnDP = document.getElementById('btn-dp');
     if(btnDP) btnDP.onclick = toggleDP;
 
-    // --- 登録ボタンの処理 (Save/Load/Reset) ---
     const btnRegStart = document.getElementById('btn-reg-start');
     if(btnRegStart) {
         btnRegStart.onclick = () => {
@@ -280,15 +292,13 @@ function setupUIEvents() {
             const savedData = localStorage.getItem('soranotsuji_start');
 
             if(!inputVal) {
-                // 空欄で押下 -> リセット
                 localStorage.removeItem('soranotsuji_start');
                 startLatLng = DEFAULT_START_LATLNG;
                 startElev = DEFAULT_START_ELEV;
-                btnRegStart.classList.remove('active'); // 黄色解除
+                btnRegStart.classList.remove('active');
                 btnRegStart.title = "現在の観測点を初期値として登録";
                 alert('観測点の初期値をリセットしました。');
             } else if (savedData) {
-                // 登録済み -> 呼び出し (Load)
                 try {
                     const data = JSON.parse(savedData);
                     if(data.lat && data.lng && data.elev !== undefined) {
@@ -301,14 +311,12 @@ function setupUIEvents() {
                     }
                 } catch(e) { console.error(e); }
             } else {
-                // 未登録 -> 登録 (Save)
                 const data = { lat: startLatLng.lat, lng: startLatLng.lng, elev: startElev };
                 localStorage.setItem('soranotsuji_start', JSON.stringify(data));
-                btnRegStart.classList.add('active'); // 黄色に
+                btnRegStart.classList.add('active');
                 btnRegStart.title = "登録済みの観測点を呼び出し";
                 alert('現在の観測点を初期値として登録しました。');
             }
-            // 更新後のUI同期
             updateLocationDisplay();
         };
     }
@@ -320,15 +328,13 @@ function setupUIEvents() {
             const savedData = localStorage.getItem('soranotsuji_end');
 
             if(!inputVal) {
-                // 空欄で押下 -> リセット
                 localStorage.removeItem('soranotsuji_end');
                 endLatLng = DEFAULT_END_LATLNG;
                 endElev = DEFAULT_END_ELEV;
-                btnRegEnd.classList.remove('active'); // 黄色解除
+                btnRegEnd.classList.remove('active');
                 btnRegEnd.title = "現在の目的地を初期値として登録";
                 alert('目的地の初期値をリセットしました。');
             } else if (savedData) {
-                // 登録済み -> 呼び出し (Load)
                 try {
                     const data = JSON.parse(savedData);
                     if(data.lat && data.lng && data.elev !== undefined) {
@@ -341,10 +347,9 @@ function setupUIEvents() {
                     }
                 } catch(e) { console.error(e); }
             } else {
-                // 未登録 -> 登録 (Save)
                 const data = { lat: endLatLng.lat, lng: endLatLng.lng, elev: endElev };
                 localStorage.setItem('soranotsuji_end', JSON.stringify(data));
-                btnRegEnd.classList.add('active'); // 黄色に
+                btnRegEnd.classList.add('active');
                 btnRegEnd.title = "登録済みの目的地を呼び出し";
                 alert('現在の目的地を初期値として登録しました。');
             }
@@ -552,7 +557,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     ));
 }
 
-// --- 5. D/P 機能 (Vincenty法 + 前後1日表示) ---
+// --- 5. D/P 機能 (大気差なしの幾何学的計算) ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -587,7 +592,8 @@ function calculateDPPathPoints(targetDate, body, observer) {
             r = eq.ra; d = eq.dec;
         }
 
-        const hor = Astronomy.Horizon(time, observer, r, d, 'normal');
+        // ★変更点3: 第5引数を null にして大気差なし(幾何学的)の高度を取得
+        const hor = Astronomy.Horizon(time, observer, r, d, null);
         
         if (hor.altitude > -2) { 
             const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
@@ -627,6 +633,7 @@ function updateDPLines() {
 
 function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     const altRad = celestialAltDeg * Math.PI / 180;
+    // REFRACTION_K が 0 なので、純粋な幾何学的計算になる
     const a = (1 - REFRACTION_K) / (2 * EARTH_RADIUS);
     const b = Math.tan(altRad);
     const c = -(hTarget - hObs);
@@ -1207,7 +1214,11 @@ function updateCalculation() {
         } else {
             equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
         }
+        
+        // ★変更点3: 表示用には大気差あり(normal)のままにするが、辻ラインとの整合性が気になる場合は null にもできる。
+        // ここでは「スマホで空を見た時の位置」を優先して normal のままにします。
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
+        
         let riseStr = "--:--";
         let setStr  = "--:--";
         if (body.id === 'Polaris' || body.id === 'Subaru' || body.id === 'MyStar') {
