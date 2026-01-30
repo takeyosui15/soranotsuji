@@ -1,9 +1,9 @@
-# 宙の辻 - Sora no Tsuji
+# [宙の辻 - Sora no Tsuji](https://soranotsuji.design10100.net/)
 
 **「時」と「場所」が交差する瞬間を、地図上で探す。**
 
 「宙の辻 (Sora no Tsuji)」は、天体シミュレーションと地図情報を組み合わせたWebアプリケーションです。
-特定の日時・場所における太陽、月、惑星、恒星の位置を計算し、ダイヤモンド富士やパール富士が見られる「辻（交差点）」を可視化します。
+特定の日時・場所における太陽、月、惑星、恒星の位置を計算し、ダイヤモンド富士やパール富士、ダイヤモンド槍ヶ岳、特定の山のダイヤモンド『推しの山』が見られる「辻（交差点）」を可視化します。
 
 ## 🌟 主な機能
 
@@ -51,7 +51,6 @@
 
 * **Author**: たけちゃん
 * **Note**: [https://note.com/takeyosui](https://note.com/takeyosui)
-* **Support**: [寄付・サポートはこちら](https://note.com/takeyosui/n/n6a5b93f7c5fe)
 
 ---
 Copyright (c) 2026- Sora no Tsuji Project.
