@@ -101,7 +101,6 @@ body, html {
 }
 
 /* --- モーダル共通 (ヘルプ & グラフ) --- */
-/* 修正箇所: #graph-modal を追加しました */
 #help-modal, #graph-modal {
     position: absolute;
     top: 0;
@@ -115,7 +114,6 @@ body, html {
     align-items: center;
 }
 
-/* 修正箇所: #graph-modal.hidden を追加しました */
 #help-modal.hidden, #graph-modal.hidden {
     display: none;
 }
@@ -301,7 +299,7 @@ input[type="text"],
 select,
 .style-indicator {
     height: 34px;              
-    font-size: 14px;           
+    font-size: 16px;           
     font-family: sans-serif;
     box-sizing: border-box;
     vertical-align: middle;
@@ -399,7 +397,8 @@ input[type="number"] {
     padding: 0 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    text-align: right; 
+    text-align: right;
+    min-width: 0; /* 追加: テキスト入力欄と挙動を合わせる */
 }
 
 #time-input {
@@ -425,7 +424,7 @@ input[type="number"] {
     gap: 5px;
 }
 #moon-age-input {
-    width: 60px;
+    width: 75px; /* 60px -> 75px に変更 (4文字対応) */
     text-align: center;
     padding: 0 5px;
     border: 1px solid #ccc;
