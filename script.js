@@ -272,25 +272,44 @@ function setupUIEvents() {
     const btnDP = document.getElementById('btn-dp');
     if(btnDP) btnDP.onclick = toggleDP;
 
-    // --- 登録ボタンの処理 ---
+    // --- 登録ボタンの処理 (Save/Load/Reset) ---
     const btnRegStart = document.getElementById('btn-reg-start');
     if(btnRegStart) {
         btnRegStart.onclick = () => {
             const inputVal = document.getElementById('input-start-latlng').value;
+            const savedData = localStorage.getItem('soranotsuji_start');
+
             if(!inputVal) {
-                // リセット
+                // 空欄で押下 -> リセット
                 localStorage.removeItem('soranotsuji_start');
                 startLatLng = DEFAULT_START_LATLNG;
                 startElev = DEFAULT_START_ELEV;
+                btnRegStart.classList.remove('active'); // 黄色解除
+                btnRegStart.title = "現在の観測点を初期値として登録";
                 alert('観測点の初期値をリセットしました。');
+            } else if (savedData) {
+                // 登録済み -> 呼び出し (Load)
+                try {
+                    const data = JSON.parse(savedData);
+                    if(data.lat && data.lng && data.elev !== undefined) {
+                        startLatLng = { lat: data.lat, lng: data.lng };
+                        startElev = data.elev;
+                        updateLocationDisplay();
+                        updateCalculation();
+                        fitBoundsToLocations();
+                        alert('登録済みの観測点を呼び出しました。');
+                    }
+                } catch(e) { console.error(e); }
             } else {
-                // 登録
+                // 未登録 -> 登録 (Save)
                 const data = { lat: startLatLng.lat, lng: startLatLng.lng, elev: startElev };
                 localStorage.setItem('soranotsuji_start', JSON.stringify(data));
+                btnRegStart.classList.add('active'); // 黄色に
+                btnRegStart.title = "登録済みの観測点を呼び出し";
                 alert('現在の観測点を初期値として登録しました。');
             }
+            // 更新後のUI同期
             updateLocationDisplay();
-            updateCalculation();
         };
     }
 
@@ -298,20 +317,38 @@ function setupUIEvents() {
     if(btnRegEnd) {
         btnRegEnd.onclick = () => {
             const inputVal = document.getElementById('input-end-latlng').value;
+            const savedData = localStorage.getItem('soranotsuji_end');
+
             if(!inputVal) {
-                // リセット
+                // 空欄で押下 -> リセット
                 localStorage.removeItem('soranotsuji_end');
                 endLatLng = DEFAULT_END_LATLNG;
                 endElev = DEFAULT_END_ELEV;
+                btnRegEnd.classList.remove('active'); // 黄色解除
+                btnRegEnd.title = "現在の目的地を初期値として登録";
                 alert('目的地の初期値をリセットしました。');
+            } else if (savedData) {
+                // 登録済み -> 呼び出し (Load)
+                try {
+                    const data = JSON.parse(savedData);
+                    if(data.lat && data.lng && data.elev !== undefined) {
+                        endLatLng = { lat: data.lat, lng: data.lng };
+                        endElev = data.elev;
+                        updateLocationDisplay();
+                        if(isDPActive) updateDPLines();
+                        fitBoundsToLocations();
+                        alert('登録済みの目的地を呼び出しました。');
+                    }
+                } catch(e) { console.error(e); }
             } else {
-                // 登録
+                // 未登録 -> 登録 (Save)
                 const data = { lat: endLatLng.lat, lng: endLatLng.lng, elev: endElev };
                 localStorage.setItem('soranotsuji_end', JSON.stringify(data));
+                btnRegEnd.classList.add('active'); // 黄色に
+                btnRegEnd.title = "登録済みの目的地を呼び出し";
                 alert('現在の目的地を初期値として登録しました。');
             }
             updateLocationDisplay();
-            if(isDPActive) updateDPLines();
         };
     }
 
@@ -985,6 +1022,13 @@ function loadLocationSettings() {
             if(data.lat && data.lng && data.elev !== undefined) {
                 startLatLng = { lat: data.lat, lng: data.lng };
                 startElev = data.elev;
+                
+                // ボタンを黄色(active)に & タイトル変更
+                const btn = document.getElementById('btn-reg-start');
+                if(btn) {
+                    btn.classList.add('active');
+                    btn.title = "登録済みの観測点を呼び出し";
+                }
             }
         } catch(e) { console.error(e); }
     }
@@ -997,6 +1041,13 @@ function loadLocationSettings() {
             if(data.lat && data.lng && data.elev !== undefined) {
                 endLatLng = { lat: data.lat, lng: data.lng };
                 endElev = data.elev;
+
+                // ボタンを黄色(active)に & タイトル変更
+                const btn = document.getElementById('btn-reg-end');
+                if(btn) {
+                    btn.classList.add('active');
+                    btn.title = "登録済みの目的地を呼び出し";
+                }
             }
         } catch(e) { console.error(e); }
     }
