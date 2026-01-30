@@ -751,8 +751,19 @@ function updateProgress(percent, current, total) {
     if(bar) bar.style.width = percent + "%";
     
     if(text) {
-        const remainingTime = (total - current) * 5;
-        text.innerText = `${percent}% : ${current} / ${total} ( 残り ${remainingTime} s )`;
+        const remainingSeconds = (total - current) * 5;
+        
+        // 時・分・秒に変換
+        const h = Math.floor(remainingSeconds / 3600);
+        const m = Math.floor((remainingSeconds % 3600) / 60);
+        const s = remainingSeconds % 60;
+        
+        let timeStr = "";
+        if (h > 0) timeStr += `${h}h `;
+        if (m > 0 || h > 0) timeStr += `${m}m `;
+        timeStr += `${s}s`;
+
+        text.innerText = `${percent}% : ${current} / ${total} ( 残り ${timeStr} )`;
     }
 }
 
