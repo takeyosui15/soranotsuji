@@ -57,8 +57,8 @@ const ALNILAM_DEC = -1.202;
 const SYNODIC_MONTH = 29.53059; 
 const EARTH_RADIUS = 6371000;
 
-// ★変更点1: 大気差係数を0に変更 (幾何学的計算のため)
-const REFRACTION_K = 0; 
+// ★修正: 大気差なし（幾何学的計算）にするため 0 に設定
+const REFRACTION_K = 0;
 
 // My天体変数
 let myStarRA = ALNILAM_RA;
@@ -113,7 +113,7 @@ window.onload = function() {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // ★変更点2: 国土地理院の地図レイヤーを使用
+        // 地理院地図レイヤーを使用
         const gsiStdLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
             attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
             maxZoom: 18
@@ -129,7 +129,6 @@ window.onload = function() {
             maxZoom: 18
         });
 
-        // 検索や海外用にOSMも残す
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
@@ -137,7 +136,7 @@ window.onload = function() {
         map = L.map('map', {
             center: [startLatLng.lat, startLatLng.lng],
             zoom: 9, 
-            layers: [gsiStdLayer], // デフォルトを地理院地図(標準)に
+            layers: [gsiStdLayer], 
             zoomControl: false
         });
 
@@ -557,7 +556,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     ));
 }
 
-// --- 5. D/P 機能 (大気差なしの幾何学的計算) ---
+// --- 5. D/P 機能 (大気差なし: Geometric Position) ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -592,7 +591,7 @@ function calculateDPPathPoints(targetDate, body, observer) {
             r = eq.ra; d = eq.dec;
         }
 
-        // ★変更点3: 第5引数を null にして大気差なし(幾何学的)の高度を取得
+        // ★修正: null を使用して大気差なしの高度を取得
         const hor = Astronomy.Horizon(time, observer, r, d, null);
         
         if (hor.altitude > -2) { 
@@ -633,7 +632,7 @@ function updateDPLines() {
 
 function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     const altRad = celestialAltDeg * Math.PI / 180;
-    // REFRACTION_K が 0 なので、純粋な幾何学的計算になる
+    // REFRACTION_K = 0 (大気差なし) で計算
     const a = (1 - REFRACTION_K) / (2 * EARTH_RADIUS);
     const b = Math.tan(altRad);
     const c = -(hTarget - hObs);
@@ -1215,9 +1214,8 @@ function updateCalculation() {
             equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
         }
         
-        // ★変更点3: 表示用には大気差あり(normal)のままにするが、辻ラインとの整合性が気になる場合は null にもできる。
-        // ここでは「スマホで空を見た時の位置」を優先して normal のままにします。
-        const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, 'normal');
+        // ★修正: 表示用も null (大気差なし) に統一
+        const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, null);
         
         let riseStr = "--:--";
         let setStr  = "--:--";
