@@ -22,12 +22,13 @@ GNU General Public License for more details.
     <meta property="og:description" content="「時」と「場所」が交差する瞬間を、地図上で探す。ダイヤモンド富士やパール富士が見える位置をシミュレーションするWebアプリです。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://soranotsuji.design10100.net/">
-    <meta property="og:image" content="https://soranotsuji.design10100.net/ogp.png">
+    <meta property="og:image" content="https://soranotsuji.design10100.net/ogpV1.6.png">
     <meta property="og:site_name" content="宙の辻">
     <meta property="og:locale" content="ja_JP">
-    <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="宙の辻 - Sora no Tsuji">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="宙の辻 - Sora no Tsuji">
     <meta name="twitter:description" content="ダイヤモンド富士やパール富士が見える「辻」を地図上で探すWebアプリ。">
-    <meta name="twitter:image" content="https://soranotsuji.design10100.net/ogp.png">
+    <meta name="twitter:image" content="https://soranotsuji.design10100.net/ogpV1.6.png">
     <meta name="google-site-verification" content="2lAHbwDdCuACvK0K2-OLOqOKltOPSYYnbPO1vcdbRjo" />
     <title>宙の辻 (Sora no Tsuji)</title>
     
@@ -64,7 +65,7 @@ GNU General Public License for more details.
     <div id="control-panel" class="control-panel minimized">
         <div class="panel-header" onclick="togglePanel()">
             <span id="header-title">
-                <img src="logoICO.png" alt="ロゴ" class="header-logo">
+                <img src="logo.png" alt="ロゴ" class="header-logo">
                 宙の辻<span class="header-subtitle"> - Sora no Tsuji</span>
             </span>
             <div class="header-controls">
@@ -91,14 +92,16 @@ GNU General Public License for more details.
                     </div>
 
                     <div class="control-row">
-                        <div class="spacer-group"></div>
+                        <div class="btn-group-left">
+                            <button id="btn-reg-start" class="nav-btn small" title="現在の観測点を初期値として登録">Hom</button>
+                        </div>
                         <label class="input-label">観測点高:</label>
                         <input type="number" id="input-start-elev" placeholder="標高 m" step="0.1">
                     </div>
 
                     <div class="control-row">
                         <div class="btn-group-left">
-                            <button id="btn-dp" class="nav-btn small" title="辻ライン(D/P)表示">辻</button>
+                            <button id="btn-reg-end" class="nav-btn small" title="現在の目的地を初期値として登録">推山</button>
                             <input type="radio" name="loc-mode" id="radio-end" value="end">
                         </div>
                         <label class="input-label">目的地:</label>
@@ -106,20 +109,23 @@ GNU General Public License for more details.
                     </div>
 
                     <div class="control-row">
-                        <div class="spacer-group"></div>
+                        <div class="btn-group-left">
+                            <div style="width: 46px;"></div> 
+                        </div>
                         <label class="input-label">目的地高:</label>
                         <input type="number" id="input-end-elev" placeholder="標高 m" step="0.1">
                     </div>
 
-                    <div class="control-row">
-                        <button id="btn-elevation" class="nav-btn" style="width: 100%;">⛰ 標高グラフ表示</button>
+                    <div class="control-row main-buttons-row">
+                        <button id="btn-dp" class="nav-btn main-btn" title="辻ライン表示">辻ライン</button>
+                        <button id="btn-elevation" class="nav-btn main-btn">標高グラフ</button>
                     </div>
                 </div>
             </div>
 
             <div class="section">
                 <div class="section-header" onclick="toggleSection('sec-datetime')">
-                    <span>日時設定</span> <span id="icon-sec-datetime">▲</span>
+                    <span>日時情報</span> <span id="icon-sec-datetime">▲</span>
                 </div>
                 <div id="sec-datetime" class="section-content">
                     <div class="control-row">
@@ -245,6 +251,8 @@ GNU General Public License for more details.
                 <ul>
                     <li><strong>GPS:</strong> 現在地を観測点に設定します。</li>
                     <li><strong>観測点/目的地:</strong> 地図をクリック、または緯度,経度を直接入力するか、「東京タワー」「富士山」などの地名を入力してEnterキーを押すと検索・設定できます。ラジオボタンは、観測点/目的地のクリック時の入力切り替えです。</li>
+                    <li><strong>Hom:</strong> 観測点に現在入力されている座標を、次回起動時の初期値としてブラウザに保存します。入力欄を空にして登録すると、デフォルト（東京タワー）に戻ります。</li>
+                    <li><strong>推山:</strong> 目的地に現在入力されている座標を、次回起動時の初期値としてブラウザに保存します。入力欄を空にして登録すると、デフォルト（富士山）に戻ります。</li>
                     <li><strong>標高:</strong> 地図をクリックまたは地名を検索すると、国土地理院のAPIから自動で標高を取得します。手動で数値を修正してシミュレーションすることも可能です。</li>
                 </ul>
 
@@ -256,21 +264,21 @@ GNU General Public License for more details.
                 </ul>
 
                 <h3>「辻」機能 (ダイヤモンド・パールなど)</h3>
-                <p>「辻」ボタンをオン（黄色）にすると、目的地（山頂など）と観測点を結ぶライン上で、天体が山頂と重なる位置を計算し、地図上に曲線で表示します。</p>
+                <p>「辻ライン」ボタンをオン（黄色）にすると、目的地（山頂など）と観測点を結ぶライン上で、天体が山頂と重なる位置を計算し、地図上に曲線で表示します。</p>
                 <ul>
                     <li><strong>破線（---）:</strong> 設定した日時のライン（10分刻みの「●」マーカーと時刻を表示）</li>
                     <li><strong>点線（···）:</strong> 前日および翌日のライン（ラインのみ表示）</li>
                 </ul>
                 <p>太陽（赤）、月（黄）、および表示中の惑星やMy天体について計算されます。</p>
 
+                <h3>標高グラフ</h3>
+                <p>観測点と目的地の間の断面標高をグラフに表示します。サーバー低負荷にするため100m5秒おきに算出します。ブラウザを表示したままで気長にお待ちいただくか、PCでの利用を推奨。</p>
+
                 <h3>My天体</h3>
                 <p>お好みの恒星などの座標（赤経, 赤緯）を登録して表示できます。初期値はオリオン座のアルニラムです。空白にして登録ボタンを押下することでリセットできます。</p>
 
                 <h3>表示天体</h3>
                 <p>太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星、北極星、すばる、のそれぞれを出没時刻、入没時刻、方位、高度がわかります。チェックボックスで表示・非表示にできます。また、カラーパレットで、色と線種を変更できます。リロードで元に戻ります。</p>
-
-                <h3>標高グラフ</h3>
-                <p>観測点と目的地の間の断面標高をグラフに表示します。サーバー低負荷にするため100m5秒おきに算出します。ブラウザを表示したままで気長にお待ちいただくか、PCでの利用を推奨。</p>
 
                 <h3>地図上の線のズレについて（豆知識）</h3>
                 <p>距離が遠い場合、<strong>地図上の「観測点からの色付きの方位線、または、観測点と目的地を結ぶ黒い線」と「辻ラインのマーカー(破線と点線の曲線)」</strong>がズレて見えることがあります。</p>

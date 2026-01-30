@@ -25,11 +25,17 @@ const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb
 
 let visitorData = null; // 取得したカウンターデータを保持
 
-// 位置情報管理
-let startLatLng = { lat: 35.65858, lng: 139.74543 }; 
-let startElev = 150.0; 
-let endLatLng = { lat: 35.360776, lng: 138.727299 }; 
-let endElev = 3776.0; 
+// デフォルト値 (東京タワー & 富士山)
+const DEFAULT_START_LATLNG = { lat: 35.65858, lng: 139.74543 };
+const DEFAULT_START_ELEV = 150.0;
+const DEFAULT_END_LATLNG = { lat: 35.360776, lng: 138.727299 };
+const DEFAULT_END_ELEV = 3776.0;
+
+// 位置情報管理 (初期値はデフォルトだが、起動時に上書きされる可能性あり)
+let startLatLng = DEFAULT_START_LATLNG; 
+let startElev = DEFAULT_START_ELEV; 
+let endLatLng = DEFAULT_END_LATLNG; 
+let endElev = DEFAULT_END_ELEV; 
 
 // 標高グラフ用
 let isElevationActive = false;
@@ -101,6 +107,7 @@ window.onload = function() {
     console.log("宙の辻: 起動");
 
     loadMyStarSettings();
+    loadLocationSettings(); // 位置情報の読み込み
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -264,6 +271,49 @@ function setupUIEvents() {
 
     const btnDP = document.getElementById('btn-dp');
     if(btnDP) btnDP.onclick = toggleDP;
+
+    // --- 登録ボタンの処理 ---
+    const btnRegStart = document.getElementById('btn-reg-start');
+    if(btnRegStart) {
+        btnRegStart.onclick = () => {
+            const inputVal = document.getElementById('input-start-latlng').value;
+            if(!inputVal) {
+                // リセット
+                localStorage.removeItem('soranotsuji_start');
+                startLatLng = DEFAULT_START_LATLNG;
+                startElev = DEFAULT_START_ELEV;
+                alert('観測点の初期値をリセットしました。');
+            } else {
+                // 登録
+                const data = { lat: startLatLng.lat, lng: startLatLng.lng, elev: startElev };
+                localStorage.setItem('soranotsuji_start', JSON.stringify(data));
+                alert('現在の観測点を初期値として登録しました。');
+            }
+            updateLocationDisplay();
+            updateCalculation();
+        };
+    }
+
+    const btnRegEnd = document.getElementById('btn-reg-end');
+    if(btnRegEnd) {
+        btnRegEnd.onclick = () => {
+            const inputVal = document.getElementById('input-end-latlng').value;
+            if(!inputVal) {
+                // リセット
+                localStorage.removeItem('soranotsuji_end');
+                endLatLng = DEFAULT_END_LATLNG;
+                endElev = DEFAULT_END_ELEV;
+                alert('目的地の初期値をリセットしました。');
+            } else {
+                // 登録
+                const data = { lat: endLatLng.lat, lng: endLatLng.lng, elev: endElev };
+                localStorage.setItem('soranotsuji_end', JSON.stringify(data));
+                alert('現在の目的地を初期値として登録しました。');
+            }
+            updateLocationDisplay();
+            if(isDPActive) updateDPLines();
+        };
+    }
 
     const inputStart = document.getElementById('input-start-latlng');
     const inputEnd = document.getElementById('input-end-latlng');
@@ -922,6 +972,33 @@ function loadMyStarSettings() {
         } catch(e) {
             console.error("MyStar storage parse error", e);
         }
+    }
+}
+
+// 位置情報を読み込む関数
+function loadLocationSettings() {
+    // 観測点
+    const savedStart = localStorage.getItem('soranotsuji_start');
+    if(savedStart) {
+        try {
+            const data = JSON.parse(savedStart);
+            if(data.lat && data.lng && data.elev !== undefined) {
+                startLatLng = { lat: data.lat, lng: data.lng };
+                startElev = data.elev;
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // 目的地
+    const savedEnd = localStorage.getItem('soranotsuji_end');
+    if(savedEnd) {
+        try {
+            const data = JSON.parse(savedEnd);
+            if(data.lat && data.lng && data.elev !== undefined) {
+                endLatLng = { lat: data.lat, lng: data.lng };
+                endElev = data.elev;
+            }
+        } catch(e) { console.error(e); }
     }
 }
 
