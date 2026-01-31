@@ -295,7 +295,7 @@ function setupUIEvents() {
                 startLatLng = DEFAULT_START_LATLNG;
                 startElev = DEFAULT_START_ELEV;
                 btnRegStart.classList.remove('active');
-                btnRegStart.title = "現在の観測点を初期値として登録";
+                btnRegStart.title = "観測点の初期値をリセット";
                 alert('観測点の初期値をリセットしました。');
             } else if (savedData) {
                 try {
@@ -313,7 +313,7 @@ function setupUIEvents() {
                 const data = { lat: startLatLng.lat, lng: startLatLng.lng, elev: startElev };
                 localStorage.setItem('soranotsuji_start', JSON.stringify(data));
                 btnRegStart.classList.add('active');
-                btnRegStart.title = "登録済みの観測点を呼び出し";
+                btnRegStart.title = "現在の観測点を初期値として登録";
                 alert('現在の観測点を初期値として登録しました。');
             }
             updateLocationDisplay();
@@ -331,7 +331,7 @@ function setupUIEvents() {
                 endLatLng = DEFAULT_END_LATLNG;
                 endElev = DEFAULT_END_ELEV;
                 btnRegEnd.classList.remove('active');
-                btnRegEnd.title = "現在の目的地を初期値として登録";
+                btnRegEnd.title = "目的地の初期値をリセット";
                 alert('目的地の初期値をリセットしました。');
             } else if (savedData) {
                 try {
@@ -349,7 +349,7 @@ function setupUIEvents() {
                 const data = { lat: endLatLng.lat, lng: endLatLng.lng, elev: endElev };
                 localStorage.setItem('soranotsuji_end', JSON.stringify(data));
                 btnRegEnd.classList.add('active');
-                btnRegEnd.title = "登録済みの目的地を呼び出し";
+                btnRegEnd.title = "現在の目的地を初期値として登録";
                 alert('現在の目的地を初期値として登録しました。');
             }
             updateLocationDisplay();
@@ -594,7 +594,12 @@ function calculateDPPathPoints(targetDate, body, observer) {
         // ★修正: null を使用して大気差なしの高度を取得
         const hor = Astronomy.Horizon(time, observer, r, d, null);
         
-        if (hor.altitude > -2) { 
+        // ★ここを修正: 固定値 -2 ではなく、計算に基づいた限界値を使う
+        // 太陽の視半径(約0.27度) + 眼高差 + マージン(0.1度)
+        const dip = getHorizonDip(startElev); // 観測点の標高から眼高差を計算
+        const limit = -(dip + 0.27 + 0.1); 
+
+        if (hor.altitude > limit) {
             const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
             if (dist > 0 && dist <= 350000) {
                 path.push({ dist: dist, az: hor.azimuth, time: time });
@@ -1057,6 +1062,17 @@ function loadLocationSettings() {
             }
         } catch(e) { console.error(e); }
     }
+}
+
+// 眼高差（Dip）を計算する関数 (度数法)
+function getHorizonDip(elevation) {
+    if (elevation <= 0) return 0;
+    // 地球を真球と仮定した幾何学的計算
+    // cos(θ) = R / (R + h)
+    const val = EARTH_RADIUS / (EARTH_RADIUS + elevation);
+    if (val >= 1) return 0; // エラー回避
+    const dipRad = Math.acos(val);
+    return dipRad * (180 / Math.PI); // ラジアン -> 度
 }
 
 // --- 以下、日時計算系ロジック (既存) ---
