@@ -57,8 +57,8 @@ const ALNILAM_DEC = -1.202;
 const SYNODIC_MONTH = 29.53059; 
 const EARTH_RADIUS = 6378137;
 
-// ★修正: 大気差なし（幾何学的計算）にするため 0 に設定
-const REFRACTION_K = 0;
+// ★修正: 大気差なし（幾何学的計算）にするため 0.0 に設定, オンの値: 0.13
+const REFRACTION_K = 0.0;
 
 // My天体変数
 let myStarRA = ALNILAM_RA;
@@ -591,7 +591,7 @@ function calculateDPPathPoints(targetDate, body, observer) {
             r = eq.ra; d = eq.dec;
         }
 
-        // ★修正: null を使用して大気差なしの高度を取得
+        // ★修正: null を使用して大気差なしの高度を取得、オンは、"normal" で計算
         const hor = Astronomy.Horizon(time, observer, r, d, null);
         
         // ★ここを修正: 固定値 -2 ではなく、計算に基づいた限界値を使う
@@ -987,7 +987,7 @@ function searchStarRiseSet(ra, dec, observer, startOfDay) {
     let prevAlt = null;
     for (let m = 0; m <= 1440; m += 10) {
         const time = new Date(start + m * 60000);
-        // ★修正: 表示用も null (大気差なし) に統一
+        // ★修正: 表示用も null (大気差なし) に統一、オンは、"normal" で計算
         const hor = Astronomy.Horizon(time, observer, ra, dec, null);
         const alt = hor.altitude;
         if (prevAlt !== null) {
@@ -1231,7 +1231,7 @@ function updateCalculation() {
             equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
         }
         
-        // ★修正: 表示用も null (大気差なし) に統一
+        // ★修正: 表示用も null (大気差なし) に統一、オンは、"normal" で計算
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, null);
         
         let riseStr = "--:--";
