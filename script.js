@@ -26,7 +26,7 @@ const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb
 let visitorData = null; // 取得したカウンターデータを保持
 
 // デフォルト値 (東京タワー & 富士山)
-const DEFAULT_START_LATLNG = { lat: 35.65858, lng: 139.74543 };
+const DEFAULT_START_LATLNG = { lat: 35.658449, lng: 139.745536 };
 const DEFAULT_START_ELEV = 150.0;
 const DEFAULT_END_LATLNG = { lat: 35.360776, lng: 138.727299 };
 const DEFAULT_END_ELEV = 3776.0;
