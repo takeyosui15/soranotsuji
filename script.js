@@ -55,7 +55,7 @@ const ALNILAM_RA = 5.603;
 const ALNILAM_DEC = -1.202;
 
 const SYNODIC_MONTH = 29.53059; 
-const EARTH_RADIUS = 6371000;
+const EARTH_RADIUS = 6378137;
 
 // ★修正: 大気差なし（幾何学的計算）にするため 0 に設定
 const REFRACTION_K = 0;
