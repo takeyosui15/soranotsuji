@@ -987,7 +987,8 @@ function searchStarRiseSet(ra, dec, observer, startOfDay) {
     let prevAlt = null;
     for (let m = 0; m <= 1440; m += 10) {
         const time = new Date(start + m * 60000);
-        const hor = Astronomy.Horizon(time, observer, ra, dec, 'normal');
+        // ★修正: 表示用も null (大気差なし) に統一
+        const hor = Astronomy.Horizon(time, observer, ra, dec, null);
         const alt = hor.altitude;
         if (prevAlt !== null) {
             if (prevAlt < 0 && alt >= 0) {
