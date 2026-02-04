@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Refactored Version 1.8.2 (Compatible Names)
+Refactored Version 1.8.3 (Fix: Button Event Timing & Logic)
 */
 
 // ============================================================
@@ -50,7 +50,6 @@ const COLOR_MAP = [
 let map; 
 let linesLayer, locationLayer, dpLayer;
 
-// アプリケーション状態
 let appState = {
     start: { lat: DEFAULT_START_LATLNG.lat, lng: DEFAULT_START_LATLNG.lng, elev: DEFAULT_START_ELEV },
     end: { lat: DEFAULT_END_LATLNG.lat, lng: DEFAULT_END_LATLNG.lng, elev: DEFAULT_END_ELEV },
@@ -90,7 +89,7 @@ let fetchTimer = null;
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.2)");
+    console.log("宙の辻: 起動 (V1.8.3)");
 
     loadSettings();
     initMap();
@@ -105,7 +104,7 @@ window.onload = function() {
         document.getElementById('btn-dp').classList.add('active');
     }
 
-    setSunrise(); // 起動時に日の出セット
+    setSunrise(); 
     
     window.addEventListener('resize', () => {
         if(isElevationActive) drawProfileGraph();
@@ -218,8 +217,10 @@ function setupUI() {
     document.getElementById('btn-gps').onclick = useGPS;
     document.getElementById('btn-elevation').onclick = toggleElevation;
     document.getElementById('btn-dp').onclick = toggleDP;
-    document.getElementById('btn-reg-start').onclick = () => registerLocation('start');
-    document.getElementById('btn-reg-end').onclick = () => registerLocation('end');
+
+    // ★修正: onclick -> onmousedown に変更 (入力欄のblurイベントより先に実行させるため)
+    document.getElementById('btn-reg-start').onmousedown = () => registerLocation('start');
+    document.getElementById('btn-reg-end').onmousedown = () => registerLocation('end');
 
     const inputStart = document.getElementById('input-start-latlng');
     const inputEnd = document.getElementById('input-end-latlng');
@@ -241,19 +242,17 @@ function setupUI() {
 
 
 // ============================================================
-// 4. メイン更新ロジック (旧関数名維持)
+// 4. メイン更新ロジック (Compatible Names)
 // ============================================================
 
-/** 全更新 */
 function updateAll() {
     if (!map) return;
-    updateLocationDisplay(); // 旧名: updateLocationView
-    updateCalculation();     // 旧名: updateCelestialView
-    if (appState.isDPActive) updateDPLines(); // 旧名: updateTsujiLinesView
+    updateLocationDisplay(); 
+    updateCalculation();     
+    if (appState.isDPActive) updateDPLines(); 
     else dpLayer.clearLayers();
 }
 
-/** 位置情報表示更新 (updateLocationDisplay) */
 function updateLocationDisplay() {
     locationLayer.clearLayers();
 
@@ -274,7 +273,6 @@ function updateLocationDisplay() {
     L.polyline([startPt, endPt], { color: 'black', weight: 6, opacity: 0.8 }).addTo(locationLayer);
 }
 
-/** 天体計算・表示更新 (updateCalculation) */
 function updateCalculation() {
     linesLayer.clearLayers();
     
@@ -328,7 +326,6 @@ function updateCalculation() {
     updateMoonInfo(currentDate);
 }
 
-/** 辻ライン更新 (updateDPLines) */
 function updateDPLines() {
     dpLayer.clearLayers();
     
@@ -550,6 +547,8 @@ async function handleLocationInput(val, isStart) {
     if(coords) {
         const elev = await getElevation(coords.lat, coords.lng);
         const validElev = (elev !== null) ? elev : 0;
+        
+        const inputId = isStart ? 'input-start-latlng' : 'input-end-latlng';
 
         if(isStart) {
             appState.start = { ...coords, elev: validElev };
@@ -561,6 +560,7 @@ async function handleLocationInput(val, isStart) {
             document.getElementById('input-end-elev').value = validElev;
         }
         
+        document.getElementById(inputId).blur(); // ★フォーカス解除 (値の正規化のため)
         map.setView(coords, 10);
         updateAll();
     }
@@ -699,7 +699,6 @@ function getHorizonDip(elev) {
 // 7. 操作系ロジック (Handlers)
 // ============================================================
 
-// ★復活: 旧関数名 setSunrise (中身はsetSunriseAndInitと同じ)
 function setSunrise() {
     const now = new Date();
     const dInput = document.getElementById('date-input');
@@ -816,7 +815,7 @@ function toggleDP() {
     appState.isDPActive = !appState.isDPActive;
     if (appState.isDPActive) {
         btn.classList.add('active');
-        updateDPLines(); // 旧名: updateTsujiLinesView
+        updateDPLines();
     } else {
         btn.classList.remove('active');
         dpLayer.clearLayers();
@@ -841,31 +840,80 @@ function useGPS() {
 // 8. その他の機能 (Settings, Graph, Counter)
 // ============================================================
 
+// ★修正: 登録/呼び出し切り替えロジック
 function registerLocation(type) {
     const key = `soranotsuji_${type}`;
     const input = document.getElementById(`input-${type}-latlng`);
+    const btn = document.getElementById(`btn-reg-${type}`);
+    const savedData = localStorage.getItem(key);
+
+    // 1. リセット (空で押下)
     if (!input.value) {
         localStorage.removeItem(key);
-        alert('リセットしました');
+        btn.classList.remove('active');
+        btn.title = (type === 'start' ? "観測点" : "目的地") + "の初期値を登録";
+        alert('初期値をリセットしました。');
         return;
     }
-    const data = (type === 'start') ? appState.start : appState.end;
-    localStorage.setItem(key, JSON.stringify(data));
-    alert('登録しました');
+
+    // 2. 呼び出し (保存データあり)
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            
+            if (type === 'start') {
+                appState.start = { lat: data.lat, lng: data.lng, elev: data.elev };
+                document.getElementById('input-start-elev').value = data.elev;
+                document.getElementById('radio-start').checked = true;
+            } else {
+                appState.end = { lat: data.lat, lng: data.lng, elev: data.elev };
+                document.getElementById('input-end-elev').value = data.elev;
+                document.getElementById('radio-end').checked = true;
+            }
+
+            updateAll(); 
+
+            // 地図をフィット
+            const bounds = L.latLngBounds(
+                [appState.start.lat, appState.start.lng],
+                [appState.end.lat, appState.end.lng]
+            );
+            map.fitBounds(bounds, { padding: [50, 50] });
+
+            alert('登録済みの場所を呼び出しました。');
+        } catch(e) { console.error(e); }
+    } 
+    // 3. 登録 (保存データなし)
+    else {
+        const data = (type === 'start') ? appState.start : appState.end;
+        localStorage.setItem(key, JSON.stringify(data));
+        
+        btn.classList.add('active');
+        btn.title = "登録済みの" + (type === 'start' ? "観測点" : "目的地") + "を呼び出し";
+        
+        alert('現在の場所を初期値として登録しました。\n(上書きする場合は、一度入力欄を空にしてボタンを押し、リセットしてください)');
+    }
 }
 
+// ★修正: 起動時にボタンをactiveにする
 function loadSettings() {
-    const load = (key, target) => {
+    const load = (key, target, btnId, label) => {
         const d = localStorage.getItem(key);
         if(d) {
             try { 
                 const o = JSON.parse(d); 
                 target.lat = o.lat; target.lng = o.lng; target.elev = o.elev; 
+                
+                const btn = document.getElementById(btnId);
+                if(btn) {
+                    btn.classList.add('active');
+                    btn.title = `登録済みの${label}を呼び出し`;
+                }
             } catch(e){}
         }
     };
-    load('soranotsuji_start', appState.start);
-    load('soranotsuji_end', appState.end);
+    load('soranotsuji_start', appState.start, 'btn-reg-start', '観測点');
+    load('soranotsuji_end', appState.end, 'btn-reg-end', '目的地');
     
     const ms = localStorage.getItem('soranotsuji_mystar');
     if(ms) { try { const o = JSON.parse(ms); appState.myStar = o; } catch(e){} }
@@ -935,7 +983,6 @@ function openPalette(id) {
     p.classList.remove('hidden');
 }
 
-// ★復活: グローバルで呼べるように
 function applyColor(code) {
     const b = bodies.find(x => x.id === editingBodyId);
     if(b) {
@@ -1086,7 +1133,6 @@ function closeGraph() { document.getElementById('graph-modal').classList.add('hi
 function togglePanel() { document.getElementById('control-panel').classList.toggle('minimized'); }
 function toggleSection(id) { document.getElementById(id).classList.toggle('closed'); }
 
-// ヘルプ表示 (復旧)
 function toggleHelp() {
     const modal = document.getElementById('help-modal');
     if(modal) modal.classList.toggle('hidden');
