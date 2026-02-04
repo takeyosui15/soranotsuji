@@ -104,7 +104,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.9.1)");
+    console.log("宙の辻: 起動 (V1.8.2)");
 
     // 1. 古いデータを削除
     cleanupOldStorage();
