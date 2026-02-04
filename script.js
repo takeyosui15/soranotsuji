@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.9.0 (Full State Management Refactoring)
+Version 1.8.1 - State Managed Edition
 */
 
 // ============================================================
