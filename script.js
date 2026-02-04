@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.2 - Smart Map Movement (No Auto-Fit)
+Version 1.8.3 - Moon Age Cycle Fix
 */
 
 // ============================================================
@@ -119,7 +119,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.2)");
+    console.log("宙の辻: 起動 (V1.8.3)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -266,9 +266,18 @@ function setupUI() {
         }
     });
 
+    // ★修正: 月齢入力 (30以上で0にリセット)
     document.getElementById('moon-age-input').addEventListener('change', (e) => {
-        const targetAge = parseFloat(e.target.value);
-        if (!isNaN(targetAge)) searchMoonAge(targetAge);
+        let targetAge = parseFloat(e.target.value);
+        if (isNaN(targetAge)) return;
+        
+        // 30以上になったら0に戻す (サイクルさせる)
+        if (targetAge >= 30) {
+            targetAge = 0;
+            e.target.value = 0;
+        }
+        
+        searchMoonAge(targetAge);
     });
 
     // ボタン類
