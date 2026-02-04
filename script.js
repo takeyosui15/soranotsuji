@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.2 - Clean Formatting & Robust Logic
+Version 1.8.2 - Smart Map Movement (No Auto-Fit)
 */
 
 // ============================================================
@@ -175,7 +175,7 @@ function cleanupOldStorage() {
         'soranotsuji_last_visit',
         'soranotsuji_reg_start',
         'soranotsuji_reg_end',
-        'soranotsuji_state' // V1.8.2の一時キーも念のため削除
+        'soranotsuji_state'
     ];
     oldKeys.forEach(key => {
         localStorage.removeItem(key);
@@ -411,12 +411,10 @@ function registerLocation(type) {
         saveAppState(); // 移動した状態を保存
         updateAll();
         
-        // 地図フィット
-        const bounds = L.latLngBounds(
-            [appState.start.lat, appState.start.lng],
-            [appState.end.lat, appState.end.lng]
-        );
-        map.fitBounds(bounds, { padding: [50, 50] });
+        // ★修正: fitBounds(全体表示) ではなく setView(その場所に移動)
+        // これにより、観測点を呼び出したときに目的点まで引いてしまうのを防ぐ
+        const target = (type === 'start') ? appState.start : appState.end;
+        map.setView([target.lat, target.lng], 10);
         
         alert('登録済みの場所を呼び出しました');
     } 
@@ -635,13 +633,13 @@ async function handleLocationInput(val, isStart) {
         document.getElementById(inputId).blur(); 
         
         map.setView(coords, 10);
-        saveAppState(); // 保存
+        saveAppState(); 
         updateAll();
     }
 }
 
 // ------------------------------------------------------
-// 操作系ハンドラ (関数定義)
+// 操作系ハンドラ
 // ------------------------------------------------------
 
 function setSunrise() {
