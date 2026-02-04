@@ -13,11 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-/*
-宙の辻 - Sora no Tsuji
-Copyright (c) 2026- Sora no Tsuji Project
-*/
-
 // --- 1. グローバル変数 ---
 let map; 
 let linesLayer; 
@@ -251,6 +246,7 @@ function setupUIEvents() {
     document.getElementById('btn-time-next').onclick = () => addMinute(1);
     document.getElementById('btn-hour-next').onclick = () => addMinute(60);
 
+    // ★修正: 月の移動ロジックを高精度版に変更
     document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
     document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
 
@@ -1092,6 +1088,7 @@ function loadLocationSettings() {
 function getHorizonDip(elevation) {
     if (!elevation || elevation <= 0) return 0; // 数値以外・0以下は0を返す
     // 地球を真球と仮定した幾何学的計算
+    // cos(θ) = R / (R + h)
     const val = EARTH_RADIUS / (EARTH_RADIUS + elevation);
     if (val >= 1) return 0; // エラー回避
     const dipRad = Math.acos(val);
@@ -1304,10 +1301,267 @@ function searchMoonAge(targetAge) {
     }
 }
 
-// ★追加: ショートカットラジオボタンの選択解除用関数
-function uncheckTimeShortcuts() {
-    const radios = document.querySelectorAll('input[name="time-jump"]');
-    radios.forEach(r => r.checked = false);
+// 以下、updateCalculation, drawDirectionLine, renderCelestialList などを含む完全版
+function updateCalculation() {
+    if (!map || !linesLayer) return;
+    const dInput = document.getElementById('date-input');
+    const tInput = document.getElementById('time-input');
+    if (!dInput || !tInput) return;
+    const dateStr = dInput.value;
+    const timeStr = tInput.value;
+    if (!dateStr || !timeStr) return;
+    const calcDate = new Date(`${dateStr}T${timeStr}:00`);
+    const startOfDay = new Date(calcDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const lat = startLatLng.lat;
+    const lng = startLatLng.lng;
+    if (typeof Astronomy === 'undefined') return;
+    let observer;
+    try {
+        observer = new Astronomy.Observer(lat, lng, startElev);
+    } catch(e) { return; }
+    linesLayer.clearLayers();
+    bodies.forEach(body => {
+        let equatorCoords;
+        if (body.id === 'Polaris') {
+            equatorCoords = { ra: POLARIS_RA, dec: POLARIS_DEC };
+        } else if (body.id === 'Subaru') {
+            equatorCoords = { ra: SUBARU_RA, dec: SUBARU_DEC };
+        } else if (body.id === 'MyStar') {
+            equatorCoords = { ra: myStarRA, dec: myStarDec };
+        } else {
+            equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
+        }
+        
+        const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, null);
+        
+        let riseStr = "--:--";
+        let setStr  = "--:--";
+        if (body.id === 'Polaris' || body.id === 'Subaru' || body.id === 'MyStar') {
+            let r, d;
+            if(body.id === 'Polaris') { r=POLARIS_RA; d=POLARIS_DEC; }
+            else if(body.id === 'Subaru') { r=SUBARU_RA; d=SUBARU_DEC; }
+            else { r=myStarRA; d=myStarDec; }
+            const times = searchStarRiseSet(r, d, observer, startOfDay);
+            riseStr = times.rise;
+            setStr = times.set;
+        } else {
+            try {
+                const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
+                const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 1);
+                const fmt = (evt) => evt ? `${('00'+evt.date.getHours()).slice(-2)}:${('00'+evt.date.getMinutes()).slice(-2)}` : null;
+                riseStr = fmt(rise);
+                setStr  = fmt(set);
+            } catch(e) { }
+        }
+        if (!riseStr) riseStr = "--:--";
+        if (!setStr) setStr = "--:--";
+        if (riseStr === "--:--" && setStr === "--:--") {
+             if (horizon.altitude > 0) {
+                 riseStr = "00:00"; setStr = "00:00"; 
+             }
+        }
+        const dataEl = document.getElementById(`data-${body.id}`);
+        if (dataEl) {
+            dataEl.innerText = `出 ${riseStr} / 入 ${setStr} / 方位 ${horizon.azimuth.toFixed(0)}° / 高度 ${horizon.altitude.toFixed(0)}°`;
+        }
+        if (body.visible) {
+            drawDirectionLine(lat, lng, horizon.azimuth, horizon.altitude, body);
+        }
+    });
+    updateShortcuts(startOfDay, observer);
+    updateMoonInfo(calcDate);
+}
+
+function updateShortcuts(startOfDay, observer) {
+    try {
+        const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
+        const sunSet  = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
+        const moonRise = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
+        const moonSet  = Astronomy.SearchRiseSet('Moon', observer, -1, startOfDay, 1);
+        const fmt = (evt) => evt ? `${('00'+evt.date.getHours()).slice(-2)}:${('00'+evt.date.getMinutes()).slice(-2)}` : "--:--";
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = val;
+        };
+        setVal('time-sunrise', fmt(sunRise));
+        setVal('time-sunset', fmt(sunSet));
+        setVal('time-moonrise', fmt(moonRise));
+        setVal('time-moonset', fmt(moonSet));
+        currentRiseSetData = {
+            sunrise: sunRise ? sunRise.date : null,
+            sunset: sunSet ? sunSet.date : null,
+            moonrise: moonRise ? moonRise.date : null,
+            moonset: moonSet ? moonSet.date : null
+        };
+    } catch(e) {}
+}
+
+function updateMoonInfo(date) {
+    const phase = Astronomy.MoonPhase(date);
+    const age = (phase / 360) * SYNODIC_MONTH;
+    if (document.activeElement.id !== 'moon-age-input') {
+        const moonInput = document.getElementById('moon-age-input');
+        if(moonInput) moonInput.value = age.toFixed(1);
+    }
+    const iconIndex = Math.round(phase / 45) % 8;
+    const icons = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
+    const moonIcon = document.getElementById('moon-icon');
+    if(moonIcon) moonIcon.innerText = icons[iconIndex];
+}
+
+function drawDirectionLine(lat, lng, azimuth, altitude, body) {
+    const lengthKm = 1000;
+    const rad = (90 - azimuth) * (Math.PI / 180);
+    const dLat = (lengthKm / 111) * Math.sin(rad);
+    const dLng = (lengthKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.cos(rad);
+    const endPos = [lat + dLat, lng + dLng];
+    const opacity = altitude < 0 ? 0.3 : 1.0; 
+    const dashArray = body.isDashed ? '10, 10' : null;
+    L.polyline([[lat, lng], endPos], {
+        color: body.color,
+        weight: 6,
+        opacity: opacity,
+        dashArray: dashArray
+    }).addTo(linesLayer);
+}
+
+function toggleSection(sectionId) {
+    const content = document.getElementById(sectionId);
+    const icon = document.getElementById('icon-' + sectionId);
+    if (content && icon) {
+        content.classList.toggle('closed');
+        icon.innerText = content.classList.contains('closed') ? '▼' : '▲';
+    }
+}
+function jumpToEvent(eventType) {
+    const data = currentRiseSetData;
+    if (!data || !data[eventType]) return;
+    const targetDate = data[eventType];
+    const h = targetDate.getHours();
+    const m = targetDate.getMinutes();
+    const tInput = document.getElementById('time-input');
+    const tSlider = document.getElementById('time-slider');
+    if(tInput) tInput.value = `${('00' + h).slice(-2)}:${('00' + m).slice(-2)}`;
+    if(tSlider) tSlider.value = h * 60 + m;
+    updateCalculation();
+}
+function renderCelestialList() {
+    const list = document.getElementById('celestial-list');
+    if (!list) return;
+    list.innerHTML = '';
+    bodies.forEach(body => {
+        if(body.isCustom) return; 
+        const li = document.createElement('li');
+        const dashClass = body.isDashed ? 'dashed' : 'solid';
+        li.innerHTML = `
+            <input type="checkbox" class="body-checkbox" 
+                   ${body.visible ? 'checked' : ''} 
+                   onchange="toggleVisibility('${body.id}', this.checked)">
+            <div class="style-indicator ${dashClass}" 
+                 style="color: ${body.color};"
+                 onclick="openPalette('${body.id}')"></div>
+            <div class="body-info">
+                <div class="body-header">
+                    <span class="body-name">${body.name}</span>
+                </div>
+                <span id="data-${body.id}" class="body-detail-text">--:--</span>
+            </div>
+        `;
+        list.appendChild(li);
+    });
+}
+function toggleVisibility(id, isChecked) {
+    const body = bodies.find(b => b.id === id);
+    if (body) {
+        body.visible = isChecked;
+        updateCalculation();
+        if (isDPActive) updateDPLines();
+    }
+}
+function togglePanel() {
+    const panel = document.getElementById('control-panel');
+    const icon = document.getElementById('toggle-icon');
+    if (panel && icon) {
+        panel.classList.toggle('minimized');
+        icon.innerText = panel.classList.contains('minimized') ? '▼' : '▲';
+    }
+}
+function openPalette(bodyId) {
+    editingBodyId = bodyId;
+    const palette = document.getElementById('style-palette');
+    const colorContainer = document.getElementById('palette-colors');
+    if(!palette || !colorContainer) return;
+    colorContainer.innerHTML = '';
+    COLOR_MAP.forEach(c => {
+        const btn = document.createElement('div');
+        btn.className = 'color-btn';
+        btn.style.backgroundColor = c.code;
+        btn.onclick = () => applyColor(c.code);
+        colorContainer.appendChild(btn);
+    });
+    palette.classList.remove('hidden');
+}
+function closePalette() {
+    const palette = document.getElementById('style-palette');
+    if(palette) palette.classList.add('hidden');
+    editingBodyId = null;
+}
+function applyColor(colorCode) {
+    if (!editingBodyId) return;
+    const body = bodies.find(b => b.id === editingBodyId);
+    body.color = colorCode;
+    if(editingBodyId === 'MyStar') {
+        const ind = document.getElementById('style-MyStar');
+        if(ind) ind.style.color = colorCode;
+    }
+    finishStyleEdit();
+}
+function applyLineStyle(styleType) {
+    if (!editingBodyId) return;
+    const body = bodies.find(b => b.id === editingBodyId);
+    body.isDashed = (styleType === 'dashed');
+    if(editingBodyId === 'MyStar') {
+        const ind = document.getElementById('style-MyStar');
+        if(ind) ind.className = `style-indicator ${body.isDashed ? 'dashed' : 'solid'}`;
+    }
+    finishStyleEdit();
+}
+function finishStyleEdit() {
+    renderCelestialList();
+    updateCalculation();
+    if(isDPActive) updateDPLines();
+    closePalette();
+}
+
+// --- 9. 訪問者カウンター機能 ---
+
+function initVisitorCounter() {
+    // ローカルストレージチェック
+    const lastVisit = localStorage.getItem('soranotsuji_last_visit');
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${('00'+(today.getMonth()+1)).slice(-2)}-${('00'+today.getDate()).slice(-2)}`;
+    
+    let action = 'get'; // 基本はデータ取得のみ
+
+    // 日付が変わっていたらカウントアップ要求
+    if (lastVisit !== todayStr) {
+        action = 'visit';
+        localStorage.setItem('soranotsuji_last_visit', todayStr);
+    }
+
+    // GASへ通信
+    fetch(`${GAS_API_URL}?action=${action}`)
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+                console.error("Counter Error:", data.error);
+                return;
+            }
+            visitorData = data;
+            updateCounterDisplay();
+        })
+        .catch(err => console.error("Fetch Error:", err));
 }
 
 function updateCounterDisplay() {
