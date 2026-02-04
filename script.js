@@ -70,10 +70,10 @@ const COLOR_MAP = [
     { name: '青', code: '#0000FF' }, 
     { name: '藍', code: '#4B0082' }, 
     { name: '紫', code: '#800080' }, 
-    { name: '薄紫', code: '#DDA0DD' },
+    { name: '薄紫', code: '#DDA0DD' }, 
     { name: '茶', code: '#A52A2A' }, 
-    { name: 'こげ茶', code: '#654321' },
-    { name: '白', code: '#FFFFFF' },
+    { name: 'こげ茶', code: '#654321' }, 
+    { name: '白', code: '#FFFFFF' }, 
     { name: '黒', code: '#000000' }
 ];
 
@@ -243,6 +243,7 @@ function setupUIEvents() {
     document.getElementById('btn-time-next').onclick = () => addMinute(1);
     document.getElementById('btn-hour-next').onclick = () => addMinute(60);
 
+    // ★修正: 月の移動ロジックを高精度版に変更
     document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
     document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
 
@@ -622,7 +623,7 @@ function updateDPLines() {
         const pointsNext = calculateDPPathPoints(dateNext, body, observer);
         const pointsCurr = calculateDPPathPoints(baseDate, body, observer);
 
-        // ★修正: 点線の視認性を上げるため '1' -> '4' に変更
+        // 点線の視認性を上げるため '1' -> '4' に変更
         drawDPPath(pointsPrev, body.color, '4, 12', false);
         drawDPPath(pointsNext, body.color, '4, 12', false);
         
@@ -645,11 +646,11 @@ function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     return d;
 }
 
-// ★修正: 計算精度を維持しつつ、確実に動作するよう定数定義に戻しました
+// 計算精度を維持しつつ、確実に動作するよう定数定義に戻しました
 function getDestinationVincenty(lat1, lon1, az, dist) {
     const a = 6378137; // 定義値（正確）
     const f = 1 / 298.257223563; // 定義値（正確）
-    const b = a * (1 - f); // ★修正: 計算で出す（最も高精度）
+    const b = a * (1 - f); // 計算で出す（最も高精度）
 
     const toRad = Math.PI / 180;
     const toDeg = 180 / Math.PI;
@@ -837,6 +838,7 @@ function processFetchQueue() {
         drawProfileGraph();
         
         if (isElevationActive) {
+            // 3秒間隔に変更
             fetchTimer = setTimeout(processFetchQueue, 3000); 
         }
     });
@@ -853,6 +855,7 @@ function updateProgress(percent, current, total) {
     if(bar) bar.style.width = percent + "%";
     
     if(text) {
+        // 残り時間計算も3秒ベースに
         const remainingSeconds = (total - current) * 3;
         
         // 時・分・秒に変換
@@ -1082,12 +1085,12 @@ function loadLocationSettings() {
 function getHorizonDip(elevation) {
     if (!elevation || elevation <= 0) return 0; // 数値以外・0以下は0を返す
     // 地球を真球と仮定した幾何学的計算
+    // cos(θ) = R / (R + h)
     const val = EARTH_RADIUS / (EARTH_RADIUS + elevation);
     if (val >= 1) return 0; // エラー回避
     const dipRad = Math.acos(val);
     return dipRad * (180 / Math.PI); // ラジアン -> 度
 }
-
 // --- 以下、日時計算系ロジック (既存) ---
 
 // 起動時に現在時刻ではなく日の出時刻をセットする関数
@@ -1199,28 +1202,63 @@ function addMinute(minutes) {
     slider.dispatchEvent(new Event('input')); 
 }
 
+// ★修正: 正確な月齢ジャンプ機能
 function addMoonMonth(direction) {
     const dInput = document.getElementById('date-input');
     const tSlider = document.getElementById('time-slider');
     if(!dInput || !tSlider) return;
+    
+    // 現在の日時を取得
     const dateStr = dInput.value;
     const timeVal = parseInt(tSlider.value);
     const h = Math.floor(timeVal / 60);
     const m = timeVal % 60;
     const current = new Date(`${dateStr}T${('00' + h).slice(-2)}:${('00' + m).slice(-2)}:00`);
-    const moveMs = direction * SYNODIC_MONTH * 24 * 60 * 60 * 1000;
-    const targetDate = new Date(current.getTime() + moveMs);
-    const yyyy = targetDate.getFullYear();
-    const mm = ('00' + (targetDate.getMonth() + 1)).slice(-2);
-    const dd = ('00' + targetDate.getDate()).slice(-2);
-    dInput.value = `${yyyy}-${mm}-${dd}`;
-    const th = targetDate.getHours();
-    const tm = targetDate.getMinutes();
-    const timeStr = `${('00' + th).slice(-2)}:${('00' + tm).slice(-2)}`;
-    document.getElementById('time-input').value = timeStr;
-    tSlider.value = th * 60 + tm;
-    updateCalculation();
-    if(isDPActive) updateDPLines();
+
+    // 1. 現在の月齢（位相）を取得 (0-360度)
+    const currentPhase = Astronomy.MoonPhase(current);
+
+    // 2. およその移動先日時を計算 (平均朔望月 29.53日分)
+    const roughMoveMs = direction * SYNODIC_MONTH * 24 * 60 * 60 * 1000;
+    const roughTargetDate = new Date(current.getTime() + roughMoveMs);
+
+    // 3. 検索開始日時を設定 (およその日時から5日前から探せば確実)
+    // Astronomy.SearchMoonPhase は start_date 以降で最初にその位相になる瞬間を探す
+    const searchStartDate = new Date(roughTargetDate.getTime() - 5 * 24 * 60 * 60 * 1000);
+
+    // 4. 正確な日時を検索 (検索範囲は10日もあれば十分)
+    const result = Astronomy.SearchMoonPhase(currentPhase, searchStartDate, 10);
+
+    if (result && result.date) {
+        const targetDate = result.date;
+        
+        // 日付・時刻を更新
+        const yyyy = targetDate.getFullYear();
+        const mm = ('00' + (targetDate.getMonth() + 1)).slice(-2);
+        const dd = ('00' + targetDate.getDate()).slice(-2);
+        dInput.value = `${yyyy}-${mm}-${dd}`;
+        
+        const th = targetDate.getHours();
+        const tm = targetDate.getMinutes();
+        const timeStr = `${('00' + th).slice(-2)}:${('00' + tm).slice(-2)}`;
+        
+        const tInput = document.getElementById('time-input');
+        if(tInput) tInput.value = timeStr;
+        tSlider.value = th * 60 + tm;
+        
+        updateCalculation();
+        if(isDPActive) updateDPLines();
+    } else {
+        // 見つからなかった場合（エラー回避）は従来通り平均値で移動
+        const fallbackDate = roughTargetDate;
+        const yyyy = fallbackDate.getFullYear();
+        const mm = ('00' + (fallbackDate.getMonth() + 1)).slice(-2);
+        const dd = ('00' + fallbackDate.getDate()).slice(-2);
+        dInput.value = `${yyyy}-${mm}-${dd}`;
+        // 時刻はそのまま
+        updateCalculation();
+        if(isDPActive) updateDPLines();
+    }
 }
 
 function searchMoonAge(targetAge) {
@@ -1252,6 +1290,7 @@ function searchMoonAge(targetAge) {
     }
 }
 
+// 以下、updateCalculation, drawDirectionLine, renderCelestialList などを含む完全版
 function updateCalculation() {
     if (!map || !linesLayer) return;
     const dInput = document.getElementById('date-input');
@@ -1283,7 +1322,6 @@ function updateCalculation() {
             equatorCoords = Astronomy.Equator(body.id, calcDate, observer, false, true);
         }
         
-        // ★修正: 表示用も null (大気差なし) に統一、オンは、"normal" で計算
         const horizon = Astronomy.Horizon(calcDate, observer, equatorCoords.ra, equatorCoords.dec, null);
         
         let riseStr = "--:--";
@@ -1362,7 +1400,7 @@ function updateMoonInfo(date) {
 }
 
 function drawDirectionLine(lat, lng, azimuth, altitude, body) {
-    const lengthKm = 5000;
+    const lengthKm = 1000;
     const rad = (90 - azimuth) * (Math.PI / 180);
     const dLat = (lengthKm / 111) * Math.sin(rad);
     const dLng = (lengthKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.cos(rad);
@@ -1371,7 +1409,7 @@ function drawDirectionLine(lat, lng, azimuth, altitude, body) {
     const dashArray = body.isDashed ? '10, 10' : null;
     L.polyline([[lat, lng], endPos], {
         color: body.color,
-        weight: 3,
+        weight: 6,
         opacity: opacity,
         dashArray: dashArray
     }).addTo(linesLayer);
