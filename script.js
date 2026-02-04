@@ -130,7 +130,7 @@ window.onload = function() {
     }
     if(appState.homeEnd) {
         const btn = document.getElementById('btn-reg-end');
-        btn.classList.add('active'); btn.title = "登録済みの目的地を呼び出し";
+        btn.classList.add('active'); btn.title = "登録済みの目的点を呼び出し";
     }
 
     document.getElementById('input-mystar-radec').value = `${appState.myStar.ra},${appState.myStar.dec}`;
@@ -341,7 +341,7 @@ function registerLocation(type) {
         saveAppState();
         
         btn.classList.remove('active');
-        btn.title = `${type==='start'?'観測点':'目的地'}の初期値を登録`;
+        btn.title = `${type==='start'?'観測点':'目的点'}の初期値を登録`;
         alert('初期値をリセットしました');
         return;
     }
@@ -372,7 +372,7 @@ function registerLocation(type) {
         saveAppState();
         
         btn.classList.add('active');
-        btn.title = `登録済みの${type==='start'?'観測点':'目的地'}を呼び出し`;
+        btn.title = `登録済みの${type==='start'?'観測点':'目的点'}を呼び出し`;
         alert('現在の場所を初期値として登録しました');
     }
 }
@@ -436,7 +436,7 @@ function updateLocationDisplay() {
     const ePt = L.latLng(appState.end.lat, appState.end.lng);
     
     L.marker(sPt).addTo(locationLayer).bindPopup(createLocationPopup("観測点", appState.start, appState.end));
-    L.marker(ePt).addTo(locationLayer).bindPopup(createLocationPopup("目的地", appState.end, appState.start));
+    L.marker(ePt).addTo(locationLayer).bindPopup(createLocationPopup("目的点", appState.end, appState.start));
     
     L.polyline([sPt, ePt], { color: 'black', weight: 6, opacity: 0.8 }).addTo(locationLayer);
 }
