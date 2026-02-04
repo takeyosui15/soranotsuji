@@ -198,11 +198,13 @@ function setupUIEvents() {
     const moonInput = document.getElementById('moon-age-input');
 
     if (dateInput) dateInput.addEventListener('change', () => {
+        uncheckTimeShortcuts(); // ★手動変更時に選択解除
         updateCalculation();
         if(isDPActive) updateDPLines();
     });
     if (timeSlider) {
         timeSlider.addEventListener('input', () => {
+            uncheckTimeShortcuts(); // ★手動変更時に選択解除
             const val = parseInt(timeSlider.value);
             const h = Math.floor(val / 60);
             const m = val % 60;
@@ -212,6 +214,7 @@ function setupUIEvents() {
     }
     if (timeInput) {
         timeInput.addEventListener('input', () => {
+            uncheckTimeShortcuts(); // ★手動変更時に選択解除
             if (!timeInput.value) return;
             const [h, m] = timeInput.value.split(':').map(Number);
             if (!isNaN(h) && !isNaN(m)) {
@@ -1091,6 +1094,7 @@ function getHorizonDip(elevation) {
     const dipRad = Math.acos(val);
     return dipRad * (180 / Math.PI); // ラジアン -> 度
 }
+
 // --- 以下、日時計算系ロジック (既存) ---
 
 // 起動時に現在時刻ではなく日の出時刻をセットする関数
@@ -1148,6 +1152,7 @@ function setNow() {
     if(tInput) tInput.value = timeStr;
     if(tSlider) tSlider.value = h * 60 + m;
     
+    uncheckTimeShortcuts(); // ★手動変更時に選択解除
     updateCalculation();
     if(isDPActive) updateDPLines();
 }
@@ -1175,6 +1180,7 @@ function addMonth(months) {
     const mm = ('00' + (date.getMonth() + 1)).slice(-2);
     const dd = ('00' + date.getDate()).slice(-2);
     dInput.value = `${yyyy}-${mm}-${dd}`;
+    uncheckTimeShortcuts(); // ★手動変更時に選択解除
     updateCalculation();
     if(isDPActive) updateDPLines();
 }
@@ -1188,6 +1194,7 @@ function addDay(days) {
     const mm = ('00' + (date.getMonth() + 1)).slice(-2);
     const dd = ('00' + date.getDate()).slice(-2);
     dInput.value = `${yyyy}-${mm}-${dd}`;
+    uncheckTimeShortcuts(); // ★手動変更時に選択解除
     updateCalculation();
     if(isDPActive) updateDPLines();
 }
@@ -1246,6 +1253,7 @@ function addMoonMonth(direction) {
         if(tInput) tInput.value = timeStr;
         tSlider.value = th * 60 + tm;
         
+        uncheckTimeShortcuts(); // ★手動変更時に選択解除
         updateCalculation();
         if(isDPActive) updateDPLines();
     } else {
@@ -1256,6 +1264,7 @@ function addMoonMonth(direction) {
         const dd = ('00' + fallbackDate.getDate()).slice(-2);
         dInput.value = `${yyyy}-${mm}-${dd}`;
         // 時刻はそのまま
+        uncheckTimeShortcuts(); // ★手動変更時に選択解除
         updateCalculation();
         if(isDPActive) updateDPLines();
     }
@@ -1283,6 +1292,8 @@ function searchMoonAge(targetAge) {
         const timeStr = `${('00' + th).slice(-2)}:${('00' + tm).slice(-2)}`;
         document.getElementById('time-input').value = timeStr;
         tSlider.value = th * 60 + tm;
+        
+        uncheckTimeShortcuts(); // ★手動変更時に選択解除
         updateCalculation();
         if(isDPActive) updateDPLines();
     } else {
@@ -1551,6 +1562,12 @@ function initVisitorCounter() {
             updateCounterDisplay();
         })
         .catch(err => console.error("Fetch Error:", err));
+}
+
+// ★追加: ショートカットラジオボタンの選択解除用関数
+function uncheckTimeShortcuts() {
+    const radios = document.querySelectorAll('input[name="time-jump"]');
+    radios.forEach(r => r.checked = false);
 }
 
 function updateCounterDisplay() {
