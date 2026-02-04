@@ -20,33 +20,29 @@ let locationLayer;
 let dpLayer; 
 let moveTimer = null; 
 
-// GASのウェブアプリURL (★ここにGASのURLを貼り付けてください！)
+// GASのウェブアプリURL
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb1WQcRrRVi2Qpd_i60NvJWx6BB6Qxpb-30GD7TSzZptpRYxYL/exec"; 
 
-let visitorData = null; // 取得したカウンターデータを保持
+let visitorData = null; 
 
-// デフォルト値 (東京タワー & 富士山)
+// デフォルト値
 const DEFAULT_START_LATLNG = { lat: 35.658449, lng: 139.745536 };
 const DEFAULT_START_ELEV = 150.0;
 const DEFAULT_END_LATLNG = { lat: 35.360776, lng: 138.727299 };
 const DEFAULT_END_ELEV = 3776.0;
 
-// 位置情報管理 (初期値はデフォルトだが、起動時に上書きされる可能性あり)
 let startLatLng = DEFAULT_START_LATLNG; 
 let startElev = DEFAULT_START_ELEV; 
 let endLatLng = DEFAULT_END_LATLNG; 
 let endElev = DEFAULT_END_ELEV; 
 
-// 標高グラフ用
 let isElevationActive = false;
 let elevationDataPoints = []; 
 let fetchIndex = 0;
 let fetchTimer = null;
 
-// D/P機能用 (初期値を true に変更)
 let isDPActive = true;
 
-// 北極星・すばる・My天体(初期値:アルニラム)
 const POLARIS_RA = 2.5303; 
 const POLARIS_DEC = 89.2641; 
 const SUBARU_RA = 3.79;
@@ -57,14 +53,12 @@ const ALNILAM_DEC = -1.202;
 const SYNODIC_MONTH = 29.53059; 
 const EARTH_RADIUS = 6378137;
 
-// ★修正: 大気差なし（幾何学的計算）にするため 0.0 に設定, オンの値: 0.13
-const REFRACTION_K = 0.0;
+// 大気差なし（幾何学的計算）にするため 0 に設定
+const REFRACTION_K = 0;
 
-// My天体変数
 let myStarRA = ALNILAM_RA;
 let myStarDec = ALNILAM_DEC;
 
-// カラーパレット
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' }, 
     { name: '桃', code: '#FFC0CB' }, 
@@ -83,7 +77,6 @@ const COLOR_MAP = [
     { name: '黒', code: '#000000' }
 ];
 
-// 表示天体リスト
 let bodies = [
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
@@ -113,22 +106,18 @@ window.onload = function() {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // 地理院地図レイヤーを使用
         const gsiStdLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
             attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
             maxZoom: 18
         });
-        
         const gsiPhotoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', {
             attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
             maxZoom: 18
         });
-        
         const gsiPaleLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
             attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>',
             maxZoom: 18
         });
-
         const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         });
@@ -161,6 +150,7 @@ window.onload = function() {
 
     setupUIEvents();
     
+    // UI初期値設定
     document.getElementById('input-start-elev').value = startElev;
     document.getElementById('input-end-elev').value = endElev;
     document.getElementById('input-mystar-radec').value = `${myStarRA},${myStarDec}`;
@@ -181,7 +171,8 @@ window.onload = function() {
     }
 
     updateLocationDisplay();
-    setNow(); 
+    // 既定を日の出時刻に設定
+    setSunrise(); 
     renderCelestialList(); 
     
     window.addEventListener('resize', () => {
@@ -196,6 +187,7 @@ window.onload = function() {
 };
 
 // --- 3. UIイベント設定 ---
+
 function setupUIEvents() {
     const btnHelp = document.getElementById('btn-help');
     if(btnHelp) btnHelp.onclick = toggleHelp;
@@ -464,7 +456,6 @@ function setupUIEvents() {
     }
 }
 
-// --- 4. ヘルプ機能 ---
 function toggleHelp() {
     const modal = document.getElementById('help-modal');
     if(modal) {
@@ -530,7 +521,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     
     L.polyline([startLatLng, endLatLng], {
         color: 'black',
-        weight: 3,
+        weight: 6, // 線を太く (6)
         opacity: 0.8
     }).addTo(locationLayer);
 
@@ -556,7 +547,7 @@ async function updateLocationDisplay(fetchElevation = true) {
     ));
 }
 
-// --- 5. D/P 機能 (大気差なし: Geometric Position) ---
+// --- 5. D/P 機能 (辻ライン) ---
 
 function toggleDP() {
     const btn = document.getElementById('btn-dp');
@@ -591,16 +582,18 @@ function calculateDPPathPoints(targetDate, body, observer) {
             r = eq.ra; d = eq.dec;
         }
 
-        // ★修正: null を使用して大気差なしの高度を取得、オンは、"normal" で計算
+        // null を使用して大気差なしの高度を取得
         const hor = Astronomy.Horizon(time, observer, r, d, null);
         
-        // ★ここを修正: 固定値 -2 ではなく、計算に基づいた限界値を使う
+        // 眼高差を計算
+        const valElev = parseFloat(startElev) || 0; // 数値化(安全策)
+        const dip = getHorizonDip(valElev);
+        
         // 太陽の視半径(約0.27度) + 眼高差 + マージン(0.1度)
-        const dip = getHorizonDip(startElev); // 観測点の標高から眼高差を計算
         const limit = -(dip + 0.27 + 0.1); 
 
         if (hor.altitude > limit) {
-            const dist = calculateDistanceForAltitudes(hor.altitude, startElev, endElev);
+            const dist = calculateDistanceForAltitudes(hor.altitude, valElev, endElev);
             if (dist > 0 && dist <= 350000) {
                 path.push({ dist: dist, az: hor.azimuth, time: time });
             }
@@ -629,15 +622,18 @@ function updateDPLines() {
         const pointsNext = calculateDPPathPoints(dateNext, body, observer);
         const pointsCurr = calculateDPPathPoints(baseDate, body, observer);
 
-        drawDPPath(pointsPrev, body.color, '1, 5', false);
-        drawDPPath(pointsNext, body.color, '1, 5', false);
-        drawDPPath(pointsCurr, body.color, '5, 5', true);
+        // ★修正: 点線の視認性を上げるため '1' -> '4' に変更
+        drawDPPath(pointsPrev, body.color, '4, 12', false);
+        drawDPPath(pointsNext, body.color, '4, 12', false);
+        
+        // 当日（破線）: '12, 12'
+        drawDPPath(pointsCurr, body.color, '12, 12', true);
     });
 }
 
 function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     const altRad = celestialAltDeg * Math.PI / 180;
-    // REFRACTION_K = 0 (大気差なし) で計算
+    // REFRACTION_K = 0 (大気差なし)
     const a = (1 - REFRACTION_K) / (2 * EARTH_RADIUS);
     const b = Math.tan(altRad);
     const c = -(hTarget - hObs);
@@ -649,10 +645,11 @@ function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     return d;
 }
 
+// ★修正: 計算精度を維持しつつ、確実に動作するよう定数定義に戻しました
 function getDestinationVincenty(lat1, lon1, az, dist) {
-    const a = 6378137;
-    const b = 6356752.314245;
-    const f = 1 / 298.257223563;
+    const a = 6378137; // 定義値（正確）
+    const f = 1 / 298.257223563; // 定義値（正確）
+    const b = a * (1 - f); // ★修正: 計算で出す（最も高精度）
 
     const toRad = Math.PI / 180;
     const toDeg = 180 / Math.PI;
@@ -754,14 +751,12 @@ function drawDPPath(points, color, dashArray, withMarkers) {
     segments.forEach(seg => {
         L.polyline(seg, {
             color: color,
-            weight: 2,
+            weight: 5,
             opacity: 0.8,
             dashArray: dashArray 
         }).addTo(dpLayer);
     });
 }
-
-// --- 6. 標高グラフ機能 ---
 
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
@@ -842,7 +837,7 @@ function processFetchQueue() {
         drawProfileGraph();
         
         if (isElevationActive) {
-            fetchTimer = setTimeout(processFetchQueue, 5000); 
+            fetchTimer = setTimeout(processFetchQueue, 3000); 
         }
     });
 }
@@ -858,7 +853,7 @@ function updateProgress(percent, current, total) {
     if(bar) bar.style.width = percent + "%";
     
     if(text) {
-        const remainingSeconds = (total - current) * 5;
+        const remainingSeconds = (total - current) * 3;
         
         // 時・分・秒に変換
         const h = Math.floor(remainingSeconds / 3600);
@@ -889,7 +884,7 @@ function drawProfileGraph() {
 
     const fetchedPoints = elevationDataPoints.filter(p => p.fetched);
     let minElev = 0;
-    let maxElev = 3000; 
+    let maxElev = 4000; 
     
     if (fetchedPoints.length > 0) {
         const elevs = fetchedPoints.map(p => p.elev);
@@ -955,12 +950,32 @@ function fitBoundsToLocations() {
     map.fitBounds(bounds, { padding: [50, 50] });
 }
 
+// ハイブリッド検索 (OSM -> GSI)
 async function searchLocation(query) {
     try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        return data;
+        // 1. まずOSM (Nominatim) で検索 (ランドマークに強い)
+        const urlOsm = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+        const resOsm = await fetch(urlOsm);
+        const dataOsm = await resOsm.json();
+
+        if (dataOsm && dataOsm.length > 0) {
+            return dataOsm; // ヒットしたらそれを返す
+        }
+
+        // 2. ヒットしなければ国土地理院 (住所検索) で検索 (住所に強い)
+        const urlGsi = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(query)}`;
+        const resGsi = await fetch(urlGsi);
+        const dataGsi = await resGsi.json();
+
+        if (!dataGsi || dataGsi.length === 0) return [];
+
+        // 形式変換 (GSI -> OSM互換)
+        return dataGsi.map(item => ({
+            lat: item.geometry.coordinates[1],
+            lon: item.geometry.coordinates[0],
+            display_name: item.properties.title
+        }));
+
     } catch(e) {
         console.error("Search error:", e);
         return null;
@@ -987,7 +1002,7 @@ function searchStarRiseSet(ra, dec, observer, startOfDay) {
     let prevAlt = null;
     for (let m = 0; m <= 1440; m += 10) {
         const time = new Date(start + m * 60000);
-        // ★修正: 表示用も null (大気差なし) に統一、オンは、"normal" で計算
+        // 表示用も null (大気差なし) に統一
         const hor = Astronomy.Horizon(time, observer, ra, dec, null);
         const alt = hor.altitude;
         if (prevAlt !== null) {
@@ -1035,7 +1050,6 @@ function loadLocationSettings() {
                 startLatLng = { lat: data.lat, lng: data.lng };
                 startElev = data.elev;
                 
-                // ボタンを黄色(active)に & タイトル変更
                 const btn = document.getElementById('btn-reg-start');
                 if(btn) {
                     btn.classList.add('active');
@@ -1054,7 +1068,6 @@ function loadLocationSettings() {
                 endLatLng = { lat: data.lat, lng: data.lng };
                 endElev = data.elev;
 
-                // ボタンを黄色(active)に & タイトル変更
                 const btn = document.getElementById('btn-reg-end');
                 if(btn) {
                     btn.classList.add('active');
@@ -1067,9 +1080,8 @@ function loadLocationSettings() {
 
 // 眼高差（Dip）を計算する関数 (度数法)
 function getHorizonDip(elevation) {
-    if (elevation <= 0) return 0;
+    if (!elevation || elevation <= 0) return 0; // 数値以外・0以下は0を返す
     // 地球を真球と仮定した幾何学的計算
-    // cos(θ) = R / (R + h)
     const val = EARTH_RADIUS / (EARTH_RADIUS + elevation);
     if (val >= 1) return 0; // エラー回避
     const dipRad = Math.acos(val);
@@ -1077,6 +1089,45 @@ function getHorizonDip(elevation) {
 }
 
 // --- 以下、日時計算系ロジック (既存) ---
+
+// 起動時に現在時刻ではなく日の出時刻をセットする関数
+function setSunrise() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = ('00' + (now.getMonth() + 1)).slice(-2);
+    const dd = ('00' + now.getDate()).slice(-2);
+    
+    // 日付を今日にセット
+    const dInput = document.getElementById('date-input');
+    if(dInput) dInput.value = `${yyyy}-${mm}-${dd}`;
+    
+    // 日の出時刻を計算
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    
+    let h = 6, m = 0; // デフォルト
+    try {
+        const observer = new Astronomy.Observer(startLatLng.lat, startLatLng.lng, startElev);
+        const sunRise = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
+        if(sunRise && sunRise.date) {
+            h = sunRise.date.getHours();
+            m = sunRise.date.getMinutes();
+        }
+    } catch(e) { console.error(e); }
+    
+    const timeStr = `${('00' + h).slice(-2)}:${('00' + m).slice(-2)}`;
+    
+    const tInput = document.getElementById('time-input');
+    const tSlider = document.getElementById('time-slider');
+    if(tInput) tInput.value = timeStr;
+    if(tSlider) tSlider.value = h * 60 + m;
+
+    // ラジオボタンを「日の出」にチェックを入れる
+    const rBtn = document.getElementById('jump-sunrise');
+    if(rBtn) rBtn.checked = true;
+
+    updateCalculation();
+    if(isDPActive) updateDPLines();
+}
 
 function setNow() {
     const now = new Date();
@@ -1106,7 +1157,8 @@ function toggleMove() {
         if(btn) btn.classList.remove('active');
     } else {
         if(btn) btn.classList.add('active');
-        moveTimer = setInterval(() => { addMinute(1); }, 1000);
+        // 1分間隔から「1日」間隔へ
+        moveTimer = setInterval(() => { addDay(1); }, 1000);
     }
 }
 

@@ -17,9 +17,9 @@ GNU General Public License for more details.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="宙の辻 - Sora no Tsuji: ダイヤモンド富士やパール富士、特定の山の『推し山』ダイヤモンドが見られる時間と位置の「辻（交差点）」をマップ上に可視化するWebアプリ。">
+    <meta name="description" content="宙の辻 - Sora no Tsuji: ダイヤモンド富士やパール富士、特定の山の『推し山』ダイヤモンドが見られる時間と場所の「辻（交差点）」をマップ上に可視化するWebアプリ。">
     <meta property="og:title" content="宙の辻 - Sora no Tsuji">
-    <meta property="og:description" content="ダイヤモンド富士やパール富士、特定の山の『推し山』ダイヤモンドが見られる時間と位置の「辻（交差点）」をマップ上に可視化するWebアプリ。">
+    <meta property="og:description" content="ダイヤモンド富士やパール富士、特定の山の『推し山』ダイヤモンドが見られる時間と場所の「辻（交差点）」をマップ上に可視化するWebアプリ。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://soranotsuji.design10100.net/">
     <meta property="og:image" content="https://soranotsuji.design10100.net/ogpV1.7.png">
@@ -27,7 +27,7 @@ GNU General Public License for more details.
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="宙の辻 - Sora no Tsuji">
-    <meta name="twitter:description" content="ダイヤモンド富士や特定の山の『推し山』ダイヤモンドが見える時間と位置の「辻（交差点）」をマップ上に可視化するWebアプリ。">
+    <meta name="twitter:description" content="ダイヤモンド富士や特定の山の『推し山』ダイヤモンドが見える時間と場所の「辻（交差点）」をマップ上に可視化するWebアプリ。">
     <meta name="twitter:image" content="https://soranotsuji.design10100.net/ogpV1.7.png">
     <meta name="google-site-verification" content="2lAHbwDdCuACvK0K2-OLOqOKltOPSYYnbPO1vcdbRjo" />
     <title>宙の辻 - Sora no Tsuji</title>
@@ -89,7 +89,7 @@ GNU General Public License for more details.
                             <input type="radio" name="loc-mode" id="radio-start" value="start" checked>
                         </div>
                         <label class="input-label">観測点:</label>
-                        <input type="text" id="input-start-latlng" placeholder="緯度,経度 または 地名">
+                        <input type="text" id="input-start-latlng" placeholder="緯度,経度 地名 住所">
                     </div>
 
                     <div class="control-row">
@@ -106,7 +106,7 @@ GNU General Public License for more details.
                             <input type="radio" name="loc-mode" id="radio-end" value="end">
                         </div>
                         <label class="input-label">目的地:</label>
-                        <input type="text" id="input-end-latlng" placeholder="緯度,経度 または 地名">
+                        <input type="text" id="input-end-latlng" placeholder="緯度,経度 地名 住所">
                     </div>
 
                     <div class="control-row">
@@ -246,21 +246,21 @@ GNU General Public License for more details.
             <div class="help-body">
                 <h3>概要</h3>
                 <p><strong>「時」と「場所」が交差する瞬間を、地図上で探す。</strong></p>
-                <p>「宙の辻 - Sora no Tsuji」は、天体シミュレーションと地図情報を組み合わせたWebアプリケーションです。特定の日時・場所における太陽、月、惑星、恒星の位置を計算し、ダイヤモンド富士やパール富士、ダイヤモンド槍ヶ岳に、特定の山の『推し山』ダイヤモンドが見られる時間と位置の「辻（交差点）」をマップ上に可視化します。</p>
+                <p>「宙の辻 - Sora no Tsuji」は、天体シミュレーションと地図情報を組み合わせたWebアプリケーションです。特定の日時・場所における太陽、月、惑星、恒星の位置を計算し、ダイヤモンド富士やパール富士、ダイヤモンド槍ヶ岳に、特定の山の『推し山』ダイヤモンドが見られる時間と場所の「辻（交差点）」をマップ上に可視化します。</p>
                 
                 <h3>位置情報の設定</h3>
                 <ul>
                     <li><strong>GPS:</strong> 現在地を観測点に設定します。</li>
-                    <li><strong>観測点/目的地:</strong> 地図をクリック、または緯度,経度を直接入力するか、「東京タワー」「富士山」などの地名を入力してEnterキーを押すと検索・設定できます。ラジオボタンは、観測点/目的地のクリック時の入力切り替えです。</li>
+                    <li><strong>観測点/目的地:</strong> 地図をクリック、または、「東京タワー」「富士山」などの地名・およその住所、または、緯度,経度を入力してEnterキーを押すと検索・設定できます。ラジオボタンは、観測点/目的地のクリック時の入力切り替えです。初期値は、東京タワー(観測点)と富士山(目的地)です。</li>
+                    <li><strong>観測点高/目的地高:</strong> 観測点/目的地が入力されると自動で標高を取得します。手動で数値を修正してシミュレーションすることも可能です。</li>
                     <li><strong>Hom:</strong> 観測点の登録・呼出ボタンです。未登録時は現在の値を登録（黄色）し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除（リセット）します。</li>
                     <li><strong>推山:</strong> 目的地の登録・呼出ボタンです。未登録時は現在の値を登録（黄色）し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除（リセット）します。</li>
-                    <li><strong>標高:</strong> 地図をクリックまたは地名を検索すると、国土地理院のAPIから自動で標高を取得します。手動で数値を修正してシミュレーションすることも可能です。</li>
                 </ul>
 
                 <h3>日時情報の設定</h3>
                 <ul>
                     <li><strong>Now:</strong> 現在日時にリセットします。</li>
-                    <li><strong>Mov:</strong> 1分1秒で時間を自動で進めます（アニメーション）。</li>
+                    <li><strong>Mov:</strong> 1日1秒で時間を自動で進めます（アニメーション）。</li>
                     <li><strong>月齢:</strong> 月齢の数値を変更して、満月(15)や新月(0,30)の日にジャンプできます。◀︎ ▶︎ボタンで、およそ同じ次の月齢の日時にジャンプできます。</li>
                 </ul>
 
@@ -273,7 +273,7 @@ GNU General Public License for more details.
                 <p>太陽（赤）、月（黄）、および表示中の惑星やMy天体について計算されます。</p>
 
                 <h3>標高グラフ</h3>
-                <p>観測点と目的地の間の断面標高をグラフに表示します。サーバー低負荷にするため100m5秒おきに算出します。ブラウザを表示したままで気長にお待ちいただくか、PCでの利用を推奨。</p>
+                <p>観測点と目的地の間の断面標高をグラフに表示します。サーバー低負荷にするため100m3秒おきに算出します。ブラウザを表示したままで気長にお待ちいただくか、PCでの利用を推奨。</p>
 
                 <h3>My天体</h3>
                 <p>お好みの恒星などの座標（赤経, 赤緯）を登録して表示できます。初期値はオリオン座のアルニラムです。空白にして登録ボタンを押下することでリセットできます。</p>
@@ -282,14 +282,15 @@ GNU General Public License for more details.
                 <p>太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星、北極星、すばる、のそれぞれを出没時刻、入没時刻、方位、高度がわかります。チェックボックスで表示・非表示にできます。また、カラーパレットで、色と線種を変更できます。リロードで元に戻ります。</p>
 
                 <h3>地図上の線のズレについて（豆知識）</h3>
-                <p>距離が遠い場合、<strong>地図上の「観測点からの色付きの方位線、または、観測点と目的地を結ぶ黒い線」と「辻ラインのマーカー(破線と点線の曲線)」</strong>がズレて見えることがあります。</p>
+                <p>距離が遠い場合、<strong>地図上の「観測点からの色付きの方位線」と「観測点と目的地を結ぶ黒い線」と「辻ラインのマーカー(破線と点線の曲線)」</strong>がズレて見えることがあります。</p>
                 <p>これは、<strong>「地球は丸いのに、地図は平ら」</strong>であるために起こる現象です。</p>
                 <ul>
-                    <li><strong>辻ライン:</strong> 地球の丸みを考慮した、現実世界の光の通り道（最短ルート）を厳密に計算しています。</li>
-                    <li><strong>地図の線:</strong> 平面上の単純な直線として描画されています。</li>
+                    <li><strong>方位線:</strong> 地球の丸みを考慮した方位になります。</li>
+                    <li><strong>黒い線:</strong> 平面上の単純な2点間の方位になります。</li>
+                    <li><strong>辻ライン:</strong> 目的地上に天体が見える位置の時間の軌跡のため、方位を表してはいません。</li>
                 </ul>
-                <p>距離が遠くなるほど、メルカトル図法の性質上、本来の視線（光の道）は地図上でカーブを描くため、直線とは見た目がズレてしまいます。<br>
-                <strong>マーカー（曲線）のある位置が天文学的・地理学的に正しい位置</strong>ですので、ご安心ください。</p>
+                <p>距離が遠くなるほど、メルカトル図法の性質上、方位線と黒い線はズレて表示されます。辻ラインは、そもそも、方位線と黒い線とは重なりません。</p>
+                <p><strong>辻ライン上に観測点を設定した時が、天文学的・地理学的に正しい位置と方位を示します。</strong></p>
 
                 <h3>注意事項・免責事項</h3>
                 <ul>
