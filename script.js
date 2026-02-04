@@ -12,11 +12,11 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Refactored Version 1.8.3 (Fix: Button Event Timing & Logic)
+Version 1.9.0 (Full State Management Refactoring)
 */
 
 // ============================================================
-// 1. 定数・グローバル変数定義
+// 1. 定数定義
 // ============================================================
 
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb1WQcRrRVi2Qpd_i60NvJWx6BB6Qxpb-30GD7TSzZptpRYxYL/exec"; 
@@ -24,40 +24,55 @@ const SYNODIC_MONTH = 29.53059;
 const EARTH_RADIUS = 6378137;
 const REFRACTION_K = 0;
 
-const POLARIS_RA = 2.5303; 
-const POLARIS_DEC = 89.2641; 
-const SUBARU_RA = 3.79;
-const SUBARU_DEC = 24.12;
-const ALNILAM_RA = 5.603; 
-const ALNILAM_DEC = -1.202;
+const POLARIS_RA = 2.5303;  const POLARIS_DEC = 89.2641; 
+const SUBARU_RA = 3.79;     const SUBARU_DEC = 24.12;
+const ALNILAM_RA = 5.603;   const ALNILAM_DEC = -1.202;
 
-const DEFAULT_START_LATLNG = { lat: 35.658449, lng: 139.745536 };
-const DEFAULT_START_ELEV = 150.0;
-const DEFAULT_END_LATLNG = { lat: 35.360776, lng: 138.727299 };
-const DEFAULT_END_ELEV = 3776.0;
+const DEFAULT_START = { lat: 35.658449, lng: 139.745536, elev: 150.0 };
+const DEFAULT_END = { lat: 35.360776, lng: 138.727299, elev: 3776.0 };
 
 const COLOR_MAP = [
-    { name: '赤', code: '#FF0000' }, { name: '桃', code: '#FFC0CB' }, 
-    { name: '橙', code: '#FFA500' }, { name: '黄', code: '#FFFF00' }, 
-    { name: '黄緑', code: '#ADFF2F' }, { name: '緑', code: '#008000' }, 
-    { name: '水', code: '#00BFFF' }, { name: '青', code: '#0000FF' }, 
-    { name: '藍', code: '#4B0082' }, { name: '紫', code: '#800080' }, 
-    { name: '薄紫', code: '#DDA0DD' }, { name: '茶', code: '#A52A2A' }, 
-    { name: 'こげ茶', code: '#654321' }, { name: '白', code: '#FFFFFF' }, 
-    { name: '黒', code: '#000000' }
+    { name: '赤', code: '#FF0000' }, { name: '桃', code: '#FFC0CB' }, { name: '橙', code: '#FFA500' }, 
+    { name: '黄', code: '#FFFF00' }, { name: '黄緑', code: '#ADFF2F' }, { name: '緑', code: '#008000' }, 
+    { name: '水', code: '#00BFFF' }, { name: '青', code: '#0000FF' }, { name: '藍', code: '#4B0082' }, 
+    { name: '紫', code: '#800080' }, { name: '薄紫', code: '#DDA0DD' }, { name: '茶', code: '#A52A2A' }, 
+    { name: 'こげ茶', code: '#654321' }, { name: '白', code: '#FFFFFF' }, { name: '黒', code: '#000000' }
 ];
+
+// ============================================================
+// 2. グローバル変数 & アプリケーション状態 (appState)
+// ============================================================
 
 let map; 
 let linesLayer, locationLayer, dpLayer;
 
+// ★全ての動的状態を一元管理するオブジェクト
 let appState = {
-    start: { lat: DEFAULT_START_LATLNG.lat, lng: DEFAULT_START_LATLNG.lng, elev: DEFAULT_START_ELEV },
-    end: { lat: DEFAULT_END_LATLNG.lat, lng: DEFAULT_END_LATLNG.lng, elev: DEFAULT_END_ELEV },
+    // 現在の観測点と目的地
+    start: { ...DEFAULT_START },
+    end:   { ...DEFAULT_END },
+    
+    // 現在のシミュレーション日時
+    currentDate: new Date(), 
+    
+    // My天体の設定
     myStar: { ra: ALNILAM_RA, dec: ALNILAM_DEC },
+    
+    // 各機能のON/OFFフラグ
+    isMoving: false,
     isDPActive: true,
-    moveTimer: null
+    isElevationActive: false,
+    
+    // 内部動作用タイマーID
+    moveTimerId: null,
+    fetchTimerId: null,
+    
+    // 標高グラフ用データ
+    elevationPoints: [],
+    fetchIndex: 0
 };
 
+// 天体データ（表示・色はここで管理）
 let bodies = [
     { id: 'Sun',     name: '太陽',   color: '#FF0000', isDashed: false, visible: true },
     { id: 'Moon',    name: '月',     color: '#FFFF00', isDashed: false, visible: true },
@@ -74,70 +89,68 @@ let bodies = [
     { id: 'MyStar',  name: 'My天体', color: '#DDA0DD', isDashed: false, visible: false, isCustom: true }
 ];
 
+// その他UI補助
 let visitorData = null; 
 let editingBodyId = null;
-let currentRiseSetData = {};
-
-let isElevationActive = false;
-let elevationDataPoints = []; 
-let fetchIndex = 0;
-let fetchTimer = null;
+let currentRiseSetData = {}; // ショートカット用の一時データ
 
 
 // ============================================================
-// 2. 初期化処理
+// 3. 初期化プロセス
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.3)");
+    console.log("宙の辻: 起動 (V1.9.0 - State Managed)");
 
-    loadSettings();
+    // 1. ローカルストレージから永続設定を読み込む（ボタン状態など）
+    loadPersistentSettings();
+
+    // 2. 地図の生成
     initMap();
-    setupUI();
-    
-    document.getElementById('input-start-elev').value = appState.start.elev;
-    document.getElementById('input-end-elev').value = appState.end.elev;
-    document.getElementById('input-mystar-radec').value = `${appState.myStar.ra},${appState.myStar.dec}`;
-    reflectMyStarUI();
 
+    // 3. UIイベントの紐付け
+    setupUI();
+
+    // 4. アプリ状態の初期化
+    // 辻ラインボタンの見た目を状態に合わせる
     if (appState.isDPActive) {
         document.getElementById('btn-dp').classList.add('active');
     }
+    
+    // My天体の値をUIに反映
+    document.getElementById('input-mystar-radec').value = `${appState.myStar.ra},${appState.myStar.dec}`;
+    reflectMyStarUI();
 
+    // 5. 日の出時刻にセットして初期描画
     setSunrise(); 
     
+    // リサイズイベント登録
     window.addEventListener('resize', () => {
-        if(isElevationActive) drawProfileGraph();
+        if(appState.isElevationActive) drawProfileGraph();
     });
 
+    // 訪問者カウンター（非同期）
     setTimeout(initVisitorCounter, 1000);
 };
 
 function initMap() {
-    const mapElement = document.getElementById('map');
-    if (!mapElement) return;
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return;
 
-    const gsiStdLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 });
-    const gsiPhotoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', {
-        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 });
-    const gsiPaleLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
-        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 });
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
+    const gsiStd = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 });
+    const gsiPhoto = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', { attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 });
+    const gsiPale = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', { attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>', maxZoom: 18 });
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' });
 
     map = L.map('map', {
         center: [appState.start.lat, appState.start.lng],
         zoom: 9, 
-        layers: [gsiStdLayer], 
+        layers: [gsiStd], 
         zoomControl: false
     });
     map.attributionControl.addAttribution('標高データ: &copy; 国土地理院');
 
-    L.control.layers({ 
-        "標準(地理院)": gsiStdLayer, "写真(地理院)": gsiPhotoLayer, "淡色(地理院)": gsiPaleLayer, "OSM": osmLayer 
-    }, null, { position: 'topleft' }).addTo(map);
-
+    L.control.layers({ "標準(地理院)": gsiStd, "写真(地理院)": gsiPhoto, "淡色(地理院)": gsiPale, "OSM": osm }, null, { position: 'topleft' }).addTo(map);
     L.control.zoom({ position: 'topleft' }).addTo(map);
     L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
     
@@ -150,27 +163,30 @@ function initMap() {
 
 
 // ============================================================
-// 3. UIイベント設定
+// 4. UIイベント設定
 // ============================================================
 
 function setupUI() {
+    // ヘルプ
     document.getElementById('btn-help').onclick = toggleHelp;
 
-    const dInput = document.getElementById('date-input');
+    // 日時入力変化
+    document.getElementById('date-input').addEventListener('change', () => {
+        uncheckTimeShortcuts();
+        syncStateFromUI(); // UIの値をStateに取り込む
+        updateAll();
+    });
+
     const tInput = document.getElementById('time-input');
     const tSlider = document.getElementById('time-slider');
-    const moonInput = document.getElementById('moon-age-input');
 
-    const onTimeChange = () => { uncheckTimeShortcuts(); updateAll(); };
-
-    dInput.addEventListener('change', onTimeChange);
-    
     tSlider.addEventListener('input', () => {
         uncheckTimeShortcuts();
         const val = parseInt(tSlider.value);
         const h = Math.floor(val / 60);
         const m = val % 60;
         tInput.value = `${('00' + h).slice(-2)}:${('00' + m).slice(-2)}`;
+        syncStateFromUI();
         updateAll();
     });
 
@@ -180,53 +196,59 @@ function setupUI() {
         const [h, m] = tInput.value.split(':').map(Number);
         if (!isNaN(h) && !isNaN(m)) {
             tSlider.value = h * 60 + m;
+            syncStateFromUI();
             updateAll();
         }
     });
 
-    moonInput.addEventListener('change', (e) => {
+    document.getElementById('moon-age-input').addEventListener('change', (e) => {
         const targetAge = parseFloat(e.target.value);
         if (!isNaN(targetAge)) searchMoonAge(targetAge);
     });
 
+    // 各種ボタン
     document.getElementById('btn-now').onclick = setNow;
     document.getElementById('btn-move').onclick = toggleMove;
 
-    const dateShift = (days) => { addDay(days); };
-    const monthShift = (months) => { addMonth(months); };
-    document.getElementById('btn-date-prev').onclick = () => dateShift(-1);
-    document.getElementById('btn-date-next').onclick = () => dateShift(1);
-    document.getElementById('btn-month-prev').onclick = () => monthShift(-1);
-    document.getElementById('btn-month-next').onclick = () => monthShift(1);
-
-    const timeShift = (mins) => { addMinute(mins); };
-    document.getElementById('btn-time-prev').onclick = () => timeShift(-1);
-    document.getElementById('btn-time-next').onclick = () => timeShift(1);
-    document.getElementById('btn-hour-prev').onclick = () => timeShift(-60);
-    document.getElementById('btn-hour-next').onclick = () => timeShift(60);
-
+    // 時間操作ボタン（ラッパー関数で呼び出し）
+    const shiftD = (d) => addDay(d);
+    const shiftM = (m) => addMonth(m);
+    const shiftT = (m) => addMinute(m);
+    
+    document.getElementById('btn-date-prev').onclick = () => shiftD(-1);
+    document.getElementById('btn-date-next').onclick = () => shiftD(1);
+    document.getElementById('btn-month-prev').onclick = () => shiftM(-1);
+    document.getElementById('btn-month-next').onclick = () => shiftM(1);
+    document.getElementById('btn-time-prev').onclick = () => shiftT(-1);
+    document.getElementById('btn-time-next').onclick = () => shiftT(1);
+    document.getElementById('btn-hour-prev').onclick = () => shiftT(-60);
+    document.getElementById('btn-hour-next').onclick = () => shiftT(60);
     document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
     document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
 
+    // ショートカットラジオ
     document.querySelectorAll('input[name="time-jump"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             if(e.target.checked) jumpToEvent(e.target.value);
         });
     });
 
+    // 機能ボタン
     document.getElementById('btn-gps').onclick = useGPS;
     document.getElementById('btn-elevation').onclick = toggleElevation;
     document.getElementById('btn-dp').onclick = toggleDP;
 
-    // ★修正: onclick -> onmousedown に変更 (入力欄のblurイベントより先に実行させるため)
-    document.getElementById('btn-reg-start').onmousedown = () => registerLocation('start');
-    document.getElementById('btn-reg-end').onmousedown = () => registerLocation('end');
+    // 登録ボタン (onclickで動作するようにロジックを整理済)
+    document.getElementById('btn-reg-start').onclick = () => registerLocation('start');
+    document.getElementById('btn-reg-end').onclick = () => registerLocation('end');
 
-    const inputStart = document.getElementById('input-start-latlng');
-    const inputEnd = document.getElementById('input-end-latlng');
-    inputStart.addEventListener('change', () => handleLocationInput(inputStart.value, true));
-    inputEnd.addEventListener('change', () => handleLocationInput(inputEnd.value, false));
+    // 座標直接入力
+    const iStart = document.getElementById('input-start-latlng');
+    const iEnd = document.getElementById('input-end-latlng');
+    iStart.addEventListener('change', () => handleLocationInput(iStart.value, true));
+    iEnd.addEventListener('change', () => handleLocationInput(iEnd.value, false));
 
+    // 標高入力
     document.getElementById('input-start-elev').addEventListener('change', (e) => {
         appState.start.elev = parseFloat(e.target.value) || 0;
         updateAll(); 
@@ -236,48 +258,91 @@ function setupUI() {
         updateAll();
     });
 
+    // My天体
     document.getElementById('btn-mystar-reg').onclick = registerMyStar;
     document.getElementById('chk-mystar').addEventListener('change', (e) => toggleVisibility('MyStar', e.target.checked));
 }
 
 
 // ============================================================
-// 4. メイン更新ロジック (Compatible Names)
+// 5. データ更新・レンダリング (Core Update Logic)
 // ============================================================
 
+/** UIの現在値をappState.currentDateに反映させるヘルパー */
+function syncStateFromUI() {
+    const dStr = document.getElementById('date-input').value;
+    const tStr = document.getElementById('time-input').value;
+    if(dStr && tStr) {
+        appState.currentDate = new Date(`${dStr}T${tStr}:00`);
+    }
+}
+
+/** appState.currentDateの値をUIに反映させるヘルパー */
+function syncUIFromState() {
+    const d = appState.currentDate;
+    const yyyy = d.getFullYear();
+    const mm = ('00'+(d.getMonth()+1)).slice(-2);
+    const dd = ('00'+d.getDate()).slice(-2);
+    const h = ('00'+d.getHours()).slice(-2);
+    const m = ('00'+d.getMinutes()).slice(-2);
+    
+    document.getElementById('date-input').value = `${yyyy}-${mm}-${dd}`;
+    document.getElementById('time-input').value = `${h}:${m}`;
+    document.getElementById('time-slider').value = d.getHours() * 60 + d.getMinutes();
+}
+
+/** 画面全体の一括更新 */
 function updateAll() {
     if (!map) return;
-    updateLocationDisplay(); 
-    updateCalculation();     
-    if (appState.isDPActive) updateDPLines(); 
+    
+    // 念のためUIとStateを同期
+    // (自動移動中などはStateが正でUIが追従、手動入力時はUIが正でStateが追従)
+    if (appState.isMoving) {
+        syncUIFromState();
+    } else {
+        // 入力中かもしれないので、現在値をStateに取り込む
+        // ただし、Dateオブジェクトが無効にならないよう注意
+        syncStateFromUI();
+    }
+
+    updateLocationDisplay();
+    updateCalculation();
+    
+    if (appState.isDPActive) updateDPLines();
     else dpLayer.clearLayers();
 }
 
+/** 位置情報の表示更新 */
 function updateLocationDisplay() {
     locationLayer.clearLayers();
 
-    const fmt = (lat, lng) => `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    // 座標テキストの更新（入力中でない場合のみ更新することでUX向上）
+    const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
     if(document.activeElement.id !== 'input-start-latlng') {
-        document.getElementById('input-start-latlng').value = fmt(appState.start.lat, appState.start.lng);
+        document.getElementById('input-start-latlng').value = fmt(appState.start);
     }
     if(document.activeElement.id !== 'input-end-latlng') {
-        document.getElementById('input-end-latlng').value = fmt(appState.end.lat, appState.end.lng);
+        document.getElementById('input-end-latlng').value = fmt(appState.end);
     }
+    // 標高は常に更新
+    document.getElementById('input-start-elev').value = appState.start.elev;
+    document.getElementById('input-end-elev').value = appState.end.elev;
 
-    const startPt = L.latLng(appState.start.lat, appState.start.lng);
-    const endPt = L.latLng(appState.end.lat, appState.end.lng);
+    const sPt = L.latLng(appState.start.lat, appState.start.lng);
+    const ePt = L.latLng(appState.end.lat, appState.end.lng);
     
-    L.marker(startPt).addTo(locationLayer).bindPopup(createLocationPopup("観測点", appState.start, appState.end));
-    L.marker(endPt).addTo(locationLayer).bindPopup(createLocationPopup("目的地", appState.end, appState.start));
+    L.marker(sPt).addTo(locationLayer).bindPopup(createLocationPopup("観測点", appState.start, appState.end));
+    L.marker(ePt).addTo(locationLayer).bindPopup(createLocationPopup("目的地", appState.end, appState.start));
     
-    L.polyline([startPt, endPt], { color: 'black', weight: 6, opacity: 0.8 }).addTo(locationLayer);
+    L.polyline([sPt, ePt], { color: 'black', weight: 6, opacity: 0.8 }).addTo(locationLayer);
 }
 
+/** 天体の計算と表示更新 */
 function updateCalculation() {
     linesLayer.clearLayers();
     
-    const currentDate = getCurrentDate();
-    const startOfDay = new Date(currentDate);
+    const obsDate = appState.currentDate;
+    const startOfDay = new Date(obsDate);
     startOfDay.setHours(0, 0, 0, 0);
 
     let observer;
@@ -291,23 +356,27 @@ function updateCalculation() {
         else if (body.id === 'Subaru') { ra = SUBARU_RA; dec = SUBARU_DEC; }
         else if (body.id === 'MyStar') { ra = appState.myStar.ra; dec = appState.myStar.dec; }
         else {
-            const eq = Astronomy.Equator(body.id, currentDate, observer, false, true);
+            const eq = Astronomy.Equator(body.id, obsDate, observer, false, true);
             ra = eq.ra; dec = eq.dec;
         }
 
-        const hor = Astronomy.Horizon(currentDate, observer, ra, dec, null);
+        const hor = Astronomy.Horizon(obsDate, observer, ra, dec, null);
 
+        // 出没計算
         let riseStr = "--:--", setStr = "--:--";
         if (['Polaris', 'Subaru', 'MyStar'].includes(body.id)) {
             const times = searchStarRiseSet(ra, dec, observer, startOfDay);
             riseStr = times.rise; setStr = times.set;
         } else {
-            const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
-            const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 1);
-            riseStr = rise ? formatTime(rise.date) : "--:--";
-            setStr = set ? formatTime(set.date) : "--:--";
+            try {
+                const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
+                const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 1);
+                riseStr = rise ? formatTime(rise.date) : "--:--";
+                setStr = set ? formatTime(set.date) : "--:--";
+            } catch(e){}
         }
         
+        // 常時出没判定
         if (riseStr === "--:--" && setStr === "--:--" && hor.altitude > 0) {
             riseStr = "00:00"; setStr = "00:00"; 
         }
@@ -323,52 +392,52 @@ function updateCalculation() {
     });
 
     updateShortcutsData(startOfDay, observer);
-    updateMoonInfo(currentDate);
+    updateMoonInfo(obsDate);
 }
 
+/** 辻ライン更新 */
 function updateDPLines() {
     dpLayer.clearLayers();
     
-    const currentDate = getCurrentDate();
-    const baseDate = new Date(currentDate);
+    const baseDate = new Date(appState.currentDate);
     baseDate.setHours(0, 0, 0, 0); 
 
-    const datePrev = new Date(baseDate.getTime() - 24 * 60 * 60 * 1000);
-    const dateNext = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
+    const datePrev = new Date(baseDate.getTime() - 86400000);
+    const dateNext = new Date(baseDate.getTime() + 86400000);
 
     const observer = new Astronomy.Observer(appState.end.lat, appState.end.lng, appState.end.elev);
 
     bodies.forEach(body => {
         if (!body.visible) return;
 
-        const pointsPrev = calculateDPPathPoints(datePrev, body, observer);
-        const pointsNext = calculateDPPathPoints(dateNext, body, observer);
-        const pointsCurr = calculateDPPathPoints(baseDate, body, observer);
+        const pPrev = calculateDPPathPoints(datePrev, body, observer);
+        const pNext = calculateDPPathPoints(dateNext, body, observer);
+        const pCurr = calculateDPPathPoints(baseDate, body, observer);
 
-        drawDPPath(pointsPrev, body.color, '4, 12', false);
-        drawDPPath(pointsNext, body.color, '4, 12', false);
-        drawDPPath(pointsCurr, body.color, '12, 12', true);
+        drawDPPath(pPrev, body.color, '4, 12', false);
+        drawDPPath(pNext, body.color, '4, 12', false);
+        drawDPPath(pCurr, body.color, '12, 12', true);
     });
 }
 
 
 // ============================================================
-// 5. ロジック詳細: 地図・計算
+// 6. 計算ロジック・ヘルパー関数
 // ============================================================
 
 function drawDirectionLine(lat, lng, azimuth, altitude, body) {
-    const lengthKm = 5000;
-    const rad = (90 - azimuth) * (Math.PI / 180);
-    const dLat = (lengthKm / 111) * Math.sin(rad);
-    const dLng = (lengthKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.cos(rad);
-    const endPos = [lat + dLat, lng + dLng];
-    
+    const endPos = computeDestination(lat, lng, azimuth, 5000); // 簡易計算で十分
     const opacity = altitude < 0 ? 0.3 : 1.0; 
     const dashArray = body.isDashed ? '10, 10' : null;
+    L.polyline([[lat, lng], endPos], { color: body.color, weight: 6, opacity: opacity, dashArray: dashArray }).addTo(linesLayer);
+}
 
-    L.polyline([[lat, lng], endPos], {
-        color: body.color, weight: 6, opacity: opacity, dashArray: dashArray
-    }).addTo(linesLayer);
+// 簡易目的地計算（方位線描画用）
+function computeDestination(lat, lng, az, km) {
+    const rad = (90 - az) * (Math.PI / 180);
+    const dLat = (km / 111) * Math.sin(rad);
+    const dLng = (km / (111 * Math.cos(lat * Math.PI / 180))) * Math.cos(rad);
+    return [lat + dLat, lng + dLng];
 }
 
 function calculateDPPathPoints(targetDate, body, observer) {
@@ -376,18 +445,20 @@ function calculateDPPathPoints(targetDate, body, observer) {
     const startOfDay = new Date(targetDate.getTime());
     startOfDay.setHours(0, 0, 0, 0);
 
-    const valElev = parseFloat(appState.start.elev) || 0;
+    const valElev = appState.start.elev;
     const dip = getHorizonDip(valElev);
     const limit = -(dip + 0.27 + 0.1); 
 
     for (let m = 0; m < 1440; m++) {
         const time = new Date(startOfDay.getTime() + m * 60000);
-        
         let r, d;
-        if (body.id === 'Polaris') { r = POLARIS_RA; d = POLARIS_DEC; }
-        else if (body.id === 'Subaru') { r = SUBARU_RA; d = SUBARU_DEC; }
-        else if (body.id === 'MyStar') { r = appState.myStar.ra; d = appState.myStar.dec; }
-        else {
+        
+        // 座標取得
+        if (['Polaris', 'Subaru', 'MyStar'].includes(body.id)) {
+            if(body.id === 'Polaris') { r = POLARIS_RA; d = POLARIS_DEC; }
+            else if(body.id === 'Subaru') { r = SUBARU_RA; d = SUBARU_DEC; }
+            else { r = appState.myStar.ra; d = appState.myStar.dec; }
+        } else {
             const eq = Astronomy.Equator(body.id, time, observer, false, true);
             r = eq.ra; d = eq.dec;
         }
@@ -406,7 +477,7 @@ function calculateDPPathPoints(targetDate, body, observer) {
 
 function drawDPPath(points, color, dashArray, withMarkers) {
     if (points.length === 0) return;
-    const targetPt = L.latLng(appState.end.lat, appState.end.lng);
+    const targetPt = appState.end;
     
     let segments = [];
     let currentSegment = [];
@@ -427,15 +498,12 @@ function drawDPPath(points, color, dashArray, withMarkers) {
         currentSegment.push(pt);
 
         if (withMarkers && p.time.getMinutes() % 10 === 0) {
+            L.circleMarker(pt, { radius: 4, color: color, fillColor: color, fillOpacity: 1.0, weight: 1 }).addTo(dpLayer);
             const timeStr = formatTime(p.time);
-            L.circleMarker(pt, {
-                radius: 4, color: color, fillColor: color, fillOpacity: 1.0, weight: 1
-            }).addTo(dpLayer);
-
-            const textStyle = `font-size: 14px; font-weight: bold; color: ${color}; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; white-space: nowrap;`;
             L.marker(pt, {
                 icon: L.divIcon({
-                    className: 'dp-label-icon', html: `<div style="${textStyle}">${timeStr}</div>`,
+                    className: 'dp-label-icon', 
+                    html: `<div style="font-size:14px;font-weight:bold;color:${color};text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;white-space:nowrap;">${timeStr}</div>`,
                     iconSize: [null, null], iconAnchor: [-10, 7] 
                 })
             }).addTo(dpLayer);
@@ -444,9 +512,7 @@ function drawDPPath(points, color, dashArray, withMarkers) {
     if (currentSegment.length > 0) segments.push(currentSegment);
 
     segments.forEach(seg => {
-        L.polyline(seg, {
-            color: color, weight: 5, opacity: 0.8, dashArray: dashArray 
-        }).addTo(dpLayer);
+        L.polyline(seg, { color: color, weight: 5, opacity: 0.8, dashArray: dashArray }).addTo(dpLayer);
     });
 }
 
@@ -464,7 +530,6 @@ function getDestinationVincenty(lat1, lon1, az, dist) {
     const a = 6378137; 
     const f = 1 / 298.257223563; 
     const b = a * (1 - f); 
-
     const toRad = Math.PI / 180;
     const toDeg = 180 / Math.PI;
     const alpha1 = az * toRad;
@@ -500,34 +565,22 @@ function getDestinationVincenty(lat1, lon1, az, dist) {
     const lambda = Math.atan2(sinSigma * sinAlpha1, cosU1 * cosSigma - sinU1 * sinSigma * cosAlpha1);
     const C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
     const L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
-    
     return { lat: lat2 * toDeg, lng: lon1 + L * toDeg };
 }
 
-
 // ============================================================
-// 6. ロジック詳細: データ更新・ヘルパー
+// 7. データ操作・イベントハンドラ
 // ============================================================
 
 async function onMapClick(e) {
     const isStart = document.getElementById('radio-start').checked;
-    
+    const elev = await getElevation(e.latlng.lat, e.latlng.lng);
+    const val = (elev !== null) ? elev : 0;
+
     if (isStart) {
-        appState.start.lat = e.latlng.lat;
-        appState.start.lng = e.latlng.lng;
-        const elev = await getElevation(e.latlng.lat, e.latlng.lng);
-        if (elev !== null) {
-            appState.start.elev = elev;
-            document.getElementById('input-start-elev').value = elev;
-        }
+        appState.start = { lat: e.latlng.lat, lng: e.latlng.lng, elev: val };
     } else {
-        appState.end.lat = e.latlng.lat;
-        appState.end.lng = e.latlng.lng;
-        const elev = await getElevation(e.latlng.lat, e.latlng.lng);
-        if (elev !== null) {
-            appState.end.elev = elev;
-            document.getElementById('input-end-elev').value = elev;
-        }
+        appState.end = { lat: e.latlng.lat, lng: e.latlng.lng, elev: val };
     }
     updateAll();
 }
@@ -548,24 +601,201 @@ async function handleLocationInput(val, isStart) {
         const elev = await getElevation(coords.lat, coords.lng);
         const validElev = (elev !== null) ? elev : 0;
         
-        const inputId = isStart ? 'input-start-latlng' : 'input-end-latlng';
-
         if(isStart) {
             appState.start = { ...coords, elev: validElev };
             document.getElementById('radio-start').checked = true;
-            document.getElementById('input-start-elev').value = validElev;
         } else {
             appState.end = { ...coords, elev: validElev };
             document.getElementById('radio-end').checked = true;
-            document.getElementById('input-end-elev').value = validElev;
         }
         
-        document.getElementById(inputId).blur(); // ★フォーカス解除 (値の正規化のため)
+        // ★フォーカス解除 (これにより入力欄がappStateの値で更新される)
+        const inputId = isStart ? 'input-start-latlng' : 'input-end-latlng';
+        document.getElementById(inputId).blur(); 
+        
         map.setView(coords, 10);
         updateAll();
     }
 }
 
+// 登録ボタンのロジック (localStorage vs appState)
+function registerLocation(type) {
+    const key = `soranotsuji_${type}`;
+    const input = document.getElementById(`input-${type}-latlng`);
+    const btn = document.getElementById(`btn-reg-${type}`);
+    const savedData = localStorage.getItem(key);
+
+    // リセット
+    if (!input.value) {
+        localStorage.removeItem(key);
+        btn.classList.remove('active');
+        btn.title = `${type==='start'?'観測点':'目的地'}の初期値を登録`;
+        alert('初期値をリセットしました');
+        return;
+    }
+
+    // 呼び出し (Saved Data -> appState)
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            if (type === 'start') {
+                appState.start = { lat: data.lat, lng: data.lng, elev: data.elev };
+                document.getElementById('radio-start').checked = true;
+            } else {
+                appState.end = { lat: data.lat, lng: data.lng, elev: data.elev };
+                document.getElementById('radio-end').checked = true;
+            }
+            // マップ移動
+            const bounds = L.latLngBounds([appState.start.lat, appState.start.lng], [appState.end.lat, appState.end.lng]);
+            map.fitBounds(bounds, { padding: [50, 50] });
+            
+            updateAll();
+            alert('登録済みの場所を呼び出しました');
+        } catch(e) { console.error(e); }
+    } 
+    // 登録 (appState -> Saved Data)
+    else {
+        const data = (type === 'start') ? appState.start : appState.end;
+        localStorage.setItem(key, JSON.stringify(data));
+        btn.classList.add('active');
+        btn.title = `登録済みの${type==='start'?'観測点':'目的地'}を呼び出し`;
+        alert('現在の場所を初期値として登録しました');
+    }
+}
+
+// 永続設定の読み込み
+function loadPersistentSettings() {
+    const load = (key, targetProp, btnId, label) => {
+        const d = localStorage.getItem(key);
+        if(d) {
+            try { 
+                const o = JSON.parse(d);
+                // appStateを上書き
+                appState[targetProp] = { lat: o.lat, lng: o.lng, elev: o.elev };
+                
+                const btn = document.getElementById(btnId);
+                if(btn) {
+                    btn.classList.add('active');
+                    btn.title = `登録済みの${label}を呼び出し`;
+                }
+            } catch(e){}
+        }
+    };
+    load('soranotsuji_start', 'start', 'btn-reg-start', '観測点');
+    load('soranotsuji_end', 'end', 'btn-reg-end', '目的地');
+    
+    // MyStar
+    const ms = localStorage.getItem('soranotsuji_mystar');
+    if(ms) { try { const o = JSON.parse(ms); appState.myStar = o; } catch(e){} }
+}
+
+// 日の出セット (appState更新)
+function setSunrise() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    try {
+        const obs = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev);
+        const sr = Astronomy.SearchRiseSet('Sun', obs, +1, startOfDay, 1);
+        if(sr) {
+            appState.currentDate = sr.date;
+        } else {
+            appState.currentDate = now; // 極夜/白夜なら現在時刻
+        }
+    } catch(e) { appState.currentDate = now; }
+
+    document.getElementById('jump-sunrise').checked = true;
+    renderCelestialList();
+    syncUIFromState(); // UIに反映
+    updateAll();
+}
+
+function setNow() {
+    uncheckTimeShortcuts();
+    appState.currentDate = new Date();
+    syncUIFromState();
+    updateAll();
+}
+
+function jumpToEvent(type) {
+    if (!currentRiseSetData[type]) return;
+    appState.currentDate = currentRiseSetData[type];
+    syncUIFromState();
+    updateAll();
+}
+
+function addDay(d) { uncheckTimeShortcuts(); appState.currentDate.setDate(appState.currentDate.getDate() + d); syncUIFromState(); updateAll(); }
+function addMonth(m) { uncheckTimeShortcuts(); appState.currentDate.setMonth(appState.currentDate.getMonth() + m); syncUIFromState(); updateAll(); }
+function addMinute(m) { 
+    uncheckTimeShortcuts(); 
+    appState.currentDate.setMinutes(appState.currentDate.getMinutes() + m); 
+    syncUIFromState(); updateAll(); 
+}
+
+function addMoonMonth(dir) {
+    uncheckTimeShortcuts();
+    const currentPhase = Astronomy.MoonPhase(appState.currentDate);
+    const roughTarget = new Date(appState.currentDate.getTime() + dir * SYNODIC_MONTH * 86400000);
+    const searchStart = new Date(roughTarget.getTime() - 5 * 86400000);
+    const res = Astronomy.SearchMoonPhase(currentPhase, searchStart, 10);
+    
+    if(res && res.date) appState.currentDate = res.date;
+    else appState.currentDate = roughTarget;
+    
+    syncUIFromState(); updateAll();
+}
+
+function searchMoonAge(age) {
+    uncheckTimeShortcuts();
+    const phase = (age / SYNODIC_MONTH) * 360.0;
+    const res = Astronomy.SearchMoonPhase(phase, appState.currentDate, 30);
+    if(res && res.date) {
+        appState.currentDate = res.date;
+        syncUIFromState(); updateAll();
+    } else { alert("見つかりませんでした"); }
+}
+
+function uncheckTimeShortcuts() {
+    document.querySelectorAll('input[name="time-jump"]').forEach(r => r.checked = false);
+}
+
+function toggleMove() {
+    const btn = document.getElementById('btn-move');
+    appState.isMoving = !appState.isMoving;
+    if (appState.isMoving) {
+        btn.classList.add('active');
+        appState.moveTimerId = setInterval(() => addDay(1), 1000);
+    } else {
+        btn.classList.remove('active');
+        clearInterval(appState.moveTimerId);
+    }
+}
+
+function toggleDP() {
+    const btn = document.getElementById('btn-dp');
+    appState.isDPActive = !appState.isDPActive;
+    if (appState.isDPActive) {
+        btn.classList.add('active');
+        updateDPLines();
+    } else {
+        btn.classList.remove('active');
+        dpLayer.clearLayers();
+    }
+}
+
+function useGPS() {
+    if (!navigator.geolocation) return alert('GPS非対応です');
+    navigator.geolocation.getCurrentPosition(pos => {
+        appState.start.lat = pos.coords.latitude;
+        appState.start.lng = pos.coords.longitude;
+        map.setView([appState.start.lat, appState.start.lng], 10);
+        getElevation(appState.start.lat, appState.start.lng).then(elev => {
+            if(elev !== null) appState.start.elev = elev;
+            updateAll();
+        });
+    }, () => alert('位置情報を取得できませんでした'));
+}
+
+// 汎用ヘルパー
 function parseInput(val) {
     if (val.indexOf(',') === -1) return null;
     const clean = val.replace(/[\(\)\s]/g, ''); 
@@ -595,7 +825,7 @@ async function searchLocation(query) {
             lon: item.geometry.coordinates[0],
             display_name: item.properties.title
         }));
-    } catch(e) { console.error("Search error:", e); return null; }
+    } catch(e) { console.error(e); return null; }
 }
 
 async function getElevation(lat, lng) {
@@ -608,22 +838,15 @@ async function getElevation(lat, lng) {
 }
 
 function createLocationPopup(title, pos, target) {
-    const distMeters = L.latLng(pos.lat, pos.lng).distanceTo(L.latLng(target.lat, target.lng));
     const az = calculateBearing(pos.lat, pos.lng, target.lat, target.lng);
-    return `
-        <b>${title}</b><br>
-        緯度: ${pos.lat.toFixed(5)}<br>経度: ${pos.lng.toFixed(5)}<br>
-        標高: ${pos.elev} m<br>
-        相手まで: ${(distMeters/1000).toFixed(2)} km<br>
-        方位: ${az.toFixed(1)}°
-    `;
+    const dist = L.latLng(pos.lat, pos.lng).distanceTo(L.latLng(target.lat, target.lng));
+    return `<b>${title}</b><br>緯度: ${pos.lat.toFixed(5)}<br>経度: ${pos.lng.toFixed(5)}<br>標高: ${pos.elev} m<br>相手まで: ${(dist/1000).toFixed(2)} km<br>方位: ${az.toFixed(1)}°`;
 }
 
 function calculateBearing(lat1, lng1, lat2, lng2) {
     const toRad = deg => deg * Math.PI / 180;
     const toDeg = rad => rad * 180 / Math.PI;
-    const l1 = toRad(lat1), l2 = toRad(lat2);
-    const dLng = toRad(lng2 - lng1);
+    const l1 = toRad(lat1), l2 = toRad(lat2), dLng = toRad(lng2 - lng1);
     const y = Math.sin(dLng) * Math.cos(l2);
     const x = Math.cos(l1) * Math.sin(l2) - Math.sin(l1) * Math.cos(l2) * Math.cos(dLng);
     return (toDeg(Math.atan2(y, x)) + 360) % 360;
@@ -641,9 +864,7 @@ function updateShortcutsData(startOfDay, observer) {
         document.getElementById('time-moonrise').innerText = mr ? formatTime(mr.date) : "--:--";
         document.getElementById('time-moonset').innerText = ms ? formatTime(ms.date) : "--:--";
 
-        currentRiseSetData = {
-            sunrise: sr?.date, sunset: ss?.date, moonrise: mr?.date, moonset: ms?.date
-        };
+        currentRiseSetData = { sunrise: sr?.date, sunset: ss?.date, moonrise: mr?.date, moonset: ms?.date };
     } catch(e) {}
 }
 
@@ -657,19 +878,12 @@ function updateMoonInfo(date) {
     document.getElementById('moon-icon').innerText = icons[Math.round(phase / 45) % 8];
 }
 
-function getCurrentDate() {
-    const dStr = document.getElementById('date-input').value;
-    const tStr = document.getElementById('time-input').value;
-    return new Date(`${dStr}T${tStr}:00`);
-}
-
 function formatTime(date) {
     return `${('00'+date.getHours()).slice(-2)}:${('00'+date.getMinutes()).slice(-2)}`;
 }
 
 function searchStarRiseSet(ra, dec, observer, startOfDay) {
-    let rise = null, set = null;
-    let prevAlt = null;
+    let rise = null, set = null, prevAlt = null;
     const start = startOfDay.getTime();
     for (let m = 0; m <= 1440; m += 10) {
         const time = new Date(start + m * 60000);
@@ -694,231 +908,7 @@ function getHorizonDip(elev) {
     return (val >= 1) ? 0 : Math.acos(val) * (180 / Math.PI);
 }
 
-
-// ============================================================
-// 7. 操作系ロジック (Handlers)
-// ============================================================
-
-function setSunrise() {
-    const now = new Date();
-    const dInput = document.getElementById('date-input');
-    dInput.value = `${now.getFullYear()}-${('00'+(now.getMonth()+1)).slice(-2)}-${('00'+now.getDate()).slice(-2)}`;
-    
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    try {
-        const obs = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev);
-        const sr = Astronomy.SearchRiseSet('Sun', obs, +1, startOfDay, 1);
-        if(sr) {
-            const tInput = document.getElementById('time-input');
-            const tSlider = document.getElementById('time-slider');
-            const h = sr.date.getHours(), m = sr.date.getMinutes();
-            tInput.value = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
-            tSlider.value = h * 60 + m;
-        }
-    } catch(e) {}
-
-    document.getElementById('jump-sunrise').checked = true;
-    
-    renderCelestialList();
-    updateAll();
-}
-
-function setNow() {
-    uncheckTimeShortcuts();
-    const now = new Date();
-    document.getElementById('date-input').value = `${now.getFullYear()}-${('00'+(now.getMonth()+1)).slice(-2)}-${('00'+now.getDate()).slice(-2)}`;
-    const h = now.getHours(), m = now.getMinutes();
-    document.getElementById('time-input').value = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
-    document.getElementById('time-slider').value = h * 60 + m;
-    updateAll();
-}
-
-function jumpToEvent(type) {
-    if (!currentRiseSetData[type]) return;
-    const d = currentRiseSetData[type];
-    const h = d.getHours(), m = d.getMinutes();
-    document.getElementById('time-input').value = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
-    document.getElementById('time-slider').value = h * 60 + m;
-    updateAll();
-}
-
-function addDay(d) { uncheckTimeShortcuts(); updateDate(dt => dt.setDate(dt.getDate() + d)); }
-function addMonth(m) { uncheckTimeShortcuts(); updateDate(dt => dt.setMonth(dt.getMonth() + m)); }
-function updateDate(fn) {
-    const inp = document.getElementById('date-input');
-    const dt = new Date(inp.value);
-    fn(dt);
-    inp.value = `${dt.getFullYear()}-${('00'+(dt.getMonth()+1)).slice(-2)}-${('00'+dt.getDate()).slice(-2)}`;
-    updateAll();
-}
-
-function addMinute(m) {
-    uncheckTimeShortcuts();
-    const s = document.getElementById('time-slider');
-    let v = parseInt(s.value) + m;
-    if (v < 0) v = 1439; if (v > 1439) v = 0;
-    s.value = v;
-    s.dispatchEvent(new Event('input'));
-}
-
-function addMoonMonth(dir) {
-    uncheckTimeShortcuts();
-    const current = getCurrentDate();
-    const currentPhase = Astronomy.MoonPhase(current);
-    const roughTarget = new Date(current.getTime() + dir * SYNODIC_MONTH * 24 * 3600 * 1000);
-    const searchStart = new Date(roughTarget.getTime() - 5 * 24 * 3600 * 1000);
-    
-    const res = Astronomy.SearchMoonPhase(currentPhase, searchStart, 10);
-    const target = (res && res.date) ? res.date : roughTarget;
-
-    const dInput = document.getElementById('date-input');
-    dInput.value = `${target.getFullYear()}-${('00'+(target.getMonth()+1)).slice(-2)}-${('00'+target.getDate()).slice(-2)}`;
-    const h = target.getHours(), m = target.getMinutes();
-    document.getElementById('time-input').value = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
-    document.getElementById('time-slider').value = h * 60 + m;
-    updateAll();
-}
-
-function searchMoonAge(age) {
-    uncheckTimeShortcuts();
-    const current = getCurrentDate();
-    const phase = (age / SYNODIC_MONTH) * 360.0;
-    const res = Astronomy.SearchMoonPhase(phase, current, 30);
-    if(res && res.date) {
-        const d = res.date;
-        document.getElementById('date-input').value = `${d.getFullYear()}-${('00'+(d.getMonth()+1)).slice(-2)}-${('00'+d.getDate()).slice(-2)}`;
-        const h = d.getHours(), m = d.getMinutes();
-        document.getElementById('time-input').value = `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
-        document.getElementById('time-slider').value = h * 60 + m;
-        updateAll();
-    } else { alert("見つかりませんでした"); }
-}
-
-function uncheckTimeShortcuts() {
-    document.querySelectorAll('input[name="time-jump"]').forEach(r => r.checked = false);
-}
-
-function toggleMove() {
-    const btn = document.getElementById('btn-move');
-    if (appState.moveTimer) {
-        clearInterval(appState.moveTimer);
-        appState.moveTimer = null;
-        btn.classList.remove('active');
-    } else {
-        btn.classList.add('active');
-        appState.moveTimer = setInterval(() => addDay(1), 1000);
-    }
-}
-
-function toggleDP() {
-    const btn = document.getElementById('btn-dp');
-    appState.isDPActive = !appState.isDPActive;
-    if (appState.isDPActive) {
-        btn.classList.add('active');
-        updateDPLines();
-    } else {
-        btn.classList.remove('active');
-        dpLayer.clearLayers();
-    }
-}
-
-function useGPS() {
-    if (!navigator.geolocation) return alert('GPS非対応です');
-    navigator.geolocation.getCurrentPosition(pos => {
-        appState.start.lat = pos.coords.latitude;
-        appState.start.lng = pos.coords.longitude;
-        map.setView([appState.start.lat, appState.start.lng], 10);
-        getElevation(appState.start.lat, appState.start.lng).then(elev => {
-            if(elev !== null) appState.start.elev = elev;
-            document.getElementById('input-start-elev').value = appState.start.elev;
-            updateAll();
-        });
-    }, () => alert('位置情報を取得できませんでした'));
-}
-
-// ============================================================
-// 8. その他の機能 (Settings, Graph, Counter)
-// ============================================================
-
-// ★修正: 登録/呼び出し切り替えロジック
-function registerLocation(type) {
-    const key = `soranotsuji_${type}`;
-    const input = document.getElementById(`input-${type}-latlng`);
-    const btn = document.getElementById(`btn-reg-${type}`);
-    const savedData = localStorage.getItem(key);
-
-    // 1. リセット (空で押下)
-    if (!input.value) {
-        localStorage.removeItem(key);
-        btn.classList.remove('active');
-        btn.title = (type === 'start' ? "観測点" : "目的地") + "の初期値を登録";
-        alert('初期値をリセットしました。');
-        return;
-    }
-
-    // 2. 呼び出し (保存データあり)
-    if (savedData) {
-        try {
-            const data = JSON.parse(savedData);
-            
-            if (type === 'start') {
-                appState.start = { lat: data.lat, lng: data.lng, elev: data.elev };
-                document.getElementById('input-start-elev').value = data.elev;
-                document.getElementById('radio-start').checked = true;
-            } else {
-                appState.end = { lat: data.lat, lng: data.lng, elev: data.elev };
-                document.getElementById('input-end-elev').value = data.elev;
-                document.getElementById('radio-end').checked = true;
-            }
-
-            updateAll(); 
-
-            // 地図をフィット
-            const bounds = L.latLngBounds(
-                [appState.start.lat, appState.start.lng],
-                [appState.end.lat, appState.end.lng]
-            );
-            map.fitBounds(bounds, { padding: [50, 50] });
-
-            alert('登録済みの場所を呼び出しました。');
-        } catch(e) { console.error(e); }
-    } 
-    // 3. 登録 (保存データなし)
-    else {
-        const data = (type === 'start') ? appState.start : appState.end;
-        localStorage.setItem(key, JSON.stringify(data));
-        
-        btn.classList.add('active');
-        btn.title = "登録済みの" + (type === 'start' ? "観測点" : "目的地") + "を呼び出し";
-        
-        alert('現在の場所を初期値として登録しました。\n(上書きする場合は、一度入力欄を空にしてボタンを押し、リセットしてください)');
-    }
-}
-
-// ★修正: 起動時にボタンをactiveにする
-function loadSettings() {
-    const load = (key, target, btnId, label) => {
-        const d = localStorage.getItem(key);
-        if(d) {
-            try { 
-                const o = JSON.parse(d); 
-                target.lat = o.lat; target.lng = o.lng; target.elev = o.elev; 
-                
-                const btn = document.getElementById(btnId);
-                if(btn) {
-                    btn.classList.add('active');
-                    btn.title = `登録済みの${label}を呼び出し`;
-                }
-            } catch(e){}
-        }
-    };
-    load('soranotsuji_start', appState.start, 'btn-reg-start', '観測点');
-    load('soranotsuji_end', appState.end, 'btn-reg-end', '目的地');
-    
-    const ms = localStorage.getItem('soranotsuji_mystar');
-    if(ms) { try { const o = JSON.parse(ms); appState.myStar = o; } catch(e){} }
-}
-
+// MyStar関連
 function registerMyStar() {
     const val = document.getElementById('input-mystar-radec').value.trim();
     if(!val) {
@@ -943,6 +933,7 @@ function reflectMyStarUI() {
     }
 }
 
+// 天体リスト・パレット
 function renderCelestialList() {
     const list = document.getElementById('celestial-list');
     if (!list) return;
@@ -963,12 +954,10 @@ function renderCelestialList() {
         list.appendChild(li);
     });
 }
-
 function toggleVisibility(id, checked) {
     const body = bodies.find(b => b.id === id);
     if(body) { body.visible = checked; updateAll(); }
 }
-
 function openPalette(id) {
     editingBodyId = id;
     const p = document.getElementById('style-palette');
@@ -977,21 +966,16 @@ function openPalette(id) {
     COLOR_MAP.forEach(col => {
         const d = document.createElement('div');
         d.className = 'color-btn'; d.style.backgroundColor = col.code;
-        d.onclick = () => { applyColor(col.code); };
+        d.onclick = () => { 
+            const b = bodies.find(x => x.id === editingBodyId);
+            b.color = col.code; 
+            if(editingBodyId === 'MyStar') reflectMyStarUI();
+            closePalette(); updateAll(); renderCelestialList();
+        };
         c.appendChild(d);
     });
     p.classList.remove('hidden');
 }
-
-function applyColor(code) {
-    const b = bodies.find(x => x.id === editingBodyId);
-    if(b) {
-        b.color = code;
-        if(editingBodyId === 'MyStar') reflectMyStarUI();
-        closePalette(); updateAll(); renderCelestialList();
-    }
-}
-
 function applyLineStyle(type) {
     const b = bodies.find(x => x.id === editingBodyId);
     b.isDashed = (type === 'dashed');
@@ -1000,48 +984,49 @@ function applyLineStyle(type) {
 }
 function closePalette() { document.getElementById('style-palette').classList.add('hidden'); editingBodyId = null; }
 
+// 標高グラフ
 function toggleElevation() {
     const btn = document.getElementById('btn-elevation');
     const pnl = document.getElementById('elevation-panel');
-    isElevationActive = !isElevationActive;
-    if (isElevationActive) {
+    appState.isElevationActive = !appState.isElevationActive;
+    if (appState.isElevationActive) {
         btn.classList.add('active'); pnl.classList.remove('hidden');
         startElevationFetch();
     } else {
         btn.classList.remove('active'); pnl.classList.add('hidden');
-        if(fetchTimer) clearTimeout(fetchTimer);
+        if(appState.fetchTimerId) clearTimeout(appState.fetchTimerId);
         document.getElementById('progress-overlay').classList.add('hidden');
     }
 }
 function startElevationFetch() {
-    elevationDataPoints = [];
+    appState.elevationPoints = [];
     const s = L.latLng(appState.start.lat, appState.start.lng);
     const e = L.latLng(appState.end.lat, appState.end.lng);
     const dist = s.distanceTo(e);
     const steps = Math.floor(dist / 100);
     for(let i=0; i<=steps; i++) {
         const r = i/steps;
-        elevationDataPoints.push({
+        appState.elevationPoints.push({
             lat: s.lat + (e.lat - s.lat)*r, lng: s.lng + (e.lng - s.lng)*r,
             dist: i*0.1, elev: null, fetched: false
         });
     }
-    fetchIndex = 0;
+    appState.fetchIndex = 0;
     document.getElementById('progress-overlay').classList.remove('hidden');
-    updateProgress(0, 0, elevationDataPoints.length);
+    updateProgress(0, 0, appState.elevationPoints.length);
     processFetchQueue();
 }
 function processFetchQueue() {
-    if(!isElevationActive || fetchIndex >= elevationDataPoints.length) {
+    if(!appState.isElevationActive || appState.fetchIndex >= appState.elevationPoints.length) {
         return document.getElementById('progress-overlay').classList.add('hidden');
     }
-    const pt = elevationDataPoints[fetchIndex];
+    const pt = appState.elevationPoints[appState.fetchIndex];
     getElevation(pt.lat, pt.lng).then(ev => {
         pt.elev = (ev !== null) ? ev : 0; pt.fetched = true;
-        fetchIndex++;
-        updateProgress(Math.floor((fetchIndex/elevationDataPoints.length)*100), fetchIndex, elevationDataPoints.length);
+        appState.fetchIndex++;
+        updateProgress(Math.floor((appState.fetchIndex/appState.elevationPoints.length)*100), appState.fetchIndex, appState.elevationPoints.length);
         drawProfileGraph();
-        if(isElevationActive) fetchTimer = setTimeout(processFetchQueue, 3000); 
+        if(appState.isElevationActive) appState.fetchTimerId = setTimeout(processFetchQueue, 3000); 
     });
 }
 function updateProgress(pct, cur, tot) {
@@ -1056,13 +1041,13 @@ function drawProfileGraph() {
     const w = cvs.width = cvs.clientWidth;
     const h = cvs.height = cvs.clientHeight;
     
-    const pts = elevationDataPoints.filter(p => p.fetched);
+    const pts = appState.elevationPoints.filter(p => p.fetched);
     if(pts.length === 0) return;
     const elevs = pts.map(p => p.elev);
     const minE = Math.min(0, ...elevs), maxE = Math.max(100, ...elevs); 
     const pad = {l:40, r:10, t:20, b:20};
     const gw = w - pad.l - pad.r, gh = h - pad.t - pad.b;
-    const maxD = elevationDataPoints[elevationDataPoints.length-1].dist;
+    const maxD = appState.elevationPoints[appState.elevationPoints.length-1].dist;
     
     const toX = d => pad.l + (d/maxD)*gw;
     const toY = e => pad.t + gh - ((e - minE)/(maxE - minE))*gh;
@@ -1132,8 +1117,4 @@ function showGraph(type) {
 function closeGraph() { document.getElementById('graph-modal').classList.add('hidden'); }
 function togglePanel() { document.getElementById('control-panel').classList.toggle('minimized'); }
 function toggleSection(id) { document.getElementById(id).classList.toggle('closed'); }
-
-function toggleHelp() {
-    const modal = document.getElementById('help-modal');
-    if(modal) modal.classList.toggle('hidden');
-}
+function toggleHelp() { document.getElementById('help-modal').classList.toggle('hidden'); }
