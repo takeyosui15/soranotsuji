@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.10.1 - 2026-02-05: Minor fixes and REFRACTION_K adjustment
 Version 1.10.0 - 2026-02-05: Great-circle route line appended on map; Calculation optimization
 Version 1.9.1 - 2026-02-05: Style fixes and minor adjustments
 Version 1.9.0 - 2026-02-05: Minor feature and apparent altitude appended in popup
@@ -28,7 +29,7 @@ const STORAGE_KEY = 'soranotsuji_app'; // 唯一の保存キー
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb1WQcRrRVi2Qpd_i60NvJWx6BB6Qxpb-30GD7TSzZptpRYxYL/exec"; 
 const SYNODIC_MONTH = 29.53059; 
 const EARTH_RADIUS = 6378137;
-const REFRACTION_K = 0;
+const REFRACTION_K = 0.132; // 大気差補正定数: 0.132度
 
 const POLARIS_RA = 2.5303;
 const POLARIS_DEC = 89.2641; 
@@ -124,7 +125,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.10.0)");
+    console.log("宙の辻: 起動 (V1.10.1)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
