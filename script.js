@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.11.0 - 2026-02-05: feat: REFRACTION_K設定機能追加; 各種UI改善
 Version 1.10.1 - 2026-02-05: Minor fixes and REFRACTION_K adjustment
 Version 1.10.0 - 2026-02-05: Great-circle route line appended on map; Calculation optimization
 Version 1.9.1 - 2026-02-05: Style fixes and minor adjustments
@@ -83,7 +84,10 @@ let appState = {
     
     // My天体
     myStar: { ra: ALNILAM_RA, dec: ALNILAM_DEC },
-    
+
+    // 大気差補正係数 (初期値は定数から)
+    refractionK: REFRACTION_K,
+
     // 訪問履歴
     lastVisitDate: null,
 
@@ -125,7 +129,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.10.1)");
+    console.log("宙の辻: 起動 (V1.11.0)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -334,7 +338,7 @@ function setupUI() {
     // 標高入力
     document.getElementById('input-start-elev').addEventListener('change', (e) => {
         appState.start.elev = parseFloat(e.target.value) || 0;
-        saveAppState(); // 即時保存
+        saveAppState();
         updateAll(); 
     });
     document.getElementById('input-end-elev').addEventListener('change', (e) => {
@@ -343,8 +347,16 @@ function setupUI() {
         updateAll();
     });
 
+    // My天体登録
     document.getElementById('btn-mystar-reg').onclick = registerMyStar;
     document.getElementById('chk-mystar').addEventListener('change', (e) => toggleVisibility('MyStar', e.target.checked));
+    
+    // 大気差補正設定
+    document.getElementById('btn-reg-settings').onclick = registerSettings;
+    // 起動時の値を入力欄に表示 (設定されている場合)
+    if (appState.refractionK !== undefined) {
+        document.getElementById('input-refraction-k').value = appState.refractionK;
+    }
 }
 
 
@@ -362,6 +374,7 @@ function saveAppState() {
         homeEnd: appState.homeEnd,     // 登録場所
         bodies: appState.bodies,
         myStar: appState.myStar,
+        refractionK: appState.refractionK,
         isDPActive: appState.isDPActive,
         lastVisitDate: appState.lastVisitDate
         // currentDateは保存せず、毎回起動時にリセット(日の出等)する方針
@@ -381,6 +394,7 @@ function loadAppState() {
             if(saved.homeStart) appState.homeStart = saved.homeStart;
             if(saved.homeEnd) appState.homeEnd = saved.homeEnd;
             if(saved.myStar) appState.myStar = saved.myStar;
+            if(saved.refractionK !== undefined) appState.refractionK = saved.refractionK;
             if(saved.isDPActive !== undefined) appState.isDPActive = saved.isDPActive;
             if(saved.lastVisitDate) appState.lastVisitDate = saved.lastVisitDate;
             
@@ -985,7 +999,8 @@ function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     // 気差係数 (設定値を考慮。通常0だが、厳密な測量計算用に残す)
     // 厳密な光路計算において、気差は「地球の半径が少し大きく見える」としてモデル化されることが多いです
     // R_eff = R / (1 - k)
-    const Reff = R / (1 - REFRACTION_K);
+    const k = (appState.refractionK !== undefined) ? appState.refractionK : REFRACTION_K;
+    const Reff = R / (1 - k);
 
     // 地球中心からの距離
     const r1 = Reff + hObs;
@@ -1227,9 +1242,11 @@ function createLocationPopup(title, pos, target) {
 function calculateApparentAltitude(dist, hObs, hTarget) {
     if (dist <= 0) return 0; // 距離0の場合は0度とする
     
-    // tan(a) = (H_target - H_obs) / d - d / (2 * R) * (1 - k)
+    const k = (appState.refractionK !== undefined) ? appState.refractionK : REFRACTION_K;
+
     // 地球の曲率(と気差)を考慮した視高度計算式
-    const val = (hTarget - hObs) / dist - (dist * (1 - REFRACTION_K)) / (2 * EARTH_RADIUS);
+    // tan(a) = (H_target - H_obs) / d - d / (2 * R) * (1 - k)
+    const val = (hTarget - hObs) / dist - (dist * (1 - k)) / (2 * EARTH_RADIUS);
     return Math.atan(val) * 180 / Math.PI;
 }
 
@@ -1421,6 +1438,29 @@ function applyLineStyle(type) {
     saveAppState();
     renderCelestialList();
     updateAll();
+}
+
+// 設定登録 (大気差係数など)
+function registerSettings() {
+    const input = document.getElementById('input-refraction-k');
+    const val = input.value.trim();
+    
+    // 空欄の場合はリセット
+    if (val === '') {
+        appState.refractionK = REFRACTION_K; // 定数に戻す
+        input.value = REFRACTION_K;
+        alert(`大気差補正係数を初期値 (${REFRACTION_K}) にリセットしました`);
+    } else {
+        const k = parseFloat(val);
+        if (isNaN(k) || k < 0) {
+            return alert('有効な数値を入力してください (0以上)');
+        }
+        appState.refractionK = k;
+        alert(`大気差補正係数を ${k} に設定しました`);
+    }
+    
+    saveAppState();
+    updateAll(); // 再計算して描画更新
 }
 
 function closePalette() {
