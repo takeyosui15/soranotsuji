@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.11.1 - 2026-02-05: fix: 設定セクションのUI修正
 Version 1.11.0 - 2026-02-05: feat: REFRACTION_K設定機能追加; 各種UI改善
 Version 1.10.1 - 2026-02-05: Minor fixes and REFRACTION_K adjustment
 Version 1.10.0 - 2026-02-05: Great-circle route line appended on map; Calculation optimization
@@ -129,7 +130,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.11.0)");
+    console.log("宙の辻: 起動 (V1.11.1)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
