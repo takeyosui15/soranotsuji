@@ -208,7 +208,7 @@ function initMap() {
         layers: [gsiStd], 
         zoomControl: false
     });
-    map.attributionControl.addAttribution('標高データ: &copy; 国土地理院');
+    map.attributionControl.addAttribution('標高・住所: &copy; 国土地理院,地名: &copy; OpenStreetMap');
 
     L.control.layers({
         "標準(地理院)": gsiStd,
