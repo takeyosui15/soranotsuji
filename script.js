@@ -33,7 +33,7 @@ const ALNILAM_RA = 5.603;
 const ALNILAM_DEC = -1.202;
 
 const DEFAULT_START = { lat: 35.658449, lng: 139.745536, elev: 150.0 };
-const DEFAULT_END = { lat: 35.360776, lng: 138.727299, elev: 3776.0 };
+const DEFAULT_END = { lat: 35.360776, lng: 138.727299, elev: 3774.9 };
 
 const COLOR_MAP = [
     { name: '赤', code: '#FF0000' },
@@ -153,6 +153,9 @@ window.onload = function() {
     document.getElementById('input-mystar-radec').value = `${appState.myStar.ra},${appState.myStar.dec}`;
     reflectMyStarUI();
 
+    // リストを生成
+    renderCelestialList();
+    
     // 起動時は「日の出」にセット
     setSunrise(); 
 
@@ -266,7 +269,7 @@ function setupUI() {
         }
     });
 
-    // ★修正: 月齢入力 (30以上で0にリセット)
+    // 月齢入力 (30以上で0にリセット)
     document.getElementById('moon-age-input').addEventListener('change', (e) => {
         let targetAge = parseFloat(e.target.value);
         if (isNaN(targetAge)) return;
@@ -426,7 +429,8 @@ function registerLocation(type) {
         map.setView([target.lat, target.lng], 10);
         
         alert('登録済みの場所を呼び出しました');
-    } 
+    }
+
     // 3. 登録 (登録データがない場合)
     else {
         // 現在地を登録データとして保存
@@ -488,7 +492,6 @@ function updateAll() {
         dpLayer.clearLayers();
     }
     
-    renderCelestialList(); 
 }
 
 function updateLocationDisplay() {
@@ -560,10 +563,10 @@ function updateCalculation() {
             setStr = times.set;
         } else {
             try {
-                const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 1);
-                const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 1);
-                riseStr = rise ? formatTime(rise.date) : "--:--";
-                setStr = set ? formatTime(set.date) : "--:--";
+                const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 2);
+                const set  = Astronomy.SearchRiseSet(body.id, observer, -1, startOfDay, 2);
+                riseStr = rise ? formatTime(rise.date, startOfDay) : "--:--";
+                setStr = set ? formatTime(set.date, startOfDay) : "--:--";
             } catch(e){}
         }
         
@@ -1051,13 +1054,13 @@ function updateShortcutsData(startOfDay, observer) {
     try {
         const sr = Astronomy.SearchRiseSet('Sun', observer, +1, startOfDay, 1);
         const ss = Astronomy.SearchRiseSet('Sun', observer, -1, startOfDay, 1);
-        const mr = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 1);
-        const ms = Astronomy.SearchRiseSet('Moon', observer, -1, startOfDay, 1);
+        const mr = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 2);
+        const ms = Astronomy.SearchRiseSet('Moon', observer, -1, startOfDay, 2);
         
         document.getElementById('time-sunrise').innerText = sr ? formatTime(sr.date) : "--:--";
         document.getElementById('time-sunset').innerText = ss ? formatTime(ss.date) : "--:--";
-        document.getElementById('time-moonrise').innerText = mr ? formatTime(mr.date) : "--:--";
-        document.getElementById('time-moonset').innerText = ms ? formatTime(ms.date) : "--:--";
+        document.getElementById('time-moonrise').innerText = mr ? formatTime(mr.date, startOfDay) : "--:--";
+        document.getElementById('time-moonset').innerText = ms ? formatTime(ms.date, startOfDay) : "--:--";
 
         currentRiseSetData = {
             sunrise: sr?.date,
@@ -1078,8 +1081,20 @@ function updateMoonInfo(date) {
     document.getElementById('moon-icon').innerText = icons[Math.round(phase / 45) % 8];
 }
 
-function formatTime(date) {
-    return `${('00'+date.getHours()).slice(-2)}:${('00'+date.getMinutes()).slice(-2)}`;
+function formatTime(date, baseDate) {
+    if (!date) return "--:--";
+    
+    let h = date.getHours();
+    const m = date.getMinutes();
+    
+    if (baseDate) {
+        // 24時間以上経過しているかチェック (86400000ms = 24h)
+        if (date.getTime() - baseDate.getTime() >= 86400000) {
+            h += 24;
+        }
+    }
+    
+    return `${('00'+h).slice(-2)}:${('00'+m).slice(-2)}`;
 }
 
 function searchStarRiseSet(ra, dec, observer, startOfDay) {
@@ -1199,8 +1214,8 @@ function applyColor(code) {
         if(editingBodyId === 'MyStar') reflectMyStarUI();
         closePalette();
         saveAppState();
-        updateAll();
         renderCelestialList();
+        updateAll();
     }
 }
 
@@ -1210,8 +1225,8 @@ function applyLineStyle(type) {
     if(editingBodyId === 'MyStar') reflectMyStarUI();
     closePalette();
     saveAppState();
-    updateAll();
     renderCelestialList();
+    updateAll();
 }
 
 function closePalette() {
