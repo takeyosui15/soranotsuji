@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.7 - Moon age smart Fix
+Version 1.8.8 - 2026-02-05: Style fixes and minor improvements
 */
 
 // ============================================================
@@ -119,7 +119,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.7)");
+    console.log("宙の辻: 起動 (V1.8.8)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
