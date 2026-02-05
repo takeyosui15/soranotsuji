@@ -334,7 +334,7 @@ select,
 }
 
 /* ボタンサイズ調整 */
-#btn-now, #btn-move, #btn-gps, #btn-mystar-reg, #btn-reg-start, #btn-reg-end {
+#btn-now, #btn-move, #btn-gps, #btn-reg-start, #btn-reg-end, #btn-mystar-reg, #btn-reg-settings {
     width: 46px;
     min-width: 46px;
     padding: 0;
@@ -600,11 +600,7 @@ input[type="range"] { width: 100%; margin: 10px 0; }
 /* --- 設定セクション調整 --- */
 #sec-settings .input-label {
     width: auto;        /* 固定幅(65px)を解除して文字数に合わせる */
-    margin-right: 10px; /* 右側の余白を少し広めに */
-    text-align: left;   /* 左寄せにする（お好みで） */
-}
-#btn-reg-settings {
-    margin-left: 5px;   /* 入力欄との間隔 */
+    text-align: left;   /* 左寄せにする */
 }
 
 .panel-footer {
