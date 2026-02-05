@@ -12,6 +12,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
+Version History:
+Version 1.9.0 - 2026-02-05: Minor feature and apparent altitude appended in popup
 Version 1.8.10 - 2026-02-05: Style fixes and timestamp interval adjustment
 */
 
@@ -119,7 +121,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.10)");
+    console.log("宙の辻: 起動 (V1.9.0)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -1086,14 +1088,29 @@ async function getElevation(lat, lng) {
 function createLocationPopup(title, pos, target) {
     const az = calculateBearing(pos.lat, pos.lng, target.lat, target.lng);
     const dist = L.latLng(pos.lat, pos.lng).distanceTo(L.latLng(target.lat, target.lng));
+    
+    // ★追加: 視高度を計算
+    const alt = calculateApparentAltitude(dist, pos.elev, target.elev);
+
     return `
         <b>${title}</b><br>
         緯度: ${pos.lat.toFixed(5)}<br>
         経度: ${pos.lng.toFixed(5)}<br>
         標高: ${pos.elev} m<br>
-        相手まで: ${(dist/1000).toFixed(2)} km<br>
-        方位: ${az.toFixed(1)}°
+        相手距離: ${(dist/1000).toFixed(2)} km<br>
+        相手方位: ${az.toFixed(1)}°<br>
+        相手高度: ${alt.toFixed(2)}°
     `;
+}
+
+// ★追加: 2点間の距離と標高差から視高度(角度)を計算する関数
+function calculateApparentAltitude(dist, hObs, hTarget) {
+    if (dist <= 0) return 0; // 距離0の場合は0度とする
+    
+    // tan(a) = (H_target - H_obs) / d - d / (2 * R) * (1 - k)
+    // 地球の曲率(と気差)を考慮した視高度計算式
+    const val = (hTarget - hObs) / dist - (dist * (1 - REFRACTION_K)) / (2 * EARTH_RADIUS);
+    return Math.atan(val) * 180 / Math.PI;
 }
 
 function calculateBearing(lat1, lng1, lat2, lng2) {
