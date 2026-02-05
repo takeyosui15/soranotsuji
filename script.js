@@ -13,8 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
-Version 1.9.0 - 2026-02-05: Minor feature and apparent altitude appended in popup
+Version 1.9.1 - 2026-02-05: Style fixes and minor adjustments
+ersion 1.9.0 - 2026-02-05: Minor feature and apparent altitude appended in popup
 Version 1.8.10 - 2026-02-05: Style fixes and timestamp interval adjustment
+Version 1.0.0 - 2026-01-29: Initial release
 */
 
 // ============================================================
@@ -121,7 +123,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.9.0)");
+    console.log("宙の辻: 起動 (V1.9.1)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -1094,8 +1096,8 @@ function createLocationPopup(title, pos, target) {
 
     return `
         <b>${title}</b><br>
-        緯度: ${pos.lat.toFixed(5)}<br>
-        経度: ${pos.lng.toFixed(5)}<br>
+        緯度: ${pos.lat.toFixed(5)}°<br>
+        経度: ${pos.lng.toFixed(5)}°<br>
         標高: ${pos.elev} m<br>
         相手距離: ${(dist/1000).toFixed(2)} km<br>
         相手方位: ${az.toFixed(1)}°<br>
