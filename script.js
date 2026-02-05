@@ -13,8 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.10.0 - 2026-02-05: Great-circle route line appended on map; Calculation optimization
 Version 1.9.1 - 2026-02-05: Style fixes and minor adjustments
-ersion 1.9.0 - 2026-02-05: Minor feature and apparent altitude appended in popup
+Version 1.9.0 - 2026-02-05: Minor feature and apparent altitude appended in popup
 Version 1.8.10 - 2026-02-05: Style fixes and timestamp interval adjustment
 Version 1.0.0 - 2026-01-29: Initial release
 */
@@ -123,7 +124,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.9.1)");
+    console.log("宙の辻: 起動 (V1.10.0)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -505,7 +506,7 @@ function updateLocationDisplay() {
     locationLayer.clearLayers();
 
     const fmt = (pos) => `${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`;
-    // フォーカス中は値を書き換えない
+    
     if(document.activeElement.id !== 'input-start-latlng') {
         document.getElementById('input-start-latlng').value = fmt(appState.start);
     }
@@ -519,13 +520,26 @@ function updateLocationDisplay() {
     const sPt = L.latLng(appState.start.lat, appState.start.lng);
     const ePt = L.latLng(appState.end.lat, appState.end.lng);
     
+    // マーカーの設置
     L.marker(sPt).addTo(locationLayer).bindPopup(createLocationPopup("観測点", appState.start, appState.end));
     L.marker(ePt).addTo(locationLayer).bindPopup(createLocationPopup("目的点", appState.end, appState.start));
     
+    // 1. メルカトル図法の直線 (地図上の見かけの線) -> 黒い破線
     L.polyline([sPt, ePt], {
         color: 'black',
-        weight: 6,
+        weight: 2,          // 少し細めにして
+        opacity: 0.5,       // 薄くする（補助線的な意味合い）
+        dashArray: '10, 10' // 破線で描画
+    }).addTo(locationLayer);
+
+    // 2. 大圏航路 (地球上の実際の最短ルート) -> 黒い実線
+    const pathPoints = calculateGreatCirclePoints(appState.start, appState.end);
+    
+    L.polyline(pathPoints, {
+        color: 'black',
+        weight: 4,    // 太く強調
         opacity: 0.8
+        // dashArrayを指定しない＝実線
     }).addTo(locationLayer);
 }
 
@@ -843,28 +857,28 @@ function useGPS() {
     }, () => alert('位置情報を取得できませんでした'));
 }
 
+
 // ------------------------------------------------------
 // 計算・描画ヘルパー (汎用)
 // ------------------------------------------------------
 
 function drawDirectionLine(lat, lng, azimuth, altitude, body) {
-    const endPos = computeDestination(lat, lng, azimuth, 5000);
+    // ★修正: 簡易計算(computeDestination)をやめ、
+    // 既に実装済みの高精度計算(getDestinationVincenty)を使用する
+    // 距離は5000km (5000000m)
+    const endPos = getDestinationVincenty(lat, lng, azimuth, 5000000);
+    
     const opacity = altitude < 0 ? 0.3 : 1.0; 
     const dashArray = body.isDashed ? '10, 10' : null;
     
-    L.polyline([[lat, lng], endPos], {
+    // getDestinationVincentyはオブジェクト {lat, lng} を返すので、
+    // Leaflet用の配列 [lat, lng] に変換して渡す
+    L.polyline([[lat, lng], [endPos.lat, endPos.lng]], {
         color: body.color,
         weight: 6,
         opacity: opacity,
         dashArray: dashArray
     }).addTo(linesLayer);
-}
-
-function computeDestination(lat, lng, az, km) {
-    const rad = (90 - az) * (Math.PI / 180);
-    const dLat = (km / 111) * Math.sin(rad);
-    const dLng = (km / (111 * Math.cos(lat * Math.PI / 180))) * Math.cos(rad);
-    return [lat + dLat, lng + dLng];
 }
 
 function calculateDPPathPoints(targetDate, body, observer) {
@@ -964,13 +978,63 @@ function drawDPPath(points, color, dashArray, withMarkers) {
 }
 
 function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
+    // 地球半径 (定数より取得)
+    const R = EARTH_RADIUS;
+    
+    // 気差係数 (設定値を考慮。通常0だが、厳密な測量計算用に残す)
+    // 厳密な光路計算において、気差は「地球の半径が少し大きく見える」としてモデル化されることが多いです
+    // R_eff = R / (1 - k)
+    const Reff = R / (1 - REFRACTION_K);
+
+    // 地球中心からの距離
+    const r1 = Reff + hObs;
+    const r2 = Reff + hTarget;
+
+    // 観測点での天頂角 (90度 - 高度角)
+    // 天体高度 celestailAltDeg は地平線からの角度。
+    // 三角形の計算では、鉛直方向(地球中心方向)からの角度を使うと計算しやすい。
+    // 観測点における「地球中心→観測点」のベクトルと「視線」のなす角は 90 + alt
     const altRad = celestialAltDeg * Math.PI / 180;
-    const a = (1 - REFRACTION_K) / (2 * EARTH_RADIUS);
-    const b = Math.tan(altRad);
-    const c = -(hTarget - hObs);
-    const disc = b * b - 4 * a * c;
-    if (disc < 0) return -1; 
-    return (-b + Math.sqrt(disc)) / (2 * a);
+    const thetaObs = (Math.PI / 2) + altRad;
+
+    // --- 正弦定理 (Law of Sines) ---
+    // r2 / sin(thetaObs) = r1 / sin(thetaTarget)
+    // sin(thetaTarget) = r1 * sin(thetaObs) / r2
+    
+    const sinThetaTarget = (r1 * Math.sin(thetaObs)) / r2;
+
+    // sinが1を超える＝ターゲットが高すぎて/遠すぎて物理的にその角度では見えない（地平線の下など）
+    if (sinThetaTarget > 1 || sinThetaTarget < -1) {
+        return -1; 
+    }
+
+    // ターゲット地点での角度 (arcsin)
+    // ただし、鈍角・鋭角の判定が必要だが、視線が上向きか下向きかで幾何学的に定まる。
+    // ここでは単純化して、三角形の内角の和 (180度 = PI) から中心角 gamma を求めるアプローチをとる。
+    
+    const thetaTarget = Math.asin(sinThetaTarget);
+
+    // 三角形の内角の和は π
+    // 中心角 gamma = π - thetaObs - thetaTarget
+    // ※注意: asinは -PI/2 ~ PI/2 を返すが、三角形の内角としてはこれで整合する範囲
+    
+    let gamma = Math.PI - thetaObs - thetaTarget;
+
+    // gammaが負になるケース（計算上のエラーや、同一点に近い場合）を排除
+    if (gamma < 0) {
+        // 特別なケース: altが90度に近い、またはr1, r2の位置関係によるもの
+        // 厳密にはここに来る前にフィルタリングされるべきだが、安全策として
+        return -1;
+    }
+
+    // --- 距離の算出 ---
+    // ここで求めた gamma は「光の経路（または視線）」における中心角。
+    // 地図上にプロットするために必要なのは「実際の地球表面(標高0m)での移動距離」。
+    // したがって、元の地球半径 R を掛ける。（Reffではない）
+    
+    const surfaceDist = R * gamma;
+
+    return surfaceDist;
 }
 
 function getDestinationVincenty(lat1, lon1, az, dist) {
@@ -1023,6 +1087,59 @@ function getDestinationVincenty(lat1, lon1, az, dist) {
     const L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
     
     return { lat: lat2 * toDeg, lng: lon1 + L * toDeg };
+}
+
+// ★追加: 2点間の大圏コース(最短経路)上の座標配列を返す (1km間隔)
+function calculateGreatCirclePoints(start, end) {
+    const points = [];
+    const R = EARTH_RADIUS;
+    
+    // ラジアン変換
+    const toRad = Math.PI / 180;
+    const toDeg = 180 / Math.PI;
+    const phi1 = start.lat * toRad;
+    const lam1 = start.lng * toRad;
+    const phi2 = end.lat * toRad;
+    const lam2 = end.lng * toRad;
+
+    // 球面上の距離(中心角 delta)を算出
+    const dLam = lam2 - lam1;
+    const cosDelta = Math.sin(phi1) * Math.sin(phi2) + Math.cos(phi1) * Math.cos(phi2) * Math.cos(dLam);
+    const delta = Math.acos(Math.max(-1, Math.min(1, cosDelta))); // 数値誤差対策
+
+    // 距離(m)
+    const dist = R * delta;
+    
+    // ステップ数: 1km(1000m)おき。最低でも始点・終点の2点は確保
+    const stepMeters = 1000; 
+    const steps = Math.max(1, Math.ceil(dist / stepMeters));
+
+    // 球面線形補間 (Slerp) で各点を計算
+    for (let i = 0; i <= steps; i++) {
+        const f = i / steps; // 進行割合 (0.0 ～ 1.0)
+        
+        let A, B;
+        const sinDelta = Math.sin(delta);
+        
+        if (sinDelta > 1e-6) {
+            A = Math.sin((1 - f) * delta) / sinDelta;
+            B = Math.sin(f * delta) / sinDelta;
+        } else {
+            A = 1 - f;
+            B = f;
+        }
+
+        const x = A * Math.cos(phi1) * Math.cos(lam1) + B * Math.cos(phi2) * Math.cos(lam2);
+        const y = A * Math.cos(phi1) * Math.sin(lam1) + B * Math.cos(phi2) * Math.sin(lam2);
+        const z = A * Math.sin(phi1) + B * Math.sin(phi2);
+
+        const phi = Math.atan2(z, Math.sqrt(x*x + y*y));
+        const lam = Math.atan2(y, x);
+
+        points.push([phi * toDeg, lam * toDeg]);
+    }
+    
+    return points;
 }
 
 async function onMapClick(e) {
