@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.9 - 2026-02-05: Style fixes and tooltip setup
+Version 1.8.10 - 2026-02-05: Style fixes and timestamp interval adjustment
 */
 
 // ============================================================
@@ -119,7 +119,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.9)");
+    console.log("宙の辻: 起動 (V1.8.10)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -926,7 +926,7 @@ function drawDPPath(points, color, dashArray, withMarkers) {
         }
         currentSegment.push(pt);
         
-        if (withMarkers && p.time.getMinutes() % 10 === 0) {
+        if (withMarkers && p.time.getMinutes() % 5 === 0) {
             L.circleMarker(pt, {
                 radius: 4,
                 color: color,
