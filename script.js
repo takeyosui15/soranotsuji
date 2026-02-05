@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.3 - Moon Age Cycle Fix
+Version 1.8.6 - Moon Rise/Set time Fix
 */
 
 // ============================================================
@@ -119,7 +119,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.3)");
+    console.log("宙の辻: 起動 (V1.8.6)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
