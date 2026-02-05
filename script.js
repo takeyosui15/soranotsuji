@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.6 - Moon Rise/Set time Fix
+Version 1.8.7 - Moon age smart Fix
 */
 
 // ============================================================
@@ -119,7 +119,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.6)");
+    console.log("宙の辻: 起動 (V1.8.7)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -724,10 +724,37 @@ function addMoonMonth(dir) {
     updateAll();
 }
 
-function searchMoonAge(age) {
+function searchMoonAge(targetAge) {
     uncheckTimeShortcuts();
-    const phase = (age / SYNODIC_MONTH) * 360.0;
-    const res = Astronomy.SearchMoonPhase(phase, appState.currentDate, 30);
+
+    // 1. 現在の月齢を計算
+    const currentPhaseAngle = Astronomy.MoonPhase(appState.currentDate);
+    const currentAge = (currentPhaseAngle / 360) * SYNODIC_MONTH;
+
+    // 2. 検索方向の判定 (過去に戻るべきか？)
+    // 基本は「現在日時」から未来検索
+    let searchStartDate = appState.currentDate;
+    
+    const diff = targetAge - currentAge;
+
+    // 数値が減った場合 (例: 15->14) は過去を探す。
+    // ただし、大幅に減った場合 (例: 29->0) は「次のサイクル(新月)」への以降なので未来を探す。
+    // 閾値を「半月分(約15日)」として判定します。
+    if (diff < 0 && diff > -15) {
+        // 例: 15 -> 14 (差は -1) : 過去に戻る
+        // 検索開始位置を「約1ヶ月前」にずらすことで、直近の過去を見つける
+        searchStartDate = new Date(appState.currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+    else if (diff > 15) {
+        // 例: 1 -> 29 (差は +28) : 誤って過去の月末に行きたい場合などを考慮し、ここも過去検索にしておくと自然
+        searchStartDate = new Date(appState.currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    // 3. 検索実行
+    const targetPhase = (targetAge / SYNODIC_MONTH) * 360.0;
+    
+    // 検索期間を少し広めに(45日)とって、確実にヒットさせる
+    const res = Astronomy.SearchMoonPhase(targetPhase, searchStartDate, 45);
     
     if(res && res.date) { 
         appState.currentDate = res.date; 
