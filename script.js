@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Version 1.8.8 - 2026-02-05: Style fixes and minor improvements
+Version 1.8.9 - 2026-02-05: Style fixes and tooltip setup
 */
 
 // ============================================================
@@ -119,7 +119,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.8.8)");
+    console.log("宙の辻: 起動 (V1.8.9)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -156,6 +156,9 @@ window.onload = function() {
     // リストを生成
     renderCelestialList();
     
+    // ツールチップ設定
+    setupTooltips();
+
     // 起動時は「日の出」にセット
     setSunrise(); 
 
@@ -649,6 +652,33 @@ async function handleLocationInput(val, isStart) {
         updateAll();
     }
 }
+
+
+// ============================================================
+// 8. ツールチップ設定
+// ============================================================
+
+/**
+ * すべての入力欄に対し、マウスオーバー時に入力内容をツールチップで表示する設定を行う
+ */
+function setupTooltips() {
+    // 対象とする入力タイプ
+    const selector = 'input[type="text"], input[type="number"], input[type="date"], input[type="time"]';
+    const inputs = document.querySelectorAll(selector);
+
+    inputs.forEach(input => {
+        input.addEventListener('mouseover', function() {
+            // 値が入っている場合のみ title属性に値をセットする
+            if (this.value) {
+                this.title = this.value;
+            } else {
+                // 値が空の場合は title属性を削除 (不要な空吹き出しを防ぐ)
+                this.removeAttribute('title');
+            }
+        });
+    });
+}
+
 
 // ------------------------------------------------------
 // 操作系ハンドラ
