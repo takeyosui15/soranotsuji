@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.11.4 - 2026-02-07: fix: 初期表示を現在日時に修正
 Version 1.11.3 - 2026-02-07: fix: 計算不具合等修正
 Version 1.11.2 - 2026-02-06: style: 大気差補正Kの文言・表示修正
 Version 1.11.1 - 2026-02-05: fix: 設定セクションのUI修正
@@ -132,7 +133,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.11.3)");
+    console.log("宙の辻: 起動 (V1.11.4)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -172,8 +173,8 @@ window.onload = function() {
     // ツールチップ設定
     setupTooltips();
 
-    // 起動時は「日の出」にセット
-    setSunrise(); 
+    // 起動時は「現在日時」にセット
+    setNow();
 
     // リサイズ対応
     window.addEventListener('resize', () => {
