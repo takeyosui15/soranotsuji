@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.11.3 - 2026-02-07: fix: 計算不具合等修正
 Version 1.11.2 - 2026-02-06: style: 大気差補正Kの文言・表示修正
 Version 1.11.1 - 2026-02-05: fix: 設定セクションのUI修正
 Version 1.11.0 - 2026-02-05: feat: REFRACTION_K設定機能追加; 各種UI改善
@@ -30,9 +31,9 @@ Version 1.0.0 - 2026-01-29: Initial release
 
 const STORAGE_KEY = 'soranotsuji_app'; // 唯一の保存キー
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb1WQcRrRVi2Qpd_i60NvJWx6BB6Qxpb-30GD7TSzZptpRYxYL/exec"; 
-const SYNODIC_MONTH = 29.53059; 
+const SYNODIC_MONTH = 29.53058886; // 朔望月 (日数)
 const EARTH_RADIUS = 6378137;
-const REFRACTION_K = 0.132; // 大気差補正定数: 0.132度
+const REFRACTION_K = 0.0; // 大気差補正定数: 0.132
 
 const POLARIS_RA = 2.5303;
 const POLARIS_DEC = 89.2641; 
@@ -131,7 +132,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.11.2)");
+    console.log("宙の辻: 起動 (V1.11.3)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -301,19 +302,14 @@ function setupUI() {
     // ボタン類
     document.getElementById('btn-now').onclick = setNow;
     document.getElementById('btn-move').onclick = toggleMove;
-
-    const shiftD = (d) => addDay(d);
-    const shiftM = (m) => addMonth(m);
-    const shiftT = (m) => addMinute(m);
-    
-    document.getElementById('btn-date-prev').onclick = () => shiftD(-1);
-    document.getElementById('btn-date-next').onclick = () => shiftD(1);
-    document.getElementById('btn-month-prev').onclick = () => shiftM(-1);
-    document.getElementById('btn-month-next').onclick = () => shiftM(1);
-    document.getElementById('btn-time-prev').onclick = () => shiftT(-1);
-    document.getElementById('btn-time-next').onclick = () => shiftT(1);
-    document.getElementById('btn-hour-prev').onclick = () => shiftT(-60);
-    document.getElementById('btn-hour-next').onclick = () => shiftT(60);
+    document.getElementById('btn-date-prev').onclick = () => addDay(-1);
+    document.getElementById('btn-date-next').onclick = () => addDay(1);
+    document.getElementById('btn-month-prev').onclick = () => addMonth(-1);
+    document.getElementById('btn-month-next').onclick = () => addMonth(1);
+    document.getElementById('btn-time-prev').onclick = () => addMinute(-1);
+    document.getElementById('btn-time-next').onclick = () => addMinute(1);
+    document.getElementById('btn-hour-prev').onclick = () => addMinute(-60);
+    document.getElementById('btn-hour-next').onclick = () => addMinute(60);
     document.getElementById('btn-moon-prev').onclick = () => addMoonMonth(-1);
     document.getElementById('btn-moon-next').onclick = () => addMoonMonth(1);
 
@@ -426,11 +422,25 @@ function registerLocation(type) {
     // 1. リセット (空で押下)
     if (!input.value) {
         appState[homeKey] = null; // 登録削除
-        saveAppState();
+
+        // ★追加: 現在の場所をシステム初期値に戻す
+        if (type === 'start') {
+            appState.start = { ...DEFAULT_START };
+        } else {
+            appState.end = { ...DEFAULT_END };
+        }
         
+        saveAppState(); // 変更を保存
+        updateAll();    // ★画面(入力欄・マーカー)を更新
+        
+        // ★親切機能: 地図もその場所へ移動させる
+        const target = (type === 'start') ? appState.start : appState.end;
+        map.setView([target.lat, target.lng], 10);
+
         btn.classList.remove('active');
         btn.title = `${type==='start'?'観測点':'目的点'}の初期値を登録`;
-        alert('初期値をリセットしました');
+        
+        alert('初期値をリセットし、デフォルトに戻しました');
         return;
     }
 
@@ -585,12 +595,12 @@ function updateCalculation() {
             ra = appState.myStar.ra;
             dec = appState.myStar.dec;
         } else {
-            const eq = Astronomy.Equator(body.id, obsDate, observer, false, true);
+            const eq = Astronomy.Equator(body.id, obsDate, observer, true, true);
             ra = eq.ra;
             dec = eq.dec;
         }
 
-        const hor = Astronomy.Horizon(obsDate, observer, ra, dec, null);
+        const hor = Astronomy.Horizon(obsDate, observer, ra, dec, "normal");
 
         let riseStr = "--:--";
         let setStr = "--:--";
@@ -634,7 +644,7 @@ function updateDPLines() {
     
     const datePrev = new Date(baseDate.getTime() - 86400000);
     const dateNext = new Date(baseDate.getTime() + 86400000);
-    const observer = new Astronomy.Observer(appState.end.lat, appState.end.lng, appState.end.elev);
+    const observer = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev);
 
     appState.bodies.forEach(body => {
         if (!body.visible) return;
@@ -642,9 +652,9 @@ function updateDPLines() {
         const pNext = calculateDPPathPoints(dateNext, body, observer);
         const pCurr = calculateDPPathPoints(baseDate, body, observer);
         
-        drawDPPath(pPrev, body.color, '4, 12', false);
-        drawDPPath(pNext, body.color, '4, 12', false);
-        drawDPPath(pCurr, body.color, '12, 12', true);
+        drawDPPath(pPrev, body.color, '1, 13', false);
+        drawDPPath(pNext, body.color, '1, 13', false);
+        drawDPPath(pCurr, body.color, '13, 13', true);
     });
 }
 
@@ -774,21 +784,31 @@ function addMinute(m) {
 }
 
 function addMoonMonth(dir) {
-    uncheckTimeShortcuts();
+    uncheckTimeShortcuts(); // 1. ショートカットの選択解除
+
+    // 2. 「今の瞬間の月」がどんな状態か（位相）を調べる
     const currentPhase = Astronomy.MoonPhase(appState.currentDate);
+
+    // 3. 「だいたい1ヶ月後（または前）」の日付を計算する (推測)
     const roughTarget = new Date(appState.currentDate.getTime() + dir * SYNODIC_MONTH * 86400000);
+
+    // 4. 検索の開始地点を「だいたいの日」の5日前にセットする
     const searchStart = new Date(roughTarget.getTime() - 5 * 86400000);
+
+    // 5. 正確な日時を検索する (ここが心臓部！)
     const res = Astronomy.SearchMoonPhase(currentPhase, searchStart, 10);
     
+    // 6. 結果の適用
     if(res && res.date) {
-        appState.currentDate = res.date; 
+        appState.currentDate = res.date; // 正確な日時が見つかればそれをセット
     } else {
-        appState.currentDate = roughTarget;
+        appState.currentDate = roughTarget; // 見つからなければ概算値を使う(保険)
     }
     syncUIFromState(); 
     updateAll();
 }
 
+// 月齢検索ロジック(*** 改良の余地あり ***)
 function searchMoonAge(targetAge) {
     uncheckTimeShortcuts();
 
@@ -880,16 +900,13 @@ function useGPS() {
 // ------------------------------------------------------
 
 function drawDirectionLine(lat, lng, azimuth, altitude, body) {
-    // ★修正: 簡易計算(computeDestination)をやめ、
-    // 既に実装済みの高精度計算(getDestinationVincenty)を使用する
-    // 距離は5000km (5000000m)
-    const endPos = getDestinationVincenty(lat, lng, azimuth, 5000000);
-    
+    // ★修正: Vincenty(大圏) ではなく Rhumb(等角) を使う
+    // これにより、地図上で「指定した方位」に向かって真っ直ぐ線が引かれます
+    const endPos = getDestinationRhumb(lat, lng, azimuth, 3000000); // 3000km
+
     const opacity = altitude < 0 ? 0.3 : 1.0; 
     const dashArray = body.isDashed ? '10, 10' : null;
     
-    // getDestinationVincentyはオブジェクト {lat, lng} を返すので、
-    // Leaflet用の配列 [lat, lng] に変換して渡す
     L.polyline([[lat, lng], [endPos.lat, endPos.lng]], {
         color: body.color,
         weight: 6,
@@ -903,8 +920,8 @@ function calculateDPPathPoints(targetDate, body, observer) {
     const startOfDay = new Date(targetDate.getTime());
     startOfDay.setHours(0, 0, 0, 0);
     const valElev = appState.start.elev;
-    const dip = getHorizonDip(valElev);
-    const limit = -(dip + 0.27 + 0.1); 
+    const dip = getHorizonDip(valElev); // 地平線の低下量 (度)
+    const limit = -(dip + (16 / 60 + 1.18 / 3600) * 2 + 0.1); // 地平線の低下分 + 太陽の視直径 + 0.1度のマージン
 
     for (let m = 0; m < 1440; m += 1) { // 1分毎
         const time = new Date(startOfDay.getTime() + m * 60000);
@@ -923,12 +940,12 @@ function calculateDPPathPoints(targetDate, body, observer) {
                 d = appState.myStar.dec;
             }
         } else {
-            const eq = Astronomy.Equator(body.id, time, observer, false, true);
+            const eq = Astronomy.Equator(body.id, time, observer, true, true);
             r = eq.ra;
             d = eq.dec;
         }
         
-        const hor = Astronomy.Horizon(time, observer, r, d, null);
+        const hor = Astronomy.Horizon(time, observer, r, d, "normal");
         
         if (hor.altitude > limit) {
             const dist = calculateDistanceForAltitudes(hor.altitude, valElev, appState.end.elev);
@@ -994,6 +1011,20 @@ function drawDPPath(points, color, dashArray, withMarkers) {
     });
 }
 
+/**
+ * 2つの高度(観測者・ターゲット)と地球の丸みを考慮して、
+ * 指定された見かけの高度角(alt)で見える「地上の水平距離」を逆算する
+ * * 原理: 地球中心(C)-観測者(O)-ターゲット(T) の3点で三角形を作る
+ * * 1. 既知の辺: r1(地球+観測者), r2(地球+ターゲット)
+ * 2. 既知の角: θobs = 90° + 高度角(alt)
+ * 3. 正弦定理 (r2 / sin(θobs) = r1 / sin(θtarget)) を使って、
+ * ターゲット側の内角(θtarget)を導き出す
+ * 4. 三角形の内角の和(180°)から、地球中心角(γ)を決定する: γ = 180° - θobs - θtarget
+ * 5. 弧の長さ L = R * γ で地上の距離を算出する
+ * * @param {number} celestialAltDeg 見かけの高度角 (度)
+ * @param {number} hObs 観測者の標高 (m)
+ * @param {number} hTarget ターゲットの標高 (m)
+ */
 function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
     // 地球半径 (定数より取得)
     const R = EARTH_RADIUS;
@@ -1056,7 +1087,7 @@ function calculateDistanceForAltitudes(celestialAltDeg, hObs, hTarget) {
 }
 
 function getDestinationVincenty(lat1, lon1, az, dist) {
-    const a = 6378137;
+    const a = EARTH_RADIUS;
     const f = 1 / 298.257223563;
     const b = a * (1 - f); 
     
@@ -1105,6 +1136,41 @@ function getDestinationVincenty(lat1, lon1, az, dist) {
     const L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
     
     return { lat: lat2 * toDeg, lng: lon1 + L * toDeg };
+}
+
+// ★追加: 等角航路（地図上の直線）での到達点を計算する関数
+function getDestinationRhumb(lat1, lon1, brng, dist) {
+    const R = EARTH_RADIUS; // 地球半径 (m)
+    const rad = Math.PI / 180;
+    
+    // ラジアン変換
+    const lat1Rad = lat1 * rad;
+    const lon1Rad = lon1 * rad;
+    const brngRad = brng * rad;
+    
+    // 緯度の変化 (等角航路では緯度は距離のcos成分で単純に変化する)
+    const d = dist / R; // 角距離
+    let lat2Rad = lat1Rad + d * Math.cos(brngRad);
+
+    // 緯度が90度を超えないように制限
+    if (Math.abs(lat2Rad) > Math.PI / 2) {
+        lat2Rad = lat2Rad > 0 ? Math.PI / 2 : -Math.PI / 2;
+    }
+
+    // 経度の変化 (メルカトル図法上の伸び率「等長緯度」を考慮)
+    const dPhi = Math.log(Math.tan(Math.PI / 4 + lat2Rad / 2) / Math.tan(Math.PI / 4 + lat1Rad / 2));
+    
+    // 東西方向(90度/270度)に近い場合のゼロ除算対策
+    // q = (Δlat / ΔPhi) もしくは cos(lat)
+    const q = Math.abs(dPhi) > 1e-10 ? (lat2Rad - lat1Rad) / dPhi : Math.cos(lat1Rad);
+    
+    const dLon = d * Math.sin(brngRad) / q;
+    const lon2Rad = lon1Rad + dLon;
+
+    return {
+        lat: lat2Rad / rad,
+        lng: lon2Rad / rad // Leafletは経度が180度を超えても描画してくれるので正規化しなくてOK
+    };
 }
 
 // ★追加: 2点間の大圏コース(最短経路)上の座標配列を返す (1km間隔)
@@ -1188,6 +1254,18 @@ function parseInput(val) {
 }
 
 async function searchLocation(query) {
+    if (!query) return null;
+
+    // 前後の空白を削除
+    const q = query.trim();
+
+    // ★修正: 数値のみ（緯度だけ入力など）の場合は検索しない
+    // これにより、郵便番号やルート番号として解釈されて海外に飛ぶのを防ぐ
+    // 正規表現: 先頭から末尾まで「数字」と「ドット(.)」と「マイナス(-)」だけで構成されているか
+    if (/^[\d\.\-\s]+$/.test(q)) {
+        console.warn("数値のみの入力のため、地名検索をスキップしました:", q);
+        return null; // 何もせず終了
+    }
     try {
         const urlOsm = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
         const resOsm = await fetch(urlOsm);
@@ -1316,15 +1394,17 @@ function searchStarRiseSet(ra, dec, observer, startOfDay) {
     let prevAlt = null;
     const start = startOfDay.getTime();
     
-    for (let m = 0; m <= 1440; m += 10) {
+    for (let m = 0; m <= 1440; m += 1) { 
         const time = new Date(start + m * 60000);
-        const hor = Astronomy.Horizon(time, observer, ra, dec, null);
+        
+        const hor = Astronomy.Horizon(time, observer, ra, dec, "normal"); 
         const alt = hor.altitude;
+        
         if (prevAlt !== null) {
             if (prevAlt < 0 && alt >= 0) {
-                rise = getCrossingTime(start + (m-10)*60000, start + m*60000, prevAlt, alt);
+                rise = getCrossingTime(start + (m-1)*60000, start + m*60000, prevAlt, alt);
             } else if (prevAlt >= 0 && alt < 0) {
-                set = getCrossingTime(start + (m-10)*60000, start + m*60000, prevAlt, alt);
+                set = getCrossingTime(start + (m-1)*60000, start + m*60000, prevAlt, alt);
             }
         }
         prevAlt = alt;
@@ -1335,14 +1415,40 @@ function searchStarRiseSet(ra, dec, observer, startOfDay) {
     };
 }
 
+/**
+ * 線形補間により、高度が0(地平線)になる正確な時刻を計算する
+ * 原理: 2点間を直線で結び、その線が0と交差するポイント(比率)を求める
+ * * @param {number} t1 前回の時刻 (ms)
+ * @param {number} t2 今回の時刻 (ms)
+ * @param {number} alt1 前回の高度
+ * @param {number} alt2 今回の高度
+ */
 function getCrossingTime(t1, t2, alt1, alt2) {
-    return new Date(t1 + (t2 - t1) * ((0 - alt1) / (alt2 - alt1)));
+    // 1. 全体でどれだけ高度が変わったか (分母: 坂の高さ)
+    const totalClimb = alt2 - alt1;
+    
+    // 2. 0(地平線)になるには、t1からあとどれだけ登ればいいか (分子: 残りの高さ)
+    const needToClimb = 0 - alt1;
+    
+    // 3. その比率(進捗率)を出し、時間の幅(t2-t1)に掛けて、t1に足す
+    const ratio = needToClimb / totalClimb;
+    
+    return new Date(t1 + (t2 - t1) * ratio);
 }
 
-function getHorizonDip(elev) {
-    if (!elev || elev <= 0) return 0;
-    const val = EARTH_RADIUS / (EARTH_RADIUS + elev);
-    return (val >= 1) ? 0 : Math.acos(val) * (180 / Math.PI);
+/**
+ * 眼高差（Dip of Horizon）を計算する
+ * 引用: 天文航法, 天文学辞典, 理科年表
+ * 式: σ = 1.776' × √h (分)
+ * * @param {number} h 眼高 (メートル)
+ * @returns {number} 眼高差 (度)
+ */
+function getHorizonDip(h) {
+    if (!h || h <= 0) return 0;
+    
+    // 1.776分 × √h
+    // 戻り値は「度」にする必要があるので 60 で割る
+    return 1.776 * Math.sqrt(h) / 60;
 }
 
 // MyStar
@@ -1624,9 +1730,12 @@ function showGraph(type) {
     const w = cvs.width = cvs.clientWidth;
     const h = cvs.height = 300;
     
-    const data = visitorData.dailyLog;
+    const data = (type==='current') ? visitorData.dailyLog : visitorData.lastYearLog;
     document.getElementById('graph-title').innerText = (type==='current') ? "今年の推移" : "昨年の推移";
-    if(type!=='current' || data.length===0) {
+    if(!data || data.length===0) {
+        ctx.fillStyle = '#333'; // 文字色も指定しておくと丁寧です
+        ctx.font = "20px sans-serif";
+        ctx.textAlign = "center"; // 中央揃え
         ctx.fillText("No Data", w/2, h/2);
         return;
     }
@@ -1638,6 +1747,7 @@ function showGraph(type) {
     
     ctx.strokeStyle='#ccc';
     ctx.strokeRect(pad, pad, gw, gh);
+    
     ctx.beginPath();
     ctx.strokeStyle='#007bff';
     ctx.lineWidth=2;
@@ -1647,12 +1757,15 @@ function showGraph(type) {
         const y = (pad+gh) - (d.count/maxVal)*gh;
         if(i===0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
+        
+        ctx.fillStyle = '#007bff'; 
         ctx.fillRect(x-2, y-2, 4, 4);
     });
     ctx.stroke();
     
     ctx.fillStyle='#333';
-    ctx.fillText(maxVal, pad-20, pad+10);
+    ctx.textAlign = "right"; // 右揃え
+    ctx.fillText(maxVal, pad-10, pad+10); // 位置調整
     ctx.fillText(0, pad-10, h-pad);
 }
 

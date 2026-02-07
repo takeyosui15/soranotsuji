@@ -76,7 +76,8 @@ function calculateStats(data, todayStr) {
   var currentYear = today.getFullYear();
   var lastYear = currentYear - 1;
 
-  var dailyLog = []; // グラフ用データ
+  var dailyLog = [];      // 今年のグラフ用データ
+  var lastYearLog = [];   // ★追加: 去年のグラフ用データ
 
   for (var i = 1; i < data.length; i++) {
     var rowDate = new Date(data[i][0]);
@@ -87,12 +88,17 @@ function calculateStats(data, todayStr) {
     if (rowDateStr === todayStr) todayCount = count;
     if (rowDateStr === yesterdayStr) yesterdayCount = count;
     
+    // 今年の処理
     if (rowYear === currentYear) {
       yearTotal += count;
       dailyLog.push({date: rowDateStr, count: count});
     }
+    
+    // 去年の処理
     if (rowYear === lastYear) {
       lastYearTotal += count;
+      // ★追加: 去年のデータも配列に保存する
+      lastYearLog.push({date: rowDateStr, count: count});
     }
   }
 
@@ -101,6 +107,7 @@ function calculateStats(data, todayStr) {
     yesterday: yesterdayCount,
     yearTotal: yearTotal,
     lastYearTotal: lastYearTotal,
-    dailyLog: dailyLog
+    dailyLog: dailyLog,       // 今年のデータ
+    lastYearLog: lastYearLog  // ★追加: 去年のデータをJSONに含める
   };
 }
