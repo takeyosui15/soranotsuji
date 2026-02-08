@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.11.5 - 2026-02-08: fix: 月齢検索の不具合修正
 Version 1.11.4 - 2026-02-07: fix: 初期表示を現在日時に修正
 Version 1.11.3 - 2026-02-07: fix: 計算不具合等修正
 Version 1.11.2 - 2026-02-06: style: 大気差補正Kの文言・表示修正
@@ -133,7 +134,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (V1.11.4)");
+    console.log("宙の辻: 起動 (V1.11.5)");
 
     // 1. 古いデータを削除 (Clean up)
     cleanupOldStorage();
@@ -286,16 +287,10 @@ function setupUI() {
         }
     });
 
-    // 月齢入力 (30以上で0にリセット)
+    // 月齢入力
     document.getElementById('moon-age-input').addEventListener('change', (e) => {
         let targetAge = parseFloat(e.target.value);
         if (isNaN(targetAge)) return;
-        
-        // 30以上になったら0に戻す (サイクルさせる)
-        if (targetAge >= 30) {
-            targetAge = 0;
-            e.target.value = 0;
-        }
         
         searchMoonAge(targetAge);
     });
@@ -350,7 +345,7 @@ function setupUI() {
     document.getElementById('btn-mystar-reg').onclick = registerMyStar;
     document.getElementById('chk-mystar').addEventListener('change', (e) => toggleVisibility('MyStar', e.target.checked));
     
-    // 大気差補正設定
+    // 測量気差補正設定
     document.getElementById('btn-reg-settings').onclick = registerSettings;
     // 起動時の値を入力欄に表示 (設定されている場合)
     if (appState.refractionK !== undefined) {
@@ -512,7 +507,7 @@ function syncUIFromState() {
 
 function updateAll() {
     if (!map) return;
-    
+
     if (appState.isMoving) {
         syncUIFromState();
     } else {
@@ -809,7 +804,7 @@ function addMoonMonth(dir) {
     updateAll();
 }
 
-// 月齢検索ロジック(*** 改良の余地あり ***)
+// 月齢検索ロジック
 function searchMoonAge(targetAge) {
     uncheckTimeShortcuts();
 
@@ -824,25 +819,22 @@ function searchMoonAge(targetAge) {
     const diff = targetAge - currentAge;
 
     // 数値が減った場合 (例: 15->14) は過去を探す。
-    // ただし、大幅に減った場合 (例: 29->0) は「次のサイクル(新月)」への以降なので未来を探す。
-    // 閾値を「半月分(約15日)」として判定します。
-    if (diff < 0 && diff > -15) {
-        // 例: 15 -> 14 (差は -1) : 過去に戻る
-        // 検索開始位置を「約1ヶ月前」にずらすことで、直近の過去を見つける
-        searchStartDate = new Date(appState.currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
-    else if (diff > 15) {
-        // 例: 1 -> 29 (差は +28) : 誤って過去の月末に行きたい場合などを考慮し、ここも過去検索にしておくと自然
-        searchStartDate = new Date(appState.currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    if (diff < 0) {
+        // 例: 10 -> -5 (差は -15) : 過去に戻る
+        // 検索開始位置を「diff+半月前」にずらすことで、直近の過去を見つける
+        searchStartDate = new Date(appState.currentDate.getTime() - (Math.floor(Math.abs(diff)) + 15) * 24 * 60 * 60 * 1000);
     }
 
     // 3. 検索実行
-    const targetPhase = (targetAge / SYNODIC_MONTH) * 360.0;
+    // 例: 31を入力 -> 31 % 29.53 = 1.47 -> 月齢1.47の位相を検索
+    const normalizedAge = targetAge % SYNODIC_MONTH;
+    const targetPhase = (normalizedAge / SYNODIC_MONTH) * 360;
     
     // 検索期間を少し広めに(45日)とって、確実にヒットさせる
     const res = Astronomy.SearchMoonPhase(targetPhase, searchStartDate, 45);
     
-    if(res && res.date) { 
+    if(res && res.date) {
+        document.getElementById('moon-age-input').blur(); 
         appState.currentDate = res.date; 
         syncUIFromState(); 
         updateAll(); 
@@ -1366,9 +1358,7 @@ function updateShortcutsData(startOfDay, observer) {
 function updateMoonInfo(date) {
     const phase = Astronomy.MoonPhase(date);
     const age = (phase / 360) * SYNODIC_MONTH;
-    if (document.activeElement.id !== 'moon-age-input') {
-        document.getElementById('moon-age-input').value = age.toFixed(1);
-    }
+    document.getElementById('moon-age-input').value = age.toFixed(1);
     const icons = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
     document.getElementById('moon-icon').innerText = icons[Math.round(phase / 45) % 8];
 }
