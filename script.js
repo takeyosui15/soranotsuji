@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.17.3 - 2026-03-25: fix: Hom/推山ボタンのリセット/登録時に地図のズームを解除
 Version 1.17.2 - 2026-03-25: fix: 既定目的点の富士山の緯度経度と標高を修正、ヘルプの内容を見直し
 Version 1.17.1 - 2026-03-21: feat: 観測点/目的点標高、オフセット方位距離/視高距離、表示天体詳細表記
 Version 1.17.0 - 2026-03-06: feat: 薄明ジャンプ機能追加、日出/日入/月出/月入ジャンプに視高度を表示
@@ -227,7 +228,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (v1.17.2)");
+    console.log("宙の辻: 起動 (v1.17.3)");
     
     // Astronomy Engineが読み込まれているかチェック
     if (typeof Astronomy === 'undefined') {
@@ -713,7 +714,7 @@ function registerLocation(type) {
         
         // ★親切機能: 地図もその場所へ移動させる
         const target = (type === 'start') ? appState.start : appState.end;
-        map.setView([target.lat, target.lng], 10);
+        map.setView([target.lat, target.lng]);
 
         btn.classList.remove('active');
         btn.title = `現在の${type==='start'?'観測点':'目的点'}を初期値として登録`;
@@ -747,7 +748,7 @@ function registerLocation(type) {
         // ★修正: fitBounds(全体表示) ではなく setView(その場所に移動)
         // これにより、観測点を呼び出したときに目的点まで引いてしまうのを防ぐ
         const target = (type === 'start') ? appState.start : appState.end;
-        map.setView([target.lat, target.lng], 10);
+        map.setView([target.lat, target.lng]);
         
         alert('登録済みの場所を呼び出しました');
     }
