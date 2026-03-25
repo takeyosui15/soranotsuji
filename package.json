@@ -1,0 +1,27 @@
+{
+  "name": "soranotsuji-dev-local",
+  "version": "1.0.0",
+  "description": "**「時」と「場所」が交差する瞬間を、地図上で探す。**",
+  "main": "gas_spredsheet.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/takeyosui15/soranotsuji-dev.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/takeyosui15/soranotsuji-dev/issues"
+  },
+  "homepage": "https://github.com/takeyosui15/soranotsuji-dev#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

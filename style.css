@@ -699,11 +699,9 @@ select,
 
 .tsujisearch-label {
     width: 175px;
-}
-
-/* 辻検索セクションのテキストボックス幅を位置情報と揃える */
-#sec-tsujisearch input[type="number"] {
-    max-width: 140px;
+    flex-shrink: 0;
+    text-align: right;
+    margin-right: 5px;
 }
 
 /* API取得標高の読み取り専用テキストボックス */

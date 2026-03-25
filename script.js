@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.17.2 - 2026-03-25: fix: 既定目的点の富士山の緯度経度と標高を修正、ヘルプの内容を見直し
 Version 1.17.1 - 2026-03-21: feat: 観測点/目的点標高、オフセット方位距離/視高距離、表示天体詳細表記
 Version 1.17.0 - 2026-03-06: feat: 薄明ジャンプ機能追加、日出/日入/月出/月入ジャンプに視高度を表示
 Version 1.16.9 - 2026-02-28: fix: 気差係数チェックボックスでフォームの有効/無効切り替え機能追加
@@ -76,7 +77,7 @@ const BODY_RADIUS_KM = {
 const KM_PER_AU = 149597870.7;
 
 const DEFAULT_START = { lat: 35.658582, lng: 139.745471, elev: 18.5, height: 150.0 };
-const DEFAULT_END = { lat: 35.360776, lng: 138.727299, elev: 3774.9, height: 0 };
+const DEFAULT_END = { lat: 35.362799, lng: 138.730781, elev: 3774.9, height: 0 };
 
 // 天体ごとの初期スタイル (リセット用)
 const DEFAULT_BODIES = [
@@ -226,7 +227,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (v1.17.1)");
+    console.log("宙の辻: 起動 (v1.17.2)");
     
     // Astronomy Engineが読み込まれているかチェック
     if (typeof Astronomy === 'undefined') {
@@ -1041,7 +1042,7 @@ async function applyLocationCoords(coords, isStart) {
     const inputId = isStart ? 'input-start-latlng' : 'input-end-latlng';
     document.getElementById(inputId).blur();
 
-    map.setView(coords, 10);
+    map.setView(coords);
     saveAppState();
     updateAll();
 }
@@ -2642,7 +2643,9 @@ function initVisitorCounter() {
     // 計算中表示
     setCounterDisplay('-', '-', '-', '-');
 
-    const action = (appState.lastVisitDate !== todayStr) ? 'visit' : 'get';
+    // soranotsuji.net からのアクセスのみカウントアップ
+    const isProductionSite = (location.hostname === 'soranotsuji.net');
+    const action = (isProductionSite && appState.lastVisitDate !== todayStr) ? 'visit' : 'get';
     fetchVisitorData(action, todayStr);
 }
 

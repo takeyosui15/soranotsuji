@@ -72,7 +72,7 @@ cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev
 
 ### Step 1: 事前準備
 
-- [ ] ローカルのsoranotsuji-devで未コミットの変更がないことを確認
+- [x] ローカルのsoranotsuji-devで未コミットの変更がないことを確認
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev"
@@ -80,13 +80,13 @@ git status
 # "nothing to commit, working tree clean" であること
 ```
 
-- [ ] すべてのブランチをpush済みであることを確認
+- [x] すべてのブランチをpush済みであることを確認
 
 ```bash
 git push origin --all
 ```
 
-- [ ] 現在のリモートURLを記録(メモしておく)
+- [x] 現在のリモートURLを記録(メモしておく)
 
 ```bash
 git remote -v
@@ -94,7 +94,7 @@ git remote -v
 #      prod    https://github.com/takeyosui15/soranotsuji.git (fetch)
 ```
 
-- [ ] `prod` リモートエイリアスを削除
+- [x] `prod` リモートエイリアスを削除
 
 `prod` はローカルの設定(「このフォルダからどのリモートリポジトリにpushできるか」の登録)であり、
 削除してもGitHub上のリポジトリ(soranotsuji)自体には一切影響しない。
@@ -116,14 +116,14 @@ VSCodeから削除する場合は、ソース管理の「リモート」→「pr
 
 ローカルのsoranotsuji-devを試行環境用にリネームする。
 
-- [ ] Finderまたはターミナルでフォルダ名を変更
+- [x] Finderまたはターミナルでフォルダ名を変更
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents"
 mv soranotsuji-dev soranotsuji-sandbox-local
 ```
 
-- [ ] リネーム後のフォルダに移動して動作確認
+- [x] リネーム後のフォルダに移動して動作確認
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-sandbox-local"
@@ -136,13 +136,13 @@ git remote -v
 
 ### Step 3: リモートリポジトリのリネーム(1) soranotsuji-dev → soranotsuji-sandbox
 
-- [ ] GitHubでsoranotsuji-devのSettingsを開く
+- [x] GitHubでsoranotsuji-devのSettingsを開く
   1. https://github.com/takeyosui15/soranotsuji-dev にアクセス
   2. 上部メニューの **Settings** タブをクリック
   3. **General** セクションの **Repository name** を `soranotsuji-sandbox` に変更
   4. **Rename** ボタンをクリック
 
-- [ ] リネーム完了を確認
+- [x] リネーム完了を確認
   - https://github.com/takeyosui15/soranotsuji-sandbox にアクセスできること
 
 ---
@@ -151,12 +151,12 @@ git remote -v
 
 **ここからダウンタイム開始** — soranotsuji.netが一時的にアクセス不可になる。
 
-- [ ] GitHubでsoranotsujiのSettingsを開く
+- [x] GitHubでsoranotsujiのSettingsを開く
   1. https://github.com/takeyosui15/soranotsuji にアクセス
   2. **Settings** タブ → **General** → **Repository name** を `soranotsuji-dev` に変更
   3. **Rename** をクリック
 
-- [ ] リネーム完了を確認
+- [x] リネーム完了を確認
   - https://github.com/takeyosui15/soranotsuji-dev にアクセスできること
 
 **注意:** この時点でsoranotsuji.netのGitHub Pagesは停止する。
@@ -167,14 +167,14 @@ git remote -v
 
 ダウンタイムを最短にするため、このステップはStep 4の直後に素早く実行する。
 
-- [ ] GitHubで新しいリポジトリ `soranotsuji` を作成
+- [x] GitHubで新しいリポジトリ `soranotsuji` を作成
   1. https://github.com/new にアクセス
   2. Repository name: `soranotsuji`
   3. Public を選択
   4. 他のオプションはすべて未チェック(READMEなし、.gitignoreなし、ライセンスなし)
   5. **Create repository** をクリック
 
-- [ ] soranotsuji-dev(旧soranotsuji)のコードを新しいsoranotsujiにpush
+- [x] soranotsuji-dev(旧soranotsuji)のコードを新しいsoranotsujiにpush
 
 ```bash
 # 一時作業フォルダで作業
@@ -195,24 +195,24 @@ cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-tmp
 rm -rf soranotsuji-temp
 ```
 
-- [ ] CNAMEファイルの確認
+- [x] CNAMEファイルの確認
   - リポジトリのルートに `CNAME` ファイルが存在し、内容が `soranotsuji.net` であることを確認
   - https://github.com/takeyosui15/soranotsuji にアクセスしてファイル一覧を確認
 
-- [ ] GitHub Pagesを有効化
+- [x] GitHub Pagesを有効化
   1. https://github.com/takeyosui15/soranotsuji の **Settings** タブ
   2. 左メニューの **Pages** をクリック
   3. **Source**: Deploy from a branch
   4. **Branch**: main / /(root) を選択
   5. **Save** をクリック
 
-- [ ] カスタムドメインの設定
+- [x] カスタムドメインの設定
   1. 同じPagesの設定画面で **Custom domain** に `soranotsuji.net` を入力
   2. **Save** をクリック
   3. DNS checkが成功することを確認(数分かかる場合あり)
   4. **Enforce HTTPS** にチェック
 
-- [ ] soranotsuji.net にアクセスしてサイトが表示されることを確認
+- [x] soranotsuji.net にアクセスしてサイトが表示されることを確認
 
 **ダウンタイム終了**
 
@@ -220,7 +220,7 @@ rm -rf soranotsuji-temp
 
 ### Step 6: ローカルリポジトリのremote URL更新
 
-- [ ] soranotsuji-sandbox-localのremote URLを更新
+- [x] soranotsuji-sandbox-localのremote URLを更新
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-sandbox-local"
@@ -234,14 +234,14 @@ git fetch origin
 
 ### Step 7: ローカル開発環境の新規作成とdevelopブランチの作成
 
-- [ ] soranotsuji-dev-localをclone
+- [x] soranotsuji-dev-localをclone
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents"
 git clone https://github.com/takeyosui15/soranotsuji-dev.git soranotsuji-dev-local
 ```
 
-- [ ] clone成功を確認
+- [x] clone成功を確認
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
@@ -250,7 +250,7 @@ git remote -v
 git log --oneline -5
 ```
 
-- [ ] develop ブランチと work ブランチを作成してpush
+- [x] develop ブランチと work ブランチを作成してpush
 
 ブランチ戦略に従い、develop（テスト用）と work（たけちゃん作業用）ブランチを作成する。
 （参照: branch-strategy.md）
@@ -285,7 +285,7 @@ GitHub Pagesは**developブランチ**に設定する。
 こうすることで、developにマージした変更をブラウザですぐテストできる。
 （作業の流れ: claude/yyy ←→ work → develop にマージ → テスターClaudeがテスト → OKなら main にマージ）
 
-- [ ] CNAMEファイルを削除
+- [x] CNAMEファイルを削除
 
 本番環境(新soranotsuji)とカスタムドメイン(soranotsuji.net)が競合するため、
 開発環境のCNAMEファイルを削除する必要がある。
@@ -302,14 +302,14 @@ pushするたびにカスタムドメインが復活してしまう。
   4. 右上のゴミ箱アイコン(Delete file)をクリック
   5. **Commit changes** をクリック（developブランチにコミットされる）
 
-- [ ] GitHub Pagesの設定
+- [x] GitHub Pagesの設定
   1. **Settings** → **Pages**
   2. Source: **Deploy from a branch** を選択
   3. Branch: **develop** / **/(root)** を選択
   4. **Save** をクリック
   5. Custom domain: **空欄** であること（CNAMEファイル削除後に自動的に空になる）
 
-- [ ] `https://takeyosui15.github.io/soranotsuji-dev/` にアクセスして動作確認
+- [x] `https://takeyosui15.github.io/soranotsuji-dev/` にアクセスして動作確認
 
 **注意:** GitHub Pagesはdevelopブランチの内容を公開する。
 mainブランチの内容は直接公開されない（本番デプロイ時にsoranotsujiリポジトリにコピーされる）。
@@ -318,17 +318,17 @@ mainブランチの内容は直接公開されない（本番デプロイ時にs
 
 ## 移行後の確認チェックリスト
 
-- [ ] https://soranotsuji.net にアクセスしてサイトが正常に表示される
-- [ ] https://takeyosui15.github.io/soranotsuji-dev/ にアクセスして動作確認用サイトが表示される
-- [ ] https://github.com/takeyosui15/soranotsuji が存在する(本番)
-- [ ] https://github.com/takeyosui15/soranotsuji-dev が存在する(開発)
-- [ ] https://github.com/takeyosui15/soranotsuji-sandbox が存在する(試行)
-- [ ] ローカルの `$DOCS/soranotsuji-dev-local` でgit pull/pushができる
-- [ ] ローカルの `$DOCS/soranotsuji-sandbox-local` でgit pull/pushができる
-- [ ] ローカルの各リポジトリに `prod` リモートが残っていないこと
-- [ ] soranotsuji-devにdevelopブランチが存在すること
-- [ ] soranotsuji-devにworkブランチが存在すること
-- [ ] soranotsuji-devのGitHub Pagesが**developブランチ**で動作すること
+- [x] https://soranotsuji.net にアクセスしてサイトが正常に表示される
+- [x] https://takeyosui15.github.io/soranotsuji-dev/ にアクセスして動作確認用サイトが表示される
+- [x] https://github.com/takeyosui15/soranotsuji が存在する(本番)
+- [x] https://github.com/takeyosui15/soranotsuji-dev が存在する(開発)
+- [x] https://github.com/takeyosui15/soranotsuji-sandbox が存在する(試行)
+- [x] ローカルの `$DOCS/soranotsuji-dev-local` でgit pull/pushができる
+- [x] ローカルの `$DOCS/soranotsuji-sandbox-local` でgit pull/pushができる
+- [x] ローカルの各リポジトリに `prod` リモートが残っていないこと
+- [x] soranotsuji-devにdevelopブランチが存在すること
+- [x] soranotsuji-devにworkブランチが存在すること
+- [x] soranotsuji-devのGitHub Pagesが**developブランチ**で動作すること
 
 ---
 

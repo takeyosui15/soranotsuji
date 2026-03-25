@@ -55,28 +55,33 @@ Node.jsとPlaywrightは各マシンにインストールするが、バージョ
 
 **両方のマシンで同じ手順を実行する。**
 
-- [ ] nvm をインストール
+- [x] nvm をインストール
+- [x] nvm をインストール
 
 ```bash
 # nvm のインストール
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 ```
 
-- [ ] ターミナルを再起動（またはシェル設定を再読込）
+- [x] ターミナルを再起動（またはシェル設定を再読込）
+- [x] ターミナルを再起動（またはシェル設定を再読込）
 
 ```bash
 # zsh の場合（Mac のデフォルト）
 source ~/.zshrc
 ```
 
-- [ ] nvm がインストールされたことを確認
+- [x] nvm がインストールされたことを確認
+- [x] nvm がインストールされたことを確認
 
 ```bash
 nvm --version
 # 0.40.1 などのバージョンが表示されること
+# 0.40.1
 ```
 
-- [ ] Node.js LTS をインストール
+- [x] Node.js LTS をインストール
+- [x] Node.js LTS をインストール
 
 ```bash
 # LTS（長期サポート版）をインストール
@@ -85,12 +90,15 @@ nvm install --lts
 # インストールされたバージョンを確認
 node --version
 # v22.x.x などが表示されること
+# v24.14.0
 
 npm --version
 # 10.x.x などが表示されること
+# 11.9.0
 ```
 
-- [ ] デフォルトバージョンを設定
+- [x] デフォルトバージョンを設定
+- [x] デフォルトバージョンを設定
 
 ```bash
 nvm alias default lts/*
@@ -100,7 +108,7 @@ nvm alias default lts/*
 
 ### Step 2: プロジェクトの Node.js バージョンを固定
 
-- [ ] プロジェクトルートに `.nvmrc` ファイルを作成
+- [x] プロジェクトルートに `.nvmrc` ファイルを作成
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
@@ -121,20 +129,20 @@ nvm use
 
 ### Step 3: Playwright のセットアップ
 
-- [ ] package.json を初期化（まだ存在しない場合）
+- [x] package.json を初期化（まだ存在しない場合）
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
 npm init -y
 ```
 
-- [ ] Playwright をインストール
+- [x] Playwright をインストール
 
 ```bash
 npm install --save-dev @playwright/test
 ```
 
-- [ ] Playwright のブラウザをインストール
+- [x] Playwright のブラウザをインストール
 
 ```bash
 npx playwright install
@@ -143,7 +151,7 @@ npx playwright install
 これにより、Chromium / Firefox / WebKit のテスト用ブラウザがダウンロードされる。
 （ダウンロード先: `~/Library/Caches/ms-playwright/` — iCloud外のローカル領域）
 
-- [ ] .gitignore に node_modules を追加
+- [x] .gitignore に node_modules を追加
 
 ```bash
 # .gitignore に以下を追加（まだ記載がなければ）
@@ -154,7 +162,7 @@ echo "node_modules/" >> .gitignore
 
 ### Step 4: Playwright 設定ファイルの作成
 
-- [ ] `playwright.config.js` を作成
+- [x] `playwright.config.js` を作成
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
@@ -170,6 +178,7 @@ const { defineConfig } = require('@playwright/test');
 module.exports = defineConfig({
   testDir: './tests',
   timeout: 30000,
+  reporter: 'html',
   use: {
     // テスト対象URL（GitHub Pages の develop ブランチ）
     baseURL: 'https://takeyosui15.github.io/soranotsuji-dev/',
@@ -189,13 +198,13 @@ module.exports = defineConfig({
 
 ### Step 5: テストコードフォルダの作成
 
-- [ ] tests フォルダを作成
+- [x] tests フォルダを作成
 
 ```bash
 mkdir -p tests
 ```
 
-- [ ] サンプルテストを作成（`tests/basic.spec.js`）
+- [x] サンプルテストを作成（`tests/basic.spec.js`）
 
 ```javascript
 // tests/basic.spec.js
@@ -203,13 +212,13 @@ mkdir -p tests
 const { test, expect } = require('@playwright/test');
 
 test('ページが正常に読み込まれる', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   // タイトルに「宙の辻」が含まれること
   await expect(page).toHaveTitle(/宙の辻/);
 });
 
 test('地図が表示される', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   // Leaflet の地図コンテナが存在すること
   const map = page.locator('#map');
   await expect(map).toBeVisible();
@@ -218,7 +227,7 @@ test('地図が表示される', async ({ page }) => {
 test('コンソールにエラーがない', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('./');
   // ページ読み込み後にJavaScriptエラーがないこと
   expect(errors).toEqual([]);
 });
@@ -228,14 +237,14 @@ test('コンソールにエラーがない', async ({ page }) => {
 
 ### Step 6: テストの実行確認
 
-- [ ] テストを実行
+- [x] テストを実行
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
 npx playwright test
 ```
 
-- [ ] テスト結果を確認
+- [x] テスト結果を確認
 
 ```bash
 # HTMLレポートを表示（テスト結果の詳細を確認）
@@ -246,7 +255,7 @@ npx playwright show-report
 
 ### Step 7: Git にテスト関連ファイルをコミット
 
-- [ ] 以下のファイルをコミット
+- [x] 以下のファイルをコミット
 
 ```bash
 git add .nvmrc package.json package-lock.json playwright.config.js tests/ .gitignore
@@ -276,15 +285,15 @@ nvm と Node.js のインストールは各マシンで1回だけ必要。
 
 ### 2台目での手順
 
-- [ ] プロジェクトを最新に更新
+- [x] プロジェクトを最新に更新
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
-git checkout develop
-git pull origin develop
+git checkout work
+git pull origin work
 ```
 
-- [ ] Node.js バージョンを合わせる
+- [x] Node.js バージョンを合わせる
 
 ```bash
 nvm use
@@ -292,19 +301,19 @@ nvm use
 # まだインストールしていない場合は nvm install を実行
 ```
 
-- [ ] npm パッケージをインストール
+- [x] npm パッケージをインストール
 
 ```bash
 npm install
 ```
 
-- [ ] Playwright ブラウザをインストール
+- [x] Playwright ブラウザをインストール
 
 ```bash
 npx playwright install
 ```
 
-- [ ] テストを実行して確認
+- [x] テストを実行して確認
 
 ```bash
 npx playwright test

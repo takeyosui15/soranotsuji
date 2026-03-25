@@ -14,7 +14,7 @@
 （参照: branch-strategy.md）
 
 ```
-claude/yyy ←→ work ──→ develop ──→ main ──→ soranotsuji/main
+claude/yyy ←→ work ←→ develop ──→ main ──→ soranotsuji/main
  （開発）    （確認）    （テスト）    （安定版）    （本番デプロイ）
 ```
 
@@ -23,7 +23,25 @@ claude/yyy ←→ work ──→ develop ──→ main ──→ soranotsuji/ma
 3. `work` ←→ `claude/yyy` で何往復かやりとり
 4. 固まったら `develop` にマージ
 5. テスターClaude（Antigravity）が `develop` でPlaywrightテスト
-6. テストOK → `main` にマージ ← **この時点でデプロイ手順に進む**
+6. テストOK → バージョン番号を更新 → `work`,`claude/yyy`,`develop`にマージ
+7. **プレ・デプロイ・チェックリストに進む**
+8. デプロイ手順に進む
+9. Step 1: developでのテスト確認 & mainへのマージ
+10. Step 2: 開発リポジトリにバージョンタグを付与
+11. Step 3: 本番リポジトリにファイルを反映
+12. Step 4: 本番環境へpush & タグ付与
+13. Step 5: 本番環境の動作確認
+14. Step 6: デプロイ記録
+
+### プレ・デプロイ・チェックリスト
+
+- [ ] 今回のデプロイで機能追加されたところをリストアップする。
+  - 1.
+- [ ] 上記の機能は、組み込みの**ヘルプ**に内容が反映されているかを確認する。
+  - [ ] 1.
+- [ ] バージョン番号が更新されている。
+  - [ ] index.html:1箇所:バージョン表記
+  - [ ] script.js:2箇所:バージョン履歴とコンソール出力
 
 ### デプロイの流れ
 
