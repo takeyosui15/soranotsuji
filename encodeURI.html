@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URIエンコード変換</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 20px; background: #f5f5f5; color: #333; }
+        h1 { font-size: 20px; margin-bottom: 16px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .input-area { position: relative; margin-bottom: 12px; }
+        textarea { width: 100%; height: 120px; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; }
+        .char-count { position: absolute; right: 8px; bottom: 8px; font-size: 12px; color: #888; }
+        .char-count.over { color: #f44336; font-weight: bold; }
+        .btn-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-convert { background: #2196F3; color: #fff; }
+        .btn-convert:hover { background: #1976D2; }
+        .btn-copy { background: #4CAF50; color: #fff; }
+        .btn-copy:hover { background: #388E3C; }
+        .btn-copy:disabled { background: #ccc; cursor: default; }
+        .result-area { background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 10px; min-height: 60px; word-break: break-all; font-size: 14px; color: #555; }
+        .result-label { font-size: 14px; margin-bottom: 4px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URIエンコード変換</h1>
+        <div class="input-area">
+            <textarea id="input-text" maxlength="150" placeholder="日本語テキストを入力してください"></textarea>
+            <span id="char-count" class="char-count">0/150文字</span>
+        </div>
+        <div class="btn-row">
+            <button class="btn-convert" onclick="convert()">変換</button>
+            <button id="btn-copy" class="btn-copy" onclick="copyResult()" disabled>コピー</button>
+        </div>
+        <p class="result-label">変換結果:</p>
+        <div id="result" class="result-area"></div>
+    </div>
+    <script>
+        const inputText = document.getElementById('input-text');
+        const charCount = document.getElementById('char-count');
+        const resultEl = document.getElementById('result');
+        const btnCopy = document.getElementById('btn-copy');
+
+        inputText.addEventListener('input', () => {
+            const len = inputText.value.length;
+            charCount.textContent = `${len}/150文字`;
+            charCount.className = len >= 150 ? 'char-count over' : 'char-count';
+        });
+
+        function convert() {
+            const text = inputText.value;
+            if (!text) { resultEl.textContent = ''; btnCopy.disabled = true; return; }
+            resultEl.textContent = encodeURIComponent(text);
+            btnCopy.disabled = false;
+        }
+
+        function copyResult() {
+            const text = resultEl.textContent;
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('クリップボードにコピーしました。');
+            });
+        }
+    </script>
+</body>
+</html>

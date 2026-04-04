@@ -105,7 +105,7 @@ GNU General Public License for more details.
                             <input type="radio" name="loc-mode" id="radio-start" value="start" checked>
                         </div>
                         <label class="input-label">観測点(°):</label>
-                        <input type="text" id="input-start-latlng" placeholder="地名 住所 緯度,経度">
+                        <input type="text" id="input-start-latlng" placeholder="地名 住所 緯度,経度" maxlength="150">
                     </div>
 
                     <div class="control-row">
@@ -126,11 +126,11 @@ GNU General Public License for more details.
 
                     <div class="control-row">
                         <div class="btn-group-left">
-                            <div class="spacer-btn"></div>
+                            <button id="btn-url-location" class="nav-btn small" title="現在の状態で宙の辻を開くURLをクリップボードにコピー">URL</button>
                             <input type="radio" name="loc-mode" id="radio-end" value="end">
                         </div>
                         <label class="input-label">目的点(°):</label>
-                        <input type="text" id="input-end-latlng" placeholder="地名 住所 緯度,経度">
+                        <input type="text" id="input-end-latlng" placeholder="地名 住所 緯度,経度" maxlength="150">
                     </div>
 
                     <div class="control-row">
@@ -198,6 +198,9 @@ GNU General Public License for more details.
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">許容範囲視高度(°): ±</label>
                         <input type="number" id="input-tsuji-alt-tolerance" placeholder="検索中心から上向き(単位:°)" step="0.01" min="0" max="360">
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-url-tsuji" class="nav-btn main-btn" title="現在の辻検索を開くURLをクリップボードにコピー">URL取得</button>
                     </div>
                 </div>
             </div>
@@ -419,7 +422,7 @@ GNU General Public License for more details.
                 <div id="sec-mystar" class="section-content">
                     <div class="control-row">
                         <button id="btn-mystar-reg" class="nav-btn small">登録</button>
-                        <input type="text" id="input-mystar-radec" placeholder="赤経,赤緯">
+                        <input type="text" id="input-mystar-radec" placeholder="赤経,赤緯" maxlength="150">
                     </div>
                     <div class="celestial-list" style="margin-top: 5px; border-bottom: none;">
                         <li style="border-bottom: none; padding-bottom: 0;">
@@ -505,7 +508,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="panel-footer">
-                &copy; 2026- Sora no Tsuji Project - v1.17.3
+                &copy; 2026- Sora no Tsuji Project - v1.18.0
             </div>
         </div>
     </div>
@@ -553,6 +556,7 @@ GNU General Public License for more details.
                         <li><strong>観測点高/目的点高:</strong> 標高に加算する高さを設定できます。</li>
                         <li><strong>Hom(e):</strong> 観測点/観測点高の登録・呼出ボタンです。未登録時は現在の値を登録(背景色変化)し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除(リセット)します。</li>
                         <li><strong>推(し)山:</strong> 目的点/目的点高の登録・呼出ボタンです。未登録時は現在の値を登録(背景色変化)し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除(リセット)します。</li>
+                        <li><strong>URL:</strong> 現在の位置情報と日時情報と表示天体を復元して表示するURLをクリップボードにコピーします。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
                     </ul>
                 </section>
 
@@ -589,12 +593,15 @@ GNU General Public License for more details.
                         <li><strong>基準視高度:</strong> 検索する視高度の基準値。初期値は観測点→目的点の視高度。</li>
                         <li><strong>オフセット方位角:</strong> 基準方位角からのズレ(度)。正の値で時計回り方向にずらします(初期値: 0°)。</li>
                         <li><strong>オフセット視高度:</strong> 基準視高度からのズレ(度)。正の値で上方向にずらします(初期値: 0°)。</li>
+                        <li><strong>オフセット方位距離:</strong> 観測点でのオフセット方位角を目的点での水平距離(m)に換算した値です(読み取り専用)。目的点でどのくらい横にずれるかの目安になります。</li>
+                        <li><strong>オフセット視高距離:</strong> 観測点でのオフセット視高度を目的点での垂直距離(m)に換算した値です(読み取り専用)。目的点でどのくらい上下にずれるかの目安になります。</li>
                         <li><strong>許容範囲方位角: ±</strong> 検索中心(基準方位角+オフセット方位角)からの許容範囲(初期値: 15°)。</li>
                         <li><strong>許容範囲視高度: ±</strong> 検索中心(基準視高度+オフセット視高度)からの許容範囲(初期値: 2.5°)。</li>
                         <li><strong>◎:</strong> 天体の中心がほぼ目的点に重なる日(誤差±0.125°[誤差範囲0.25°、およそ視半径以内])</li>
                         <li><strong>○:</strong> 天体の縁が目的点に接する範囲の日(誤差±0.25°[誤差範囲0.5°、およそ視直径以内])</li>
                         <li><strong>△:</strong> 目的点との誤差が天体の直径4倍以内の日(誤差±1°[誤差範囲2°、およそ視直径×4以内])</li>
                         <li><strong>-:</strong> 目的点との誤差が上記以上で、指定した許容範囲以内に収まる日</li>
+                        <li><strong>URL取得:</strong> 現在の辻検索情報/位置情報/日時情報/表示天体で辻検索を実行するURLをクリップボードにコピーします。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
                     </ul>
                     <p>検索は設定日時から最大1461日間、1分間隔で行われます。結果をタップすると、その日時にジャンプして確認できます。各天体の結果は最大365件です。また、太陽と月の視半径は、およそ0.26°です。</p>
                 </section>
@@ -611,7 +618,7 @@ GNU General Public License for more details.
 
                 <section class="help-section">
                     <h3>表示天体</h3>
-                    <p>太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星、北極星、すばる、のそれぞれを出没時刻、入没時刻、方位、高度がわかります。高度が負数(およそ地平線下)になると線が半透明になります。チェックボックスで表示・非表示にできます。また、カラーパレットで、色と線種を変更できます。</p>
+                    <p>太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星、北極星、北斗七星メラク、オリオン座ミンタカ、すばる、オリオン大星雲M42、こと座ベガ、わし座アルタイル、はくちょう座デネブ、オリオン座ベテルギウス、おおいぬ座シリウス、こいぬ座プロキオンのそれぞれを出没時刻、南中時刻、入没時刻、方位角、視高度、視半径がわかります。高度が負数(およそ地平線下)になると線が半透明になります。チェックボックスで表示・非表示にできます。また、カラーパレットで、色と線種を変更できます。</p>
                 </section>
 
                 <section class="help-section">
@@ -766,8 +773,6 @@ GNU General Public License for more details.
         </div>
     </div>
 
-    <script>var GSI = GSI || {};</script>
-    <script src="muni.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

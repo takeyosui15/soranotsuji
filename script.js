@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.18.0 - 2026-04-04: feat: マーカー色青赤、既定表示天体複数追加、encodeURL.html追加、URL取得ボタン×2追加
 Version 1.17.3 - 2026-03-25: fix: Hom/推山ボタンのリセット/登録時に地図のズームを解除
 Version 1.17.2 - 2026-03-25: fix: 既定目的点の富士山の緯度経度と標高を修正、ヘルプの内容を見直し
 Version 1.17.1 - 2026-03-21: feat: 観測点/目的点標高、オフセット方位距離/視高距離、表示天体詳細表記
@@ -53,6 +54,15 @@ Version 1.0.0 - 2026-01-29: Initial release
 const STORAGE_KEY = 'soranotsuji_app'; // 唯一の保存キー
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzq94EkeZgbWlFb65cb1WQcRrRVi2Qpd_i60NvJWx6BB6Qxpb-30GD7TSzZptpRYxYL/exec"; 
 const SYNODIC_MONTH = 29.53058886; // 朔望月 (日数)
+
+// 市区町村データ (遅延読み込み)
+let muniData = null;
+async function loadMuniData() {
+    if (muniData) return muniData;
+    const resp = await fetch('muni.json');
+    muniData = await resp.json();
+    return muniData;
+}
 const EARTH_RADIUS = 6378137;
 const REFRACTION_K = 0.132; // 大気差補正定数: 0.132
 // 標準大気モデルの定数
@@ -68,6 +78,23 @@ const MINTAKA_RA = 5.533444;
 const MINTAKA_DEC = -0.299095;
 const SUBARU_RA = 3.777222;
 const SUBARU_DEC = 24.178056;
+const M42_RA = 5.588007;
+const M42_DEC = -5.3876;
+const VEGA_RA = 18.615649;
+const VEGA_DEC = 38.783689;
+const ALTAIR_RA = 19.846388;
+const ALTAIR_DEC = 8.868321;
+const DENEB_RA = 20.690532;
+const DENEB_DEC = 45.280339;
+const BETELGEUSE_RA = 5.919529;
+const BETELGEUSE_DEC = 7.407064;
+const SIRIUS_RA = 6.752477;
+const SIRIUS_DEC = -16.716116;
+const PROCYON_RA = 7.655033;
+const PROCYON_DEC = 5.224988;
+
+// 固定RA/Decの恒星IDリスト
+const FIXED_STAR_IDS = ['Polaris', 'Merak', 'Mintaka', 'Subaru', 'M42', 'Vega', 'Altair', 'Deneb', 'Betelgeuse', 'Sirius', 'Procyon', 'MyStar'];
 
 // 天体の赤道半径 (km) - 視半径の計算用
 const BODY_RADIUS_KM = {
@@ -179,6 +206,13 @@ let appState = {
         { id: 'Merak',   name: '北斗七星メラク', color: '#654321', isDashed: false, visible: false },
         { id: 'Mintaka', name: 'オリオン座ミンタカ', color: '#FFFFFF', isDashed: false, visible: false },
         { id: 'Subaru',  name: 'すばる', color: '#0000FF', isDashed: false, visible: false },
+        { id: 'M42',     name: 'オリオン大星雲M42', color: '#DDA0DD', isDashed: false, visible: false },
+        { id: 'Vega',    name: 'こと座ベガ', color: '#FFA500', isDashed: true, visible: false },
+        { id: 'Altair',  name: 'わし座アルタイル', color: '#008000', isDashed: true, visible: false },
+        { id: 'Deneb',   name: 'はくちょう座デネブ', color: '#FFD700', isDashed: true, visible: false },
+        { id: 'Betelgeuse', name: 'オリオン座ベテルギウス', color: '#FF0000', isDashed: true, visible: false },
+        { id: 'Sirius',  name: 'おおいぬ座シリウス', color: '#00BFFF', isDashed: true, visible: false },
+        { id: 'Procyon', name: 'こいぬ座プロキオン', color: '#ADFF2F', isDashed: true, visible: false },
         { id: 'MyStar',  name: 'My天体', color: '#DDA0DD', isDashed: false, visible: false, isCustom: true }
     ],
 
@@ -228,7 +262,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (v1.17.3)");
+    console.log("宙の辻: 起動 (v1.18.0)");
     
     // Astronomy Engineが読み込まれているかチェック
     if (typeof Astronomy === 'undefined') {
@@ -247,6 +281,9 @@ window.onload = function() {
 
     // 2. 設定読み込み
     loadAppState();
+
+    // 2.5. URLパラメータからの復元（LocalStorageより優先）
+    restoreFromUrl();
 
     // 3. 地図初期化
     initMap();
@@ -293,8 +330,14 @@ window.onload = function() {
     // ツールチップ設定
     setupTooltips();
 
-    // 起動時は「現在日時」にセット
-    setNow();
+    // 起動時は「現在日時」にセット（URLパラメータからの復元がない場合のみ）
+    if (appState._restoredFromUrl) {
+        delete appState._restoredFromUrl;
+        syncUIFromState();
+        updateAll();
+    } else {
+        setNow();
+    }
 
     // リサイズ対応
     window.addEventListener('resize', () => {
@@ -304,6 +347,22 @@ window.onload = function() {
     });
 
     setTimeout(initVisitorCounter, 1000);
+
+    // URLパラメータで辻検索が指定されていた場合、自動実行
+    if (appState._pendingTsujiSearch) {
+        delete appState._pendingTsujiSearch;
+        setTimeout(() => {
+            // toggleTsujiSearchと同じ処理を実行
+            appState.isTsujiSearchActive = true;
+            const btn = document.getElementById('btn-tsuji-search');
+            const pnl = document.getElementById('tsujisearch-panel');
+            btn.classList.add('active');
+            pnl.classList.remove('hidden');
+            document.getElementById('tsujisearch-header').innerHTML = '辻検索結果 <span id="tsujisearch-status"></span>';
+            syncBottomPanels();
+            startTsujiSearch();
+        }, 500);
+    }
 };
 
 // 古いキーの削除関数
@@ -497,6 +556,10 @@ function setupUI() {
     // 登録ボタン
     document.getElementById('btn-reg-start').onclick = () => registerLocation('start');
     document.getElementById('btn-reg-end').onclick = () => registerLocation('end');
+
+    // URL取得ボタン
+    document.getElementById('btn-url-location').onclick = copyLocationUrl;
+    document.getElementById('btn-url-tsuji').onclick = copyTsujiSearchUrl;
 
     // 座標入力 (changeイベント)
     const iStart = document.getElementById('input-start-latlng');
@@ -839,9 +902,11 @@ function updateLocationDisplay() {
     const sPt = L.latLng(appState.start.lat, appState.start.lng);
     const ePt = L.latLng(appState.end.lat, appState.end.lng);
     
-    // マーカーの設置
-    L.marker(sPt).addTo(locationLayer).bindPopup(createLocationPopup("観測点", appState.start, appState.end));
-    L.marker(ePt).addTo(locationLayer).bindPopup(createLocationPopup("目的点", appState.end, appState.start));
+    // マーカーの設置（観測点:青、目的点:赤）
+    const observerIcon = L.divIcon({ className: '', html: '<div class="location-marker location-marker-observer"></div>', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] });
+    const targetIcon = L.divIcon({ className: '', html: '<div class="location-marker location-marker-target"></div>', iconSize: [24, 24], iconAnchor: [12, 24], popupAnchor: [0, -24] });
+    L.marker(sPt, { icon: observerIcon }).addTo(locationLayer).bindPopup(createLocationPopup("観測点", appState.start, appState.end, appState.startApiElev, appState.startHeight));
+    L.marker(ePt, { icon: targetIcon }).addTo(locationLayer).bindPopup(createLocationPopup("目的点", appState.end, appState.start, appState.endApiElev, appState.endHeight));
     
     // 1. メルカトル図法の直線 (地図上の見かけの線) -> 黒い破線
     L.polyline([sPt, ePt], {
@@ -877,21 +942,10 @@ function updateCalculation() {
         let ra;
         let dec;
         
-        if (body.id === 'Polaris') {
-            ra = POLARIS_RA;
-            dec = POLARIS_DEC;
-        } else if (body.id === 'Merak') {
-            ra = MERAK_RA;
-            dec = MERAK_DEC;
-        } else if (body.id === 'Mintaka') {
-            ra = MINTAKA_RA;
-            dec = MINTAKA_DEC;
-        } else if (body.id === 'Subaru') {
-            ra = SUBARU_RA;
-            dec = SUBARU_DEC;
-        } else if (body.id === 'MyStar') {
-            ra = appState.myStar.ra;
-            dec = appState.myStar.dec;
+        if (FIXED_STAR_IDS.includes(body.id)) {
+            const rd = getFixedStarRaDec(body.id);
+            ra = rd.ra;
+            dec = rd.dec;
         } else {
             const eq = Astronomy.Equator(body.id, obsDate, observer, true, true);
             ra = eq.ra;
@@ -902,11 +956,9 @@ function updateCalculation() {
 
         let riseStr = "--:--";
         let setStr = "--:--";
-        
-        if (['Polaris', 'Merak', 'Mintaka', 'Subaru', 'MyStar'].includes(body.id)) {
-            const times = searchStarRiseSet(ra, dec, observer, startOfDay);
-            riseStr = times.rise;
-            setStr = times.set;
+
+        if (FIXED_STAR_IDS.includes(body.id)) {
+            // 恒星: 出入り時刻は非同期で計算（下のsetTimeoutでまとめて処理）
         } else {
             try {
                 const rise = Astronomy.SearchRiseSet(body.id, observer, +1, startOfDay, 2);
@@ -915,23 +967,10 @@ function updateCalculation() {
                 setStr = set ? formatTime(set.date, startOfDay) : "--:--";
             } catch(e){}
         }
-        
-        if (riseStr === "--:--" && setStr === "--:--" && hor.altitude > 0) {
+
+        if (!FIXED_STAR_IDS.includes(body.id) && riseStr === "--:--" && setStr === "--:--" && hor.altitude > 0) {
             riseStr = "00:00";
             setStr = "00:00";
-        }
-
-        // 南中時刻の計算
-        let transitStr = "--:--";
-        if (['Polaris', 'Merak', 'Mintaka', 'Subaru', 'MyStar'].includes(body.id)) {
-            transitStr = searchStarTransit(ra, dec, observer, startOfDay);
-        } else {
-            try {
-                const transit = Astronomy.SearchHourAngle(body.id, observer, 0, startOfDay);
-                if (transit && transit.time) {
-                    transitStr = formatTime(transit.time.date, startOfDay);
-                }
-            } catch(e) {}
         }
 
         // 視半径の計算
@@ -946,13 +985,47 @@ function updateCalculation() {
         // 出・南中・入時刻
         const risesetEl = document.getElementById(`riseset-${body.id}`);
         if (risesetEl) {
-            risesetEl.innerText = `出時刻 ${riseStr} / 南中時 ${transitStr} / 入時刻 ${setStr}`;
+            if (FIXED_STAR_IDS.includes(body.id)) {
+                // 恒星: 出入り時刻・南中時を全て非同期で一括計算
+                risesetEl.innerText = `出時刻 --:-- / 南中時 --:-- / 入時刻 --:--`;
+                const bodyId = body.id;
+                const capturedRa = ra;
+                const capturedDec = dec;
+                setTimeout(() => {
+                    const times = searchStarRiseSet(capturedRa, capturedDec, observer, startOfDay);
+                    let rs = times.rise;
+                    let ss = times.set;
+                    if (rs === "--:--" && ss === "--:--") {
+                        const h = Astronomy.Horizon(obsDate, observer, capturedRa, capturedDec, appState.refractionEnabled ? "normal" : null);
+                        if (h.altitude > 0) { rs = "00:00"; ss = "00:00"; }
+                    }
+                    const transitStr = searchStarTransit(capturedRa, capturedDec, observer, startOfDay);
+                    const el = document.getElementById(`riseset-${bodyId}`);
+                    if (el) el.innerText = `出時刻 ${rs} / 南中時 ${transitStr} / 入時刻 ${ss}`;
+                }, 0);
+            } else {
+                // 太陽系天体: 出入り時刻は同期、南中時のみ非同期
+                risesetEl.innerText = `出時刻 ${riseStr} / 南中時 --:-- / 入時刻 ${setStr}`;
+                const bodyId = body.id;
+                setTimeout(() => {
+                    let transitStr = "--:--";
+                    try {
+                        const transit = Astronomy.SearchHourAngle(bodyId, observer, 0, startOfDay);
+                        if (transit && transit.time) {
+                            transitStr = formatTime(transit.time.date, startOfDay);
+                        }
+                    } catch(e) {}
+                    const el = document.getElementById(`riseset-${bodyId}`);
+                    if (el) el.innerText = `出時刻 ${riseStr} / 南中時 ${transitStr} / 入時刻 ${setStr}`;
+                }, 0);
+            }
         }
 
         // 方位角・視高度・視半径
         const dataEl = document.getElementById(`data-${body.id}`);
         if (dataEl) {
-            dataEl.innerText = `方位角 ${hor.azimuth.toFixed(2)}° / 視高度 ${hor.altitude.toFixed(2)}° / 視半径 ${angR.toFixed(3)}°`;
+            const angRStr = BODY_RADIUS_KM[body.id] ? angR.toFixed(3) + '°' : '-.---°';
+            dataEl.innerText = `方位角 ${hor.azimuth.toFixed(2)}° / 視高度 ${hor.altitude.toFixed(2)}° / 視半径 ${angRStr}`;
         }
 
         if (body.visible) {
@@ -1320,23 +1393,10 @@ function calculateDPPathPoints(targetDate, body, observer) {
         let r;
         let d;
         
-        if (['Polaris', 'Merak', 'Mintaka', 'Subaru', 'MyStar'].includes(body.id)) {
-            if(body.id === 'Polaris') {
-                r = POLARIS_RA;
-                d = POLARIS_DEC;
-            } else if(body.id === 'Merak') {
-                r = MERAK_RA;
-                d = MERAK_DEC;
-            } else if(body.id === 'Mintaka') {
-                r = MINTAKA_RA;
-                d = MINTAKA_DEC;
-            } else if(body.id === 'Subaru') {
-                r = SUBARU_RA;
-                d = SUBARU_DEC;
-            } else {
-                r = appState.myStar.ra;
-                d = appState.myStar.dec;
-            }
+        if (FIXED_STAR_IDS.includes(body.id)) {
+            const rd = getFixedStarRaDec(body.id);
+            r = rd.ra;
+            d = rd.dec;
         } else {
             const eq = Astronomy.Equator(body.id, time, observer, true, true);
             r = eq.ra;
@@ -1418,6 +1478,25 @@ function getBodyAngularRadius(bodyId, date, observer) {
     const eq = Astronomy.Equator(bodyId, date, observer, true, true);
     const distKm = eq.dist * KM_PER_AU;
     return Math.atan(radiusKm / distKm) * 180 / Math.PI;
+}
+
+// 固定RA/Decの恒星のRA/Decを返すヘルパー
+function getFixedStarRaDec(bodyId) {
+    switch (bodyId) {
+        case 'Polaris':    return { ra: POLARIS_RA, dec: POLARIS_DEC };
+        case 'Merak':      return { ra: MERAK_RA, dec: MERAK_DEC };
+        case 'Mintaka':    return { ra: MINTAKA_RA, dec: MINTAKA_DEC };
+        case 'Subaru':     return { ra: SUBARU_RA, dec: SUBARU_DEC };
+        case 'M42':        return { ra: M42_RA, dec: M42_DEC };
+        case 'Vega':       return { ra: VEGA_RA, dec: VEGA_DEC };
+        case 'Altair':     return { ra: ALTAIR_RA, dec: ALTAIR_DEC };
+        case 'Deneb':      return { ra: DENEB_RA, dec: DENEB_DEC };
+        case 'Betelgeuse': return { ra: BETELGEUSE_RA, dec: BETELGEUSE_DEC };
+        case 'Sirius':     return { ra: SIRIUS_RA, dec: SIRIUS_DEC };
+        case 'Procyon':    return { ra: PROCYON_RA, dec: PROCYON_DEC };
+        case 'MyStar':     return { ra: appState.myStar.ra, dec: appState.myStar.dec };
+        default:           return { ra: 0, dec: 0 };
+    }
 }
 
 // ------------------------------------------------------
@@ -1621,11 +1700,12 @@ async function searchLocation(query) {
         const data = await res.json();
 
         if (data && data.length > 0) {
+            const muni = await loadMuniData();
             const gsiResults = data
                 .filter(item => item.properties.title.includes(q))
                 .map(item => {
                     const code = item.properties.addressCode || '';
-                    const muniStr = (code && GSI.MUNI_ARRAY && GSI.MUNI_ARRAY[code]) || '';
+                    const muniStr = (code && muni && muni[code]) || '';
                     const parts = muniStr.split(',');
                     const pref = parts[1] || '';
                     const city = parts[3] || '';
@@ -1854,10 +1934,10 @@ async function fetchAllElevations(points, onProgress) {
     if (onProgress) onProgress(points.length, points.length);
 }
 
-function createLocationPopup(title, pos, target) {
+function createLocationPopup(title, pos, target, apiElev, height) {
     const az = calculateBearing(pos.lat, pos.lng, target.lat, target.lng);
     const dist = L.latLng(pos.lat, pos.lng).distanceTo(L.latLng(target.lat, target.lng));
-    
+
     // ★追加: 視高度を計算
     const alt = calculateApparentAltitude(dist, pos.elev, target.elev);
 
@@ -1865,7 +1945,8 @@ function createLocationPopup(title, pos, target) {
         <b>${title}</b><br>
         緯度: ${pos.lat.toFixed(5)}°<br>
         経度: ${pos.lng.toFixed(5)}°<br>
-        標高: ${pos.elev} m<br>
+        標高: ${apiElev != null ? apiElev : pos.elev} m<br>
+        高さ: ${height != null ? height : 0} m<br>
         相手距離: ${(dist/1000).toFixed(2)} km<br>
         相手方位: ${az.toFixed(1)}°<br>
         相手高度: ${alt.toFixed(2)}°
@@ -2404,16 +2485,9 @@ async function startTsujiSearch() {
                 const time = new Date(dayStart.getTime() + m * 60000);
 
                 let ra, dec;
-                if (body.id === 'Polaris') {
-                    ra = POLARIS_RA; dec = POLARIS_DEC;
-                } else if (body.id === 'Merak') {
-                    ra = MERAK_RA; dec = MERAK_DEC;
-                } else if (body.id === 'Mintaka') {
-                    ra = MINTAKA_RA; dec = MINTAKA_DEC;
-                } else if (body.id === 'Subaru') {
-                    ra = SUBARU_RA; dec = SUBARU_DEC;
-                } else if (body.id === 'MyStar') {
-                    ra = appState.myStar.ra; dec = appState.myStar.dec;
+                if (FIXED_STAR_IDS.includes(body.id)) {
+                    const rd = getFixedStarRaDec(body.id);
+                    ra = rd.ra; dec = rd.dec;
                 } else {
                     const eq = Astronomy.Equator(body.id, time, observer, true, true);
                     ra = eq.ra; dec = eq.dec;
@@ -2514,7 +2588,8 @@ async function startTsujiSearch() {
         const tr = document.createElement('tr');
         tr.className = 'td-data-row';
         tr.style.color = r.body.color;
-        tr.innerHTML = `<td>${escapeHtml(r.body.id)}</td><td>${escapeHtml(r.body.name)}</td><td>${r.symbol}</td><td>${r.dist.toFixed(3)}°</td><td>${r.dateStr}</td><td>${r.timeStr}</td><td>${r.azimuth.toFixed(2)}°</td><td>${r.altitude.toFixed(2)}°</td><td>${r.angularRadius.toFixed(3)}°</td><td>${r.moonAge >= 0 ? r.moonAge.toFixed(1) : ''}</td><td>${r.moonIcon}</td>`;
+        const angRDisplay = BODY_RADIUS_KM[r.body.id] ? r.angularRadius.toFixed(3) + '°' : '-.---°';
+        tr.innerHTML = `<td>${escapeHtml(r.body.id)}</td><td>${escapeHtml(r.body.name)}</td><td>${r.symbol}</td><td>${r.dist.toFixed(3)}°</td><td>${r.dateStr}</td><td>${r.timeStr}</td><td>${r.azimuth.toFixed(2)}°</td><td>${r.altitude.toFixed(2)}°</td><td>${angRDisplay}</td><td>${r.moonAge >= 0 ? r.moonAge.toFixed(1) : ''}</td><td>${r.moonIcon}</td>`;
         tr.addEventListener('click', () => {
             appState.currentDate = new Date(r.dateObj);
             syncUIFromState();
@@ -2761,4 +2836,166 @@ function toggleSection(id) {
 function toggleHelp() {
     const modal = document.getElementById('help-modal');
     if(modal) modal.classList.toggle('hidden');
+}
+
+// ============================================================
+// URL取得・復元
+// ============================================================
+
+function buildBaseUrl() {
+    return window.location.origin + window.location.pathname;
+}
+
+// 日時をdessin仕様フォーマットに変換するヘルパー
+function formatDateForUrl(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}${m}${day}`;
+}
+function formatTimeForUrl(d) {
+    return `${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
+// ブラウザのタイムゾーンオフセットを+0900形式で返す
+function getLocalTimezoneOffsetString() {
+    const offset = new Date().getTimezoneOffset(); // JSTなら-540
+    const sign = offset <= 0 ? '+' : '-';
+    const abs = Math.abs(offset);
+    const h = String(Math.floor(abs / 60)).padStart(2, '0');
+    const m = String(abs % 60).padStart(2, '0');
+    return `${sign}${h}${m}`;
+}
+
+// +0900形式をパースして分単位(JSTなら+540)で返す
+function parseTimezoneOffsetMinutes(tzString) {
+    const match = tzString.match(/^([+-])(\d{2})(\d{2})$/);
+    if (!match) return 540; // デフォルトJST
+    const sign = match[1] === '+' ? 1 : -1;
+    return sign * (parseInt(match[2]) * 60 + parseInt(match[3]));
+}
+
+// 共通のURLパラメータを構築するヘルパー
+function buildCommonUrlParams() {
+    const d = appState.currentDate;
+    const params = new URLSearchParams();
+    params.set('date', formatDateForUrl(d));
+    params.set('time', formatTimeForUrl(d));
+    params.set('timeZone', getLocalTimezoneOffsetString());
+    params.set('startLat', appState.start.lat.toFixed(6));
+    params.set('startLng', appState.start.lng.toFixed(6));
+    params.set('startApiElv', String(appState.startApiElev));
+    params.set('startElv', String(appState.startHeight));
+    params.set('endLat', appState.end.lat.toFixed(6));
+    params.set('endLng', appState.end.lng.toFixed(6));
+    params.set('endApiElv', String(appState.endApiElev));
+    params.set('endElv', String(appState.endHeight));
+
+    // 表示天体: starIdを複数指定
+    const visibleBodies = appState.bodies.filter(b => b.visible);
+    visibleBodies.forEach(b => params.append('starId', b.id));
+
+    return params;
+}
+
+function copyLocationUrl() {
+    const params = buildCommonUrlParams();
+    params.set('mode', 'preview');
+
+    const url = buildBaseUrl() + '?' + params.toString();
+    navigator.clipboard.writeText(url).then(() => {
+        alert('現在の状態で宙の辻を開くURLをクリップボードにコピーしました。');
+    });
+}
+
+function copyTsujiSearchUrl() {
+    const params = buildCommonUrlParams();
+    params.set('mode', 'tsujisearch');
+
+    params.set('tsujiSearchDays', String(appState.tsujiSearchDays));
+    params.set('tsujiAz', String(appState.tsujiSearchBaseAz));
+    params.set('tsujiAlt', String(appState.tsujiSearchBaseAlt));
+    params.set('tsujiAzOffset', String(appState.tsujiSearchOffsetAz));
+    params.set('tsujiAltOffset', String(appState.tsujiSearchOffsetAlt));
+    params.set('tsujiAzTolerance', String(appState.tsujiSearchToleranceAz));
+    params.set('tsujiAltTolerance', String(appState.tsujiSearchToleranceAlt));
+
+    const url = buildBaseUrl() + '?' + params.toString();
+    navigator.clipboard.writeText(url).then(() => {
+        alert('現在の辻検索を開くURLをクリップボードにコピーしました。');
+    });
+}
+
+function restoreFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('mode')) return;
+
+    appState._restoredFromUrl = true;
+    const mode = params.get('mode');
+
+    // 位置情報
+    if (params.has('startLat')) { const v = parseFloat(params.get('startLat')); if (!isNaN(v)) appState.start.lat = v; }
+    if (params.has('startLng')) { const v = parseFloat(params.get('startLng')); if (!isNaN(v)) appState.start.lng = v; }
+    if (params.has('startApiElv')) { const v = parseFloat(params.get('startApiElv')); if (!isNaN(v)) appState.startApiElev = v; }
+    if (params.has('startElv')) { const v = parseFloat(params.get('startElv')); if (!isNaN(v)) appState.startHeight = v; }
+    if (params.has('endLat')) { const v = parseFloat(params.get('endLat')); if (!isNaN(v)) appState.end.lat = v; }
+    if (params.has('endLng')) { const v = parseFloat(params.get('endLng')); if (!isNaN(v)) appState.end.lng = v; }
+    if (params.has('endApiElv')) { const v = parseFloat(params.get('endApiElv')); if (!isNaN(v)) appState.endApiElev = v; }
+    if (params.has('endElv')) { const v = parseFloat(params.get('endElv')); if (!isNaN(v)) appState.endHeight = v; }
+
+    // 日時 (YYYYMMDD, hhmmss)
+    if (params.has('date')) {
+        const s = params.get('date');
+        if (s.length === 8) {
+            const y = parseInt(s.substring(0, 4)), m = parseInt(s.substring(4, 6)) - 1, d = parseInt(s.substring(6, 8));
+            appState.currentDate.setFullYear(y, m, d);
+        }
+    }
+    if (params.has('time')) {
+        const s = params.get('time');
+        if (s.length >= 4) {
+            const h = parseInt(s.substring(0, 2)), m = parseInt(s.substring(2, 4));
+            const sec = s.length >= 6 ? parseInt(s.substring(4, 6)) : 0;
+            appState.currentDate.setHours(h, m, sec, 0);
+        }
+    }
+
+    // タイムゾーン補正: URL作成者と閲覧者のオフセット差を補正
+    if (params.has('date') || params.has('time')) {
+        const urlTzString = params.has('timeZone') ? params.get('timeZone') : '+0900';
+        const urlOffsetMin = parseTimezoneOffsetMinutes(urlTzString);
+        const localOffsetMin = -new Date().getTimezoneOffset();
+        const diffMin = urlOffsetMin - localOffsetMin;
+        if (diffMin !== 0) {
+            appState.currentDate.setMinutes(appState.currentDate.getMinutes() - diffMin);
+        }
+    }
+
+    // 表示天体 (starId複数指定対応)
+    const starIds = params.getAll('starId');
+    if (starIds.length > 0) {
+        appState.bodies.forEach(b => {
+            b.visible = starIds.includes(b.id);
+        });
+    }
+
+    // 辻検索パラメータ (mode=tsujisearchの時のみ)
+    if (mode === 'tsujisearch') {
+        if (params.has('tsujiSearchDays')) { const v = parseInt(params.get('tsujiSearchDays')); if (!isNaN(v)) appState.tsujiSearchDays = v; }
+        if (params.has('tsujiAz')) { const v = parseFloat(params.get('tsujiAz')); if (!isNaN(v)) appState.tsujiSearchBaseAz = v; }
+        if (params.has('tsujiAlt')) { const v = parseFloat(params.get('tsujiAlt')); if (!isNaN(v)) appState.tsujiSearchBaseAlt = v; }
+        if (params.has('tsujiAzOffset')) { const v = parseFloat(params.get('tsujiAzOffset')); if (!isNaN(v)) appState.tsujiSearchOffsetAz = v; }
+        if (params.has('tsujiAltOffset')) { const v = parseFloat(params.get('tsujiAltOffset')); if (!isNaN(v)) appState.tsujiSearchOffsetAlt = v; }
+        if (params.has('tsujiAzTolerance')) { const v = parseFloat(params.get('tsujiAzTolerance')); if (!isNaN(v)) appState.tsujiSearchToleranceAz = v; }
+        if (params.has('tsujiAltTolerance')) { const v = parseFloat(params.get('tsujiAltTolerance')); if (!isNaN(v)) appState.tsujiSearchToleranceAlt = v; }
+    }
+
+    // 標高(elev)を再計算: elev = apiElev + height
+    appState.start.elev = appState.startApiElev + appState.startHeight;
+    appState.end.elev = appState.endApiElev + appState.endHeight;
+
+    // mode=tsujisearchの場合は辻検索を自動実行（UIが準備できた後に）
+    if (mode === 'tsujisearch') {
+        appState._pendingTsujiSearch = true;
+    }
 }
