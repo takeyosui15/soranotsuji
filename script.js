@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.18.1 - 2026-04-05: fix: URL取得形式を3種類(日時固定、日時半固定、アクセス日時)に修正、マーカー位置を微調整
 Version 1.18.0 - 2026-04-04: feat: マーカー色青赤、既定表示天体複数追加、encodeURL.html追加、URL取得ボタン×2追加
 Version 1.17.3 - 2026-03-25: fix: Hom/推山ボタンのリセット/登録時に地図のズームを解除
 Version 1.17.2 - 2026-03-25: fix: 既定目的点の富士山の緯度経度と標高を修正、ヘルプの内容を見直し
@@ -262,7 +263,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (v1.18.0)");
+    console.log("宙の辻: 起動 (v1.18.1)");
     
     // Astronomy Engineが読み込まれているかチェック
     if (typeof Astronomy === 'undefined') {
@@ -557,9 +558,28 @@ function setupUI() {
     document.getElementById('btn-reg-start').onclick = () => registerLocation('start');
     document.getElementById('btn-reg-end').onclick = () => registerLocation('end');
 
-    // URL取得ボタン
-    document.getElementById('btn-url-location').onclick = copyLocationUrl;
-    document.getElementById('btn-url-tsuji').onclick = copyTsujiSearchUrl;
+    // URL取得ボタン: ポップアップダイアログ表示
+    document.getElementById('btn-url-location').onclick = () => toggleUrlPanel('location');
+    document.getElementById('btn-url-tsuji').onclick = () => toggleUrlPanel('tsuji');
+    // URL取得ダイアログ: 項目クリック
+    document.getElementById('url-picker-fixed').addEventListener('click', () => {
+        const mode = urlPickerMode;
+        closeUrlPicker();
+        if (mode === 'location') copyLocationUrl('fixed');
+        else if (mode === 'tsuji') copyTsujiSearchUrl('fixed');
+    });
+    document.getElementById('url-picker-semi-fixed').addEventListener('click', () => {
+        const mode = urlPickerMode;
+        closeUrlPicker();
+        if (mode === 'location') copyLocationUrl('semi-fixed');
+        else if (mode === 'tsuji') copyTsujiSearchUrl('semi-fixed');
+    });
+    document.getElementById('url-picker-access').addEventListener('click', () => {
+        const mode = urlPickerMode;
+        closeUrlPicker();
+        if (mode === 'location') copyLocationUrl(false);
+        else if (mode === 'tsuji') copyTsujiSearchUrl(false);
+    });
 
     // 座標入力 (changeイベント)
     const iStart = document.getElementById('input-start-latlng');
@@ -2876,12 +2896,21 @@ function parseTimezoneOffsetMinutes(tzString) {
 }
 
 // 共通のURLパラメータを構築するヘルパー
-function buildCommonUrlParams() {
+function buildCommonUrlParams(dateTimeMode = 'fixed') {
     const d = appState.currentDate;
     const params = new URLSearchParams();
-    params.set('date', formatDateForUrl(d));
-    params.set('time', formatTimeForUrl(d));
-    params.set('timeZone', getLocalTimezoneOffsetString());
+    if (dateTimeMode === 'fixed' || dateTimeMode === true) {
+        params.set('date', formatDateForUrl(d));
+        params.set('time', formatTimeForUrl(d));
+        params.set('timeZone', getLocalTimezoneOffsetString());
+    } else if (dateTimeMode === 'semi-fixed') {
+        // 年を0000にして月日時は固定
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        params.set('date', `0000${mm}${dd}`);
+        params.set('time', formatTimeForUrl(d));
+        params.set('timeZone', getLocalTimezoneOffsetString());
+    }
     params.set('startLat', appState.start.lat.toFixed(6));
     params.set('startLng', appState.start.lng.toFixed(6));
     params.set('startApiElv', String(appState.startApiElev));
@@ -2898,8 +2927,33 @@ function buildCommonUrlParams() {
     return params;
 }
 
-function copyLocationUrl() {
-    const params = buildCommonUrlParams();
+// URL取得ポップアップダイアログ
+let urlPickerMode = null; // 'location' or 'tsuji'
+
+function toggleUrlPanel(type) {
+    const picker = document.getElementById('url-picker');
+    const fixedLabel = document.getElementById('url-picker-fixed-label');
+    const semiFixedLabel = document.getElementById('url-picker-semi-fixed-label');
+
+    const d = appState.currentDate;
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+
+    fixedLabel.textContent = `日時固定(${d.getFullYear()}年${mm}月${dd}日${hh}:${mi})`;
+    semiFixedLabel.textContent = `日時半固定(アクセス年の${mm}月${dd}日${hh}:${mi})`;
+    urlPickerMode = type;
+    picker.classList.remove('hidden');
+}
+
+function closeUrlPicker() {
+    document.getElementById('url-picker').classList.add('hidden');
+    urlPickerMode = null;
+}
+
+function copyLocationUrl(includeDateTime) {
+    const params = buildCommonUrlParams(includeDateTime);
     params.set('mode', 'preview');
 
     const url = buildBaseUrl() + '?' + params.toString();
@@ -2908,8 +2962,8 @@ function copyLocationUrl() {
     });
 }
 
-function copyTsujiSearchUrl() {
-    const params = buildCommonUrlParams();
+function copyTsujiSearchUrl(includeDateTime) {
+    const params = buildCommonUrlParams(includeDateTime);
     params.set('mode', 'tsujisearch');
 
     params.set('tsujiSearchDays', String(appState.tsujiSearchDays));
@@ -2930,7 +2984,6 @@ function restoreFromUrl() {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('mode')) return;
 
-    appState._restoredFromUrl = true;
     const mode = params.get('mode');
 
     // 位置情報
@@ -2943,15 +2996,19 @@ function restoreFromUrl() {
     if (params.has('endApiElv')) { const v = parseFloat(params.get('endApiElv')); if (!isNaN(v)) appState.endApiElev = v; }
     if (params.has('endElv')) { const v = parseFloat(params.get('endElv')); if (!isNaN(v)) appState.endHeight = v; }
 
-    // 日時 (YYYYMMDD, hhmmss)
+    // 日時 (YYYYMMDD, hhmmss) — date/timeが存在する場合のみ日時を復元しsetNow()をスキップ
     if (params.has('date')) {
+        appState._restoredFromUrl = true;
         const s = params.get('date');
         if (s.length === 8) {
-            const y = parseInt(s.substring(0, 4)), m = parseInt(s.substring(4, 6)) - 1, d = parseInt(s.substring(6, 8));
+            let y = parseInt(s.substring(0, 4));
+            const m = parseInt(s.substring(4, 6)) - 1, d = parseInt(s.substring(6, 8));
+            if (y === 0) y = new Date().getFullYear(); // 日時半固定: アクセス年に置換
             appState.currentDate.setFullYear(y, m, d);
         }
     }
     if (params.has('time')) {
+        appState._restoredFromUrl = true;
         const s = params.get('time');
         if (s.length >= 4) {
             const h = parseInt(s.substring(0, 2)), m = parseInt(s.substring(2, 4));

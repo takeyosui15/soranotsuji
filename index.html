@@ -508,7 +508,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="panel-footer">
-                &copy; 2026- Sora no Tsuji Project - v1.18.0
+                &copy; 2026- Sora no Tsuji Project - v1.18.1
             </div>
         </div>
     </div>
@@ -519,6 +519,24 @@ GNU General Public License for more details.
             <span class="close-picker" onclick="closeLocationPicker()">×</span>
         </div>
         <div id="picker-list" class="picker-list"></div>
+    </div>
+
+    <div id="url-picker" class="location-picker hidden">
+        <div class="picker-header">
+            <span id="url-picker-title">URL取得</span>
+            <span class="close-picker" onclick="closeUrlPicker()">×</span>
+        </div>
+        <div class="picker-list">
+            <div class="picker-item" id="url-picker-fixed">
+                <div class="picker-name" id="url-picker-fixed-label"></div>
+            </div>
+            <div class="picker-item" id="url-picker-semi-fixed">
+                <div class="picker-name" id="url-picker-semi-fixed-label"></div>
+            </div>
+            <div class="picker-item" id="url-picker-access">
+                <div class="picker-name">アクセス日時</div>
+            </div>
+        </div>
     </div>
 
 
@@ -556,7 +574,7 @@ GNU General Public License for more details.
                         <li><strong>観測点高/目的点高:</strong> 標高に加算する高さを設定できます。</li>
                         <li><strong>Hom(e):</strong> 観測点/観測点高の登録・呼出ボタンです。未登録時は現在の値を登録(背景色変化)し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除(リセット)します。</li>
                         <li><strong>推(し)山:</strong> 目的点/目的点高の登録・呼出ボタンです。未登録時は現在の値を登録(背景色変化)し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除(リセット)します。</li>
-                        <li><strong>URL:</strong> 現在の位置情報と日時情報と表示天体を復元して表示するURLをクリップボードにコピーします。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
+                        <li><strong>URL:</strong> 現在の位置情報と日時情報と表示天体を記憶/復元して表示するURLをクリップボードにコピーします。日時情報は、日時固定、日時半固定(アクセス年の月日時を固定)、アクセスした時の現在日時のアクセス日時を選択できます。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
                     </ul>
                 </section>
 
@@ -601,7 +619,7 @@ GNU General Public License for more details.
                         <li><strong>○:</strong> 天体の縁が目的点に接する範囲の日(誤差±0.25°[誤差範囲0.5°、およそ視直径以内])</li>
                         <li><strong>△:</strong> 目的点との誤差が天体の直径4倍以内の日(誤差±1°[誤差範囲2°、およそ視直径×4以内])</li>
                         <li><strong>-:</strong> 目的点との誤差が上記以上で、指定した許容範囲以内に収まる日</li>
-                        <li><strong>URL取得:</strong> 現在の辻検索情報/位置情報/日時情報/表示天体で辻検索を実行するURLをクリップボードにコピーします。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
+                        <li><strong>URL取得:</strong> 現在の辻検索情報/位置情報/日時情報/表示天体で辻検索を実行するURLをクリップボードにコピーします。日時情報は、日時固定、日時半固定(アクセス年の月日時を固定)、アクセスした時の現在日時のアクセス日時を選択できます。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
                     </ul>
                     <p>検索は設定日時から最大1461日間、1分間隔で行われます。結果をタップすると、その日時にジャンプして確認できます。各天体の結果は最大365件です。また、太陽と月の視半径は、およそ0.26°です。</p>
                 </section>

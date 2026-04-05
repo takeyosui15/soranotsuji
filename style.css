@@ -1212,6 +1212,7 @@ input[type="range"] {
     height: 24px;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
+    translate: -1.3px -13px;
     border: 2px solid #fff;
     box-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
@@ -1221,3 +1222,4 @@ input[type="range"] {
 .location-marker-target {
     background-color: #F44336;
 }
+
