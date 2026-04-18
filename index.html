@@ -69,7 +69,6 @@ GNU General Public License for more details.
 
     <div id="elevation-panel" class="hidden">
         <canvas id="elevation-canvas"></canvas>
-        <div id="elevation-info">Start -> End (100m間隔)</div>
         
         <div id="progress-overlay" class="hidden">
             <div class="progress-label">データ取得中... <span id="progress-text">0%</span></div>
@@ -102,7 +101,7 @@ GNU General Public License for more details.
                     <div class="control-row">
                         <div class="btn-group-left">
                             <button id="btn-gps" class="nav-btn small" title="現在地を取得">GPS</button>
-                            <input type="radio" name="loc-mode" id="radio-start" value="start" checked>
+                            <input type="radio" name="loc-mode" id="radio-start" class="mystars-radio" value="start" checked>
                         </div>
                         <label class="input-label">観測点(°):</label>
                         <input type="text" id="input-start-latlng" placeholder="地名 住所 緯度,経度" maxlength="150">
@@ -113,7 +112,7 @@ GNU General Public License for more details.
                             <button id="btn-reg-start" class="nav-btn small" title="現在の観測点を初期値として登録">Hom</button>
                         </div>
                         <label class="input-label">観測点標高(m):</label>
-                        <input type="number" id="input-start-api-elev" class="elev-readonly" readonly value="0" step="0.1">
+                        <input type="number" id="input-start-api-elev" class="elev-input" value="0" step="0.1" placeholder="標高 m">
                     </div>
 
                     <div class="control-row">
@@ -127,7 +126,7 @@ GNU General Public License for more details.
                     <div class="control-row">
                         <div class="btn-group-left">
                             <button id="btn-url-location" class="nav-btn small" title="現在の状態で宙の辻を開くURLをクリップボードにコピー">URL</button>
-                            <input type="radio" name="loc-mode" id="radio-end" value="end">
+                            <input type="radio" name="loc-mode" id="radio-end" class="mystars-radio" value="end">
                         </div>
                         <label class="input-label">目的点(°):</label>
                         <input type="text" id="input-end-latlng" placeholder="地名 住所 緯度,経度" maxlength="150">
@@ -138,7 +137,7 @@ GNU General Public License for more details.
                             <div class="spacer-btn"></div>
                         </div>
                         <label class="input-label">目的点標高(m):</label>
-                        <input type="number" id="input-end-api-elev" class="elev-readonly" readonly value="0" step="0.1">
+                        <input type="number" id="input-end-api-elev" class="elev-input" value="0" step="0.1" placeholder="標高 m">
                     </div>
 
                     <div class="control-row">
@@ -165,23 +164,23 @@ GNU General Public License for more details.
                 <div id="sec-tsujisearch" class="section-content closed">
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">検索期間(日):</label>
-                        <input type="number" id="input-tsuji-search-days" placeholder="最大1461日(4年間)" step="1" min="1" max="1461">
+                        <input type="number" id="input-tsuji-search-days" placeholder="最大36500日(100年間)" step="1" min="1" max="36500">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">基準方位角(°):</label>
-                        <input type="number" id="input-tsuji-az" placeholder="北から時計回り(単位:°)" step="0.01" min="0" max="360">
+                        <input type="number" id="input-tsuji-az" placeholder="北から時計回り(°)" step="0.01" min="0" max="360">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">基準視高度(°):</label>
-                        <input type="number" id="input-tsuji-alt" placeholder="水平から上向き(単位:°)" step="0.01" min="-360" max="360">
+                        <input type="number" id="input-tsuji-alt" placeholder="水平から上向き(°)" step="0.01" min="-360" max="360">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label" title="観測点基準">オフセット方位角(°):</label>
-                        <input type="number" id="input-tsuji-az-offset" placeholder="基準から時計回り(単位:°)" step="0.01" min="-360" max="360">
+                        <input type="number" id="input-tsuji-az-offset" placeholder="基準から時計回り(°)" step="0.01" min="-360" max="360">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label" title="観測点基準">オフセット視高度(°):</label>
-                        <input type="number" id="input-tsuji-alt-offset" placeholder="基準から上向き(単位:°)" step="0.01" min="-360" max="360">
+                        <input type="number" id="input-tsuji-alt-offset" placeholder="基準から上向き(°)" step="0.01" min="-360" max="360">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label" title="目的点基準">オフセット方位距離(m):</label>
@@ -193,11 +192,24 @@ GNU General Public License for more details.
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">許容範囲方位角(°): ±</label>
-                        <input type="number" id="input-tsuji-az-tolerance" placeholder="検索中心から時計回り(単位:°)" step="0.01" min="0" max="360">
+                        <input type="number" id="input-tsuji-az-tolerance" placeholder="検索中心から時計回り(°)" step="0.01" min="0" max="360">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">許容範囲視高度(°): ±</label>
-                        <input type="number" id="input-tsuji-alt-tolerance" placeholder="検索中心から上向き(単位:°)" step="0.01" min="0" max="360">
+                        <input type="number" id="input-tsuji-alt-tolerance" placeholder="検索中心から上向き(°)" step="0.01" min="0" max="360">
+                    </div>
+                    <hr class="tsujisearch-separator">
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-tsuji-moon-filter" class="body-checkbox">
+                        <label for="chk-tsuji-moon-filter">フィルタ</label>
+                    </div>
+                    <div class="control-row">
+                        <label class="input-label tsujisearch-label">基準月齢:</label>
+                        <input type="number" id="input-tsuji-moon-base" placeholder="0〜30" step="0.1" min="0" max="30">
+                    </div>
+                    <div class="control-row">
+                        <label class="input-label tsujisearch-label">許容範囲月齢: ±</label>
+                        <input type="number" id="input-tsuji-moon-tolerance" placeholder="0〜15" step="0.1" min="0" max="15">
                     </div>
                     <div class="control-row">
                         <button id="btn-url-tsuji" class="nav-btn main-btn" title="現在の辻検索を開くURLをクリップボードにコピー">URL取得</button>
@@ -223,7 +235,7 @@ GNU General Public License for more details.
                         <div class="spacer-btn-now"></div>
                         <button id="btn-hour-prev" class="nav-btn">◀◀</button>
                         <button id="btn-time-prev" class="nav-btn">◀</button>
-                        <input type="time" id="time-input" value="12:00">
+                        <input type="time" id="time-input" value="12:00:00" step="1">
                         <button id="btn-time-next" class="nav-btn">▶</button>
                         <button id="btn-hour-next" class="nav-btn">▶▶</button>
                     </div>
@@ -239,7 +251,7 @@ GNU General Public License for more details.
                     
                     <div class="shortcuts">
                         <div class="shortcut-item">
-                            <input type="radio" name="time-jump" id="jump-sunrise" value="sunrise">
+                            <input type="radio" name="time-jump" id="jump-sunrise" class="mystars-radio" value="sunrise">
                             <label for="jump-sunrise">
                                 <span class="shortcut-name">🌞日の出</span>
                                 <span class="shortcut-detail">
@@ -249,7 +261,7 @@ GNU General Public License for more details.
                             </label>
                         </div>
                         <div class="shortcut-item">
-                            <input type="radio" name="time-jump" id="jump-sunset" value="sunset">
+                            <input type="radio" name="time-jump" id="jump-sunset" class="mystars-radio" value="sunset">
                             <label for="jump-sunset">
                                 <span class="shortcut-name">🌞日の入</span>
                                 <span class="shortcut-detail">
@@ -259,7 +271,7 @@ GNU General Public License for more details.
                             </label>
                         </div>
                         <div class="shortcut-item">
-                            <input type="radio" name="time-jump" id="jump-moonrise" value="moonrise">
+                            <input type="radio" name="time-jump" id="jump-moonrise" class="mystars-radio" value="moonrise">
                             <label for="jump-moonrise">
                                 <span class="shortcut-name">🌛月の出</span>
                                 <span class="shortcut-detail">
@@ -269,7 +281,7 @@ GNU General Public License for more details.
                             </label>
                         </div>
                         <div class="shortcut-item">
-                            <input type="radio" name="time-jump" id="jump-moonset" value="moonset">
+                            <input type="radio" name="time-jump" id="jump-moonset" class="mystars-radio" value="moonset">
                             <label for="jump-moonset">
                                 <span class="shortcut-name">🌛月の入</span>
                                 <span class="shortcut-detail">
@@ -303,7 +315,7 @@ GNU General Public License for more details.
                         <div class="twilight-group-title">夜明</div>
                         <div class="twilight-grid">
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-astro-dawn" value="astro_dawn">
+                                <input type="radio" name="time-jump" id="jump-astro-dawn" class="mystars-radio" value="astro_dawn">
                                 <label for="jump-astro-dawn">
                                     <span class="shortcut-name">天文薄明[始]</span>
                                     <span class="shortcut-detail">
@@ -313,7 +325,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-naut-dawn" value="naut_dawn">
+                                <input type="radio" name="time-jump" id="jump-naut-dawn" class="mystars-radio" value="naut_dawn">
                                 <label for="jump-naut-dawn">
                                     <span class="shortcut-name">航海薄明[始]</span>
                                     <span class="shortcut-detail">
@@ -323,7 +335,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-yoake" value="yoake">
+                                <input type="radio" name="time-jump" id="jump-yoake" class="mystars-radio" value="yoake">
                                 <label for="jump-yoake">
                                     <span class="shortcut-name">夜明</span>
                                     <span class="shortcut-detail">
@@ -333,7 +345,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-civil-dawn" value="civil_dawn">
+                                <input type="radio" name="time-jump" id="jump-civil-dawn" class="mystars-radio" value="civil_dawn">
                                 <label for="jump-civil-dawn">
                                     <span class="shortcut-name">常用薄明[始]</span>
                                     <span class="shortcut-detail">
@@ -343,7 +355,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-tw-sunrise" value="tw_sunrise">
+                                <input type="radio" name="time-jump" id="jump-tw-sunrise" class="mystars-radio" value="tw_sunrise">
                                 <label for="jump-tw-sunrise">
                                     <span class="shortcut-name">日の出</span>
                                     <span class="shortcut-detail">
@@ -359,7 +371,7 @@ GNU General Public License for more details.
                         <div class="twilight-group-title">日暮</div>
                         <div class="twilight-grid">
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-tw-sunset" value="tw_sunset">
+                                <input type="radio" name="time-jump" id="jump-tw-sunset" class="mystars-radio" value="tw_sunset">
                                 <label for="jump-tw-sunset">
                                     <span class="shortcut-name">日の入</span>
                                     <span class="shortcut-detail">
@@ -370,7 +382,7 @@ GNU General Public License for more details.
                             </div>
                             <div class="shortcut-item twilight-spacer"></div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-civil-dusk" value="civil_dusk">
+                                <input type="radio" name="time-jump" id="jump-civil-dusk" class="mystars-radio" value="civil_dusk">
                                 <label for="jump-civil-dusk">
                                     <span class="shortcut-name">常用薄明[終]</span>
                                     <span class="shortcut-detail">
@@ -380,7 +392,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-higure" value="higure">
+                                <input type="radio" name="time-jump" id="jump-higure" class="mystars-radio" value="higure">
                                 <label for="jump-higure">
                                     <span class="shortcut-name">日暮</span>
                                     <span class="shortcut-detail">
@@ -390,7 +402,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-naut-dusk" value="naut_dusk">
+                                <input type="radio" name="time-jump" id="jump-naut-dusk" class="mystars-radio" value="naut_dusk">
                                 <label for="jump-naut-dusk">
                                     <span class="shortcut-name">航海薄明[終]</span>
                                     <span class="shortcut-detail">
@@ -400,7 +412,7 @@ GNU General Public License for more details.
                                 </label>
                             </div>
                             <div class="shortcut-item">
-                                <input type="radio" name="time-jump" id="jump-astro-dusk" value="astro_dusk">
+                                <input type="radio" name="time-jump" id="jump-astro-dusk" class="mystars-radio" value="astro_dusk">
                                 <label for="jump-astro-dusk">
                                     <span class="shortcut-name">天文薄明[終]</span>
                                     <span class="shortcut-detail">
@@ -414,38 +426,160 @@ GNU General Public License for more details.
                 </div>
             </div>
 
-
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-mystar')">
-                    <span>My天体</span> <span id="icon-sec-mystar">▲</span>
+                <div class="section-header" onclick="toggleSection('sec-mytsuji')">
+                    <span>My辻検索</span> <span id="icon-sec-mytsuji">▼</span>
                 </div>
-                <div id="sec-mystar" class="section-content">
+                <div id="sec-mytsuji" class="section-content closed">
                     <div class="control-row">
-                        <button id="btn-mystar-reg" class="nav-btn small">登録</button>
-                        <input type="text" id="input-mystar-radec" placeholder="赤経,赤緯" maxlength="150">
+                        <button id="btn-mytsuji-toggle-all" class="nav-btn main-btn">一括選択</button>
                     </div>
-                    <div class="celestial-list" style="margin-top: 5px; border-bottom: none;">
-                        <li style="border-bottom: none; padding-bottom: 0;">
-                            <input type="checkbox" id="chk-mystar" class="body-checkbox">
-                            <div id="style-MyStar" class="style-indicator solid" style="color: #DDA0DD;" onclick="openPalette('MyStar')"></div>
-                            <div class="body-info">
-                                <span class="body-name-label">My天体</span>
-                                <span class="body-name-id">ID: MyStar</span>
-                                <span id="radec-MyStar" class="body-detail-text">赤経 --h / 赤緯 --°</span>
-                                <span id="riseset-MyStar" class="body-detail-text">出時刻 --:-- / 南中時 --:-- / 入時刻 --:--</span>
-                                <span id="data-MyStar" class="body-detail-text">方位角 --° / 視高度 --° / 視半径 --°</span>
-                            </div>
-                        </li>
+                    <div class="control-row">
+                        <button id="btn-mytsuji-batch" class="nav-btn main-btn">一括計算</button>
+                        <button id="btn-mytsuji-file" class="nav-btn main-btn">File取得</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytsuji-get" class="nav-btn main-btn">辻検索取得</button>
+                        <button id="btn-mytsuji-regall" class="nav-btn main-btn">全て登録</button>
+                    </div>
+                    <div id="mytsuji-error" class="mypoint-error"></div>
+                    <div id="mytsuji-list" class="mypoint-list"></div>
+                    <div class="control-row">
+                        <button id="btn-mytsuji-up" class="nav-btn main-btn">▲上へ</button>
+                        <button id="btn-mytsuji-down" class="nav-btn main-btn">▼下へ</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytsuji-addrow" class="nav-btn main-btn">行追加</button>
+                        <button id="btn-mytsuji-delrow" class="nav-btn main-btn">行削除</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytsuji-csv-import" class="nav-btn main-btn">全CSV入力</button>
+                        <button id="btn-mytsuji-csv-append" class="nav-btn main-btn">追加CSV入力</button>
+                        <button id="btn-mytsuji-csv-export" class="nav-btn main-btn">CSV出力</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytsuji-url" class="nav-btn main-btn">URL取得</button>
                     </div>
                 </div>
             </div>
-            
+
+            <div class="section">
+                <div class="section-header" onclick="toggleSection('sec-myobs')">
+                    <span>My観測点</span> <span id="icon-sec-myobs">▼</span>
+                </div>
+                <div id="sec-myobs" class="section-content closed">
+                    <div class="control-row">
+                        <button id="btn-myobs-apply" class="nav-btn main-btn">位置反映</button>
+                        <button id="btn-myobs-get" class="nav-btn main-btn">観測点取得</button>
+                        <button id="btn-myobs-regall" class="nav-btn main-btn">全て登録</button>
+                    </div>
+                    <div id="myobs-error" class="mypoint-error"></div>
+                    <div id="myobs-list" class="mypoint-list"></div>
+                    <div class="control-row">
+                        <button id="btn-myobs-up" class="nav-btn main-btn">▲上へ</button>
+                        <button id="btn-myobs-down" class="nav-btn main-btn">▼下へ</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-myobs-addrow" class="nav-btn main-btn">行追加</button>
+                        <button id="btn-myobs-delrow" class="nav-btn main-btn">行削除</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-myobs-csv-import" class="nav-btn main-btn">全CSV入力</button>
+                        <button id="btn-myobs-csv-append" class="nav-btn main-btn">追加CSV入力</button>
+                        <button id="btn-myobs-csv-export" class="nav-btn main-btn">CSV出力</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-myobs-url" class="nav-btn main-btn">URL取得</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header" onclick="toggleSection('sec-mytgt')">
+                    <span>My目的点</span> <span id="icon-sec-mytgt">▼</span>
+                </div>
+                <div id="sec-mytgt" class="section-content closed">
+                    <div class="control-row">
+                        <button id="btn-mytgt-apply" class="nav-btn main-btn">位置反映</button>
+                        <button id="btn-mytgt-get" class="nav-btn main-btn">目的点取得</button>
+                        <button id="btn-mytgt-regall" class="nav-btn main-btn">全て登録</button>
+                    </div>
+                    <div id="mytgt-error" class="mypoint-error"></div>
+                    <div id="mytgt-list" class="mypoint-list"></div>
+                    <div class="control-row">
+                        <button id="btn-mytgt-up" class="nav-btn main-btn">▲上へ</button>
+                        <button id="btn-mytgt-down" class="nav-btn main-btn">▼下へ</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytgt-addrow" class="nav-btn main-btn">行追加</button>
+                        <button id="btn-mytgt-delrow" class="nav-btn main-btn">行削除</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytgt-csv-import" class="nav-btn main-btn">全CSV入力</button>
+                        <button id="btn-mytgt-csv-append" class="nav-btn main-btn">追加CSV入力</button>
+                        <button id="btn-mytgt-csv-export" class="nav-btn main-btn">CSV出力</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytgt-url" class="nav-btn main-btn">URL取得</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header" onclick="toggleSection('sec-starsearch')">
+                    <span>天体検索</span> <span id="icon-sec-starsearch">▼</span>
+                </div>
+                <div id="sec-starsearch" class="section-content closed">
+                    <div class="control-row">
+                        <input type="text" id="input-starsearch" placeholder="シリウス、M78星雲など" maxlength="150">
+                    </div>
+                    <div class="control-row starsearch-options">
+                        <span>検索OP:</span>
+                        <input type="checkbox" id="chk-search-mag3" class="body-checkbox" checked><label for="chk-search-mag3">〜3等級</label>
+                        <input type="checkbox" id="chk-search-mag6" class="body-checkbox" checked><label for="chk-search-mag6">〜6等級</label>
+                        <input type="checkbox" id="chk-search-other" class="body-checkbox" checked><label for="chk-search-other">その他</label>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-starsearch" class="nav-btn main-btn">検索</button>
+                        <button id="btn-starsearch-reg" class="nav-btn main-btn">登録</button>
+                    </div>
+                    <div class="control-row starsearch-result">
+                        <label>天体名:</label>
+                        <input type="text" id="input-starsearch-name" placeholder="天体名を変更可能" maxlength="150">
+                    </div>
+                    <div class="control-row starsearch-result">
+                        <input type="text" id="input-starsearch-radec" readonly placeholder="赤経, 赤緯">
+                    </div>
+                </div>
+            </div>
+
             <div class="section">
                 <div class="section-header" onclick="toggleSection('sec-bodies')">
                     <span>表示天体</span> <span id="icon-sec-bodies">▲</span>
                 </div>
                 <div id="sec-bodies" class="section-content">
                     <ul id="celestial-list" class="celestial-list"></ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header" onclick="toggleSection('sec-mystars')">
+                    <span>My天体</span> <span id="icon-sec-mystars">▲</span>
+                </div>
+                <div id="sec-mystars" class="section-content">
+                    <ul id="mystars-list" class="celestial-list"></ul>
+                    <div class="control-row">
+                        <button id="btn-mystars-up" class="nav-btn main-btn">▲上へ</button>
+                        <button id="btn-mystars-down" class="nav-btn main-btn">▼下へ</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mystars-delete" class="nav-btn main-btn">削除</button>
+                    </div>
+                   <div class="control-row">
+                        <button id="btn-mystars-csv-import" class="nav-btn main-btn">全CSV入力</button>
+                        <button id="btn-mystars-csv-append" class="nav-btn main-btn">追加CSV入力</button>
+                        <button id="btn-mystars-csv-export" class="nav-btn main-btn">CSV出力</button>
+                    </div>
                 </div>
             </div>
 
@@ -459,7 +593,7 @@ GNU General Public License for more details.
                     <div class="control-row refraction-row">
                         <input type="checkbox" id="chk-refraction" class="body-checkbox">
                         <label class="input-label meteo-label" for="chk-refraction">気差係数 K:</label>
-                        <input type="number" id="input-refraction-k" class="meteo-input" step="0.001"  placeholder="標準値 0.132">
+                        <input type="number" id="input-refraction-k" class="meteo-input elev-readonly" readonly step="0.001"  placeholder="標準値 0.132" readonly>
                     </div>
                     
                     <div class="meteo-box">
@@ -491,6 +625,19 @@ GNU General Public License for more details.
                 </div>
             </div>
 
+            <div class="section">
+                <div class="section-header" onclick="toggleSection('sec-backup')">
+                    <span>バックアップ/インポート</span>
+                    <span id="icon-sec-backup">▲</span>
+                </div>
+                <div id="sec-backup" class="section-content">
+                    <div class="control-row">
+                        <button id="btn-backup" class="nav-btn main-btn">バックアップ</button>
+                        <button id="btn-import" class="nav-btn main-btn">インポート</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="visitor-counter">
                 <table class="counter-table">
                     <tr>
@@ -508,7 +655,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="panel-footer">
-                &copy; 2026- Sora no Tsuji Project - v1.18.1
+                &copy; 2026- Sora no Tsuji Project - v1.19.0
             </div>
         </div>
     </div>
@@ -552,6 +699,14 @@ GNU General Public License for more details.
         </div>
     </div>
 
+    <div id="starsearch-popup" class="starsearch-popup hidden">
+        <div class="starsearch-popup-header">
+            <span id="starsearch-popup-title">天体名検索結果</span>
+            <span class="close-starsearch-popup" onclick="closeStarSearchPopup()">×</span>
+        </div>
+        <div id="starsearch-popup-content" class="starsearch-popup-content"></div>
+    </div>
+
 <div id="help-modal" class="hidden">
         <div class="help-content formal-style">
             <div class="help-header">
@@ -584,7 +739,7 @@ GNU General Public License for more details.
                         <li><strong>Now:</strong> 現在日時にリセットします。</li>
                         <li><strong>◀◀/▶▶:</strong> 月単位で日付を移動、もしくは、時単位で時刻を移動します。</li>
                         <li><strong>◀/▶:</strong> 日単位で日付を移動、もしくは、分単位で時刻を移動します。</li>
-                        <li><strong>月/秒・日/秒・時/秒・分/秒:</strong> 選択した速度で時間を自動再生します(アニメーション)。</li>
+                        <li><strong>月/秒・日/秒・時/秒・分/秒:</strong> 選択した速度で時間を自動再生します(アニメーション)。クリックでストップします。</li>
                         <li><strong>日出/日入/月出/月入:</strong> 各時刻にワンタッチでジャンプします。</li>
                         <li><strong>月齢:</strong> 数値を変更して任意の月齢の日へジャンプ。◀/▶で約1朔望月前後へ移動。</li>
                         <li><strong>薄明:</strong> 各時刻にワンタッチでジャンプします。</li>
@@ -606,7 +761,7 @@ GNU General Public License for more details.
                     <h3>「辻検索」機能</h3>
                     <p>「辻検索」ボタンをオンにすると、指定した方位角・視高度の範囲内に天体が現れる日時を検索します。例えば、富士山の山頂の右斜め上に満月が見える日時を探すことができます。</p>
                     <ul class="help-list">
-                        <li><strong>検索期間:</strong> 検索する日数(最大1461日 = 4年間)。日時情報メニューの日付を基準として検索します(現在日時ではありません)。</li>
+                        <li><strong>検索期間:</strong> 検索する日数(最大36500日 = 100年間)。日時情報メニューの日付を基準として検索します(現在日時ではありません)。</li>
                         <li><strong>基準方位角:</strong> 検索する方位角の基準値。初期値は観測点→目的点の方位角。</li>
                         <li><strong>基準視高度:</strong> 検索する視高度の基準値。初期値は観測点→目的点の視高度。</li>
                         <li><strong>オフセット方位角:</strong> 基準方位角からのズレ(度)。正の値で時計回り方向にずらします(初期値: 0°)。</li>
@@ -615,28 +770,56 @@ GNU General Public License for more details.
                         <li><strong>オフセット視高距離:</strong> 観測点でのオフセット視高度を目的点での垂直距離(m)に換算した値です(読み取り専用)。目的点でどのくらい上下にずれるかの目安になります。</li>
                         <li><strong>許容範囲方位角: ±</strong> 検索中心(基準方位角+オフセット方位角)からの許容範囲(初期値: 15°)。</li>
                         <li><strong>許容範囲視高度: ±</strong> 検索中心(基準視高度+オフセット視高度)からの許容範囲(初期値: 2.5°)。</li>
+                        <li><strong>フィルタ:</strong> 検索結果を対象とする月齢の範囲でフィルタします。満月(15)や新月(0)の近傍を抽出します。</li>
+                        <li><strong>基準月齢:</strong> フィルタする月齢の基準値。初期値は15。</li>
+                        <li><strong>許容範囲月齢: ±</strong> フィルタする月齢からの許容範囲(初期値: 2)。</li>
                         <li><strong>◎:</strong> 天体の中心がほぼ目的点に重なる日(誤差±0.125°[誤差範囲0.25°、およそ視半径以内])</li>
                         <li><strong>○:</strong> 天体の縁が目的点に接する範囲の日(誤差±0.25°[誤差範囲0.5°、およそ視直径以内])</li>
                         <li><strong>△:</strong> 目的点との誤差が天体の直径4倍以内の日(誤差±1°[誤差範囲2°、およそ視直径×4以内])</li>
                         <li><strong>-:</strong> 目的点との誤差が上記以上で、指定した許容範囲以内に収まる日</li>
                         <li><strong>URL取得:</strong> 現在の辻検索情報/位置情報/日時情報/表示天体で辻検索を実行するURLをクリップボードにコピーします。日時情報は、日時固定、日時半固定(アクセス年の月日時を固定)、アクセスした時の現在日時のアクセス日時を選択できます。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
                     </ul>
-                    <p>検索は設定日時から最大1461日間、1分間隔で行われます。結果をタップすると、その日時にジャンプして確認できます。各天体の結果は最大365件です。また、太陽と月の視半径は、およそ0.26°です。</p>
+                    <p>検索は設定日時から最大36500日間(100年間)、1分間隔で行われます。結果をタップすると、その日時にジャンプして確認できます。各天体の結果は最大365件です。また、太陽と月の視半径は、およそ0.26°です。</p>
                 </section>
 
                 <section class="help-section">
                     <h3>標高グラフ</h3>
-                    <p>観測点と目的点の間の地形断面を表示します。国土地理院のDEM標高タイルから100m間隔で標高を取得します。</p>
+                    <p>観測点と目的点の間の地形断面を表示します。国土地理院のDEM標高タイルから2000地点で標高を取得します。</p>
                 </section>
 
                 <section class="help-section">
-                    <h3>My天体</h3>
-                    <p>お好みの恒星などの座標(赤経, 赤緯)を登録して表示できます。初期値はオリオン座のミンタカです。入力欄を空にして押すと登録を解除(リセット)します。</p>
+                    <h3>My辻検索</h3>
+                    <p>辻検索の条件を複数登録・管理し、一括で計算・CSV出力できます。「辻検索取得」で現在の辻検索メニューの条件を取得、「行追加」で空行を追加できます。観測点ID・目的点IDは、My観測点・My目的点メニューで登録したIDを指定してください。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>My観測点</h3>
+                    <p>複数の観測点を登録・管理できます。「観測点取得」で現在の位置情報の観測点を追加、「位置反映」で選択中の観測点を位置情報に反映します。「全て登録」でローカルストレージに保存し、地図上に緑色のマーカーで表示されます。CSV入出力にも対応しています。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>My目的点</h3>
+                    <p>複数の目的点を登録・管理できます。「目的点取得」で現在の位置情報の目的点を追加、「位置反映」で選択中の目的点を位置情報に反映します。「全て登録」でローカルストレージに保存し、地図上に橙色のマーカーで表示されます。CSV入出力にも対応しています。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>バックアップ/インポート</h3>
+                    <p>Homeボタン、推し山ボタン、表示天体、My天体、My観測点、My目的点、My辻検索、設定の全データをJSON形式で一括バックアップ・インポートできます。デバイス間のデータ移行やバックアップに利用してください。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>天体検索</h3>
+                    <p>celestial_db.jsonから天体を検索し、My天体に登録できます。検索オプションで等級を絞り込めます。検索結果から天体を選択し、天体名を編集して登録できます。</p>
                 </section>
 
                 <section class="help-section">
                     <h3>表示天体</h3>
                     <p>太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星、北極星、北斗七星メラク、オリオン座ミンタカ、すばる、オリオン大星雲M42、こと座ベガ、わし座アルタイル、はくちょう座デネブ、オリオン座ベテルギウス、おおいぬ座シリウス、こいぬ座プロキオンのそれぞれを出没時刻、南中時刻、入没時刻、方位角、視高度、視半径がわかります。高度が負数(およそ地平線下)になると線が半透明になります。チェックボックスで表示・非表示にできます。また、カラーパレットで、色と線種を変更できます。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>My天体</h3>
+                    <p>天体検索で登録した天体の一覧です。ラジオボタンで選択し、上下移動や削除ができます。チェックボックスで辻ラインの表示/非表示、カラーパレットで色と線種を変更できます。CSV入出力にも対応しています。</p>
                 </section>
 
                 <section class="help-section">
