@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screen Size Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    width: 100vw; height: 100vh;
+    background: #1a1a2e;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    font-family: monospace; color: #eee;
+    overflow: hidden;
+}
+#size { font-size: 64px; font-weight: bold; letter-spacing: 2px; }
+#detail { font-size: 18px; color: #aaa; margin-top: 16px; }
+#guide { font-size: 13px; color: #666; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div id="size"></div>
+<div id="detail"></div>
+<div id="guide">Resize the browser window to update</div>
+<script>
+function update() {
+    document.getElementById('size').textContent =
+        `W:${window.innerWidth}px  H:${window.innerHeight}px`;
+    document.getElementById('detail').textContent =
+        `devicePixelRatio: ${window.devicePixelRatio}  |  physical: ${Math.round(window.innerWidth * window.devicePixelRatio)}x${Math.round(window.innerHeight * window.devicePixelRatio)}px`;
+}
+window.addEventListener('resize', update);
+update();
+</script>
+</body>
+</html>

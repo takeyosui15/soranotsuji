@@ -77,6 +77,11 @@
 | tsujiMoonFilter | false | 可 | 不可| 複数指定不可 | 辻検索の月齢フィルタを指定。キー省略時は、false。 | 無効 | 有効 |
 | tsujiMoonBase | 15.0 | 可 | 不可| 複数指定不可 | 辻検索の基準月齢を指定。キー省略時は、15.0。 | 無効 | 有効 |
 | tsujiMoonTolerance | 2.0 | 可 | 不可| 複数指定不可 | 辻検索の許容範囲月齢を指定。キー省略時は、2.0。 | 無効 | 有効 |
+| tsujiAccuracyFilter | false | 可 | 不可| 複数指定不可 | 辻検索の精度フィルタを指定。キー省略時は、false。 | 無効 | 有効 |
+| tsujiAccDblCircle | false | 可 | 不可| 複数指定不可 | 辻検索の精度◎フィルタを指定。キー省略時は、false。 | 無効 | 有効 |
+| tsujiAccCircle | false | 可 | 不可| 複数指定不可 | 辻検索の精度○フィルタを指定。キー省略時は、false。 | 無効 | 有効 |
+| tsujiAccTriangle | false | 可 | 不可| 複数指定不可 | 辻検索の精度△フィルタを指定。キー省略時は、false。 | 無効 | 有効 |
+| tsujiAccDash | false | 可 | 不可| 複数指定不可 | 辻検索の精度-フィルタを指定。キー省略時は、false。 | 無効 | 有効 |
 
 ### 仕様詳細:
 - 上記表のキーで、「複数指定可能」となっているものは、URLSearchParams.getAll()で取得し、starIdと対応する他のキーの内容が一致するようにする。

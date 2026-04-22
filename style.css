@@ -719,6 +719,13 @@ input[type="radio"] {
     margin: 8px 0;
 }
 
+.tsuji-acc-label {
+    width: 33px;
+    white-space: wrap;
+    margin-right: 2px;
+}
+
+
 /* 月齢フィルタの入力不可時の背景色 */
 input[type="number"]:disabled {
     background-color: #f0f0f0;
