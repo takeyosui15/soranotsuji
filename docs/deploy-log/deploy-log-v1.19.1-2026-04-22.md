@@ -36,15 +36,15 @@ claude/yyy ←→ work ←→ develop ──→ main ──→ soranotsuji/main
 
 ### プレ・デプロイ・チェックリスト
 
-- [ ] 今回のデプロイで機能追加されたところをリストアップする。
-  - 1. 
-- [ ] 上記の機能は、組み込みの**ヘルプ**に内容が反映されているかを確認する。
-  - [ ] 1. 
-- [ ] 上記の機能は、組み込みの**README.md**に内容が反映されているかを確認する。
-  - [ ] 1. 
-- [ ] バージョン番号が更新されている。
-  - [ ] index.html:1箇所:バージョン表記
-  - [ ] script.js:2箇所:バージョン履歴とコンソール出力
+- [x] 今回のデプロイで機能追加されたところをリストアップする。
+  - 1. 方位角/視高度4桁精度、精度角距離5桁精度、辻検索/My辻検索に精度フィルタ、各種不具合修正（件数表示、南中時/視半径、天体ID反映等）
+- [x] 上記の機能は、組み込みの**ヘルプ**に内容が反映されているかを確認する。
+  - [x] 1. 方位角/視高度4桁精度、精度角距離5桁精度、辻検索/My辻検索に精度フィルタ、各種不具合修正（件数表示、南中時/視半径、天体ID反映等）
+- [x] 上記の機能は、組み込みの**README.md**に内容が反映されているかを確認する。
+  - [x] 1.方位角/視高度4桁精度、精度角距離5桁精度、辻検索/My辻検索に精度フィルタ、各種不具合修正（件数表示、南中時/視半径、天体ID反映等） 
+- [x] バージョン番号が更新されている。
+  - [x] index.html:1箇所:バージョン表記
+  - [x] script.js:2箇所:バージョン履歴とコンソール出力
 
 ### デプロイの流れ
 
@@ -116,7 +116,7 @@ alias cdtmp='cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/so
 
 ### Step 1: developでのテスト確認 & mainへのマージ
 
-- [ ] developブランチでのテストが完了していることを確認
+- [x] developブランチでのテストが完了していることを確認
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
@@ -124,10 +124,10 @@ git checkout develop
 git pull origin develop
 ```
 
-- [ ] GitHub Pages（`https://takeyosui15.github.io/soranotsuji-dev/`）で動作確認
+- [x] GitHub Pages（`https://takeyosui15.github.io/soranotsuji-dev/`）で動作確認
   - GitHub Pagesはdevelopブランチをデプロイしているため、developの内容が表示される
 
-- [ ] テストOK → developをmainにマージ
+- [x] テストOK → developをmainにマージ
 
 ```bash
 # mainブランチに切り替え
@@ -141,42 +141,44 @@ git merge develop
 git push origin main
 ```
 
-- [ ] デプロイ対象のコミットハッシュを記録
+- [x] デプロイ対象のコミットハッシュを記録
 
 ```bash
 git log --oneline -5
 # 先頭のコミットハッシュをメモ（例: abc1234）。キー「q」で抜ける。
+3da61e0
 ```
 
-- [ ] `script.js` 冒頭のバージョン番号を確認
+- [x] `script.js` 冒頭のバージョン番号を確認
 
 ```bash
 head -5 script.js
 # 例: // V1.17.0（2026-03-06）
 # このバージョン番号をメモ（例: v1.17.0）
+v1.19.1
 ```
 
 ---
 
 ### Step 2: 開発リポジトリにバージョンタグを付与
 
-- [ ] タグを作成してpush
+- [x] タグを作成してpush
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-dev-local"
 
 # タグを作成（vX.Y.Zはscript.jsのバージョンに合わせる）
-git tag vX.Y.Z
+git tag v1.19.1
 
 # タグをリモートにpush
-git push origin vX.Y.Z
+git push origin v1.19.1
 ```
 
-- [ ] タグが正しく付与されたことを確認
+- [x] タグが正しく付与されたことを確認
 
 ```bash
 git tag -l
-# vX.Y.Z が表示されること
+# v1.17.0 が表示されること
 ```
 
 ---
@@ -185,7 +187,7 @@ git tag -l
 
 一時ディレクトリで本番リポジトリをcloneし、開発環境のファイルで上書きする。
 
-- [ ] 一時作業フォルダを準備
+- [x] 一時作業フォルダを準備
 
 ```bash
 # 一時作業フォルダが存在しない場合は作成
@@ -193,7 +195,7 @@ mkdir -p "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsu
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-tmp-local"
 ```
 
-- [ ] 本番リポジトリを一時cloneして同期
+- [x] 本番リポジトリを一時cloneして同期
 
 ```bash
 git clone https://github.com/takeyosui15/soranotsuji.git soranotsuji-deploy
@@ -212,7 +214,7 @@ rsync -av --exclude='.git' "$HOME/Library/Mobile Documents/com~apple~CloudDocs/D
 cp ../CNAME_backup ./CNAME
 ```
 
-- [ ] 差分を確認
+- [x] 差分を確認
 
 ```bash
 git status
@@ -220,7 +222,7 @@ git diff --stat
 # 変更内容が意図通りであることを確認
 ```
 
-- [ ] 環境差異ファイルの確認
+- [x] 環境差異ファイルの確認
 
 ```bash
 # CNAMEファイルの内容確認
@@ -232,24 +234,24 @@ cat CNAME
 
 ### Step 4: 本番環境へpush & タグ付与
 
-- [ ] コミット & push
+- [x] コミット & push
 
 ```bash
 git add -A
-git commit -m "deploy: soranotsuji-dev コミット abc1234 からデプロイ (vX.Y.Z)"
+git commit -m "deploy: soranotsuji-dev コミット 3da61e0 からデプロイ (v1.19.1)"
 # ↑ abc1234 はStep 1で記録したコミットハッシュに置き換え
-# ↑ vX.Y.Z はStep 1で確認したバージョンに置き換え
+# ↑ v1.17.0 はStep 1で確認したバージョンに置き換え
 git push origin main
 ```
 
-- [ ] 本番リポジトリにもバージョンタグを付与
+- [x] 本番リポジトリにもバージョンタグを付与
 
 ```bash
-git tag vX.Y.Z
-git push origin vX.Y.Z
+git tag v1.19.1
+git push origin v1.19.1
 ```
 
-- [ ] 一時作業フォルダを削除
+- [x] 一時作業フォルダを削除
 
 ```bash
 cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/soranotsuji-tmp-local"
@@ -263,25 +265,25 @@ rm -f CNAME_backup
 
 GitHub Pagesのデプロイには1-2分かかる場合がある。
 
-- [ ] `https://soranotsuji.net` にアクセスして動作確認
-- [ ] 主要機能のチェック:
-  - [ ] 地図が正常に表示される
-  - [ ] 天体の方位角・高度が計算される
-  - [ ] 辻検索が動作する
-  - [ ] LocalStorageへの保存・読込が正常
+- [x] `https://soranotsuji.net` にアクセスして動作確認
+- [x] 主要機能のチェック:
+  - [x] 地図が正常に表示される
+  - [x] 天体の方位角・高度が計算される
+  - [x] 辻検索が動作する
+  - [x] LocalStorageへの保存・読込が正常
 
 ---
 
 ### Step 6: デプロイ記録
 
-- [ ] デプロイ記録を残す（order.mdまたは任意の場所に記録）
+- [x] デプロイ記録を残す（order.mdまたは任意の場所に記録）
 
 ```
-デプロイ日時: YYYY-MM-DD HH:MM
-バージョン: vX.Y.Z
-デプロイ元コミット: abc1234 (soranotsuji-dev)
-デプロイ先コミット: xyz5678 (soranotsuji)
-確認結果: OK / NG
+デプロイ日時: 2026-04-22 19:43
+バージョン: v1.19.1
+デプロイ元コミット: 3da61e0 (soranotsuji-dev)
+デプロイ先コミット: d47d65c (soranotsuji)
+確認結果: OK
 ```
 
 ---

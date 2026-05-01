@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.19.2 - 2026-05-01: fix: 辻検索とMy辻検索の精度不整合、辻検索とMy辻検索の計算中の観測点/目的点/日時の動的問題を修正
 Version 1.19.1 - 2026-04-22: fix: 方位角/視高度4桁精度、精度角距離5桁精度、辻検索/My辻検索に精度フィルタ、各種不具合修正（件数表示、南中時/視半径、天体ID反映等）
 Version 1.19.0 - 2026-04-18: feat: My天体改修、My観測点、My目的点、My辻検索、バックアップ/インポートの機能追加
 Version 1.18.1 - 2026-04-05: fix: URL取得形式を3種類(日時固定、日時半固定、アクセス日時)に修正、マーカー位置を微調整
@@ -291,7 +292,7 @@ let currentRiseSetData = {};
 // ============================================================
 
 window.onload = function() {
-    console.log("宙の辻: 起動 (v1.19.1)");
+    console.log("宙の辻: 起動 (v1.19.2)");
     
     // Astronomy Engineが読み込まれているかチェック
     if (typeof Astronomy === 'undefined') {
@@ -3762,8 +3763,8 @@ function calcMyTsujiBaseValues(t) {
     const dist = L.latLng(obs.lat, obs.lng).distanceTo(L.latLng(tgt.lat, tgt.lng));
     const az = calculateBearing(obs.lat, obs.lng, tgt.lat, tgt.lng);
     const alt = calculateApparentAltitude(dist, obsElev, tgtElev);
-    t.baseAz = parseFloat(az.toFixed(4));
-    t.baseAlt = parseFloat(alt.toFixed(4));
+    t.baseAz = az;
+    t.baseAlt = alt;
     return true;
 }
 
@@ -3772,8 +3773,8 @@ function autoCalcMyTsujiBase(t, row) {
     if (!calcMyTsujiBaseValues(t)) return;
     const azInput = row.querySelector('.mytsuji-base-az');
     const altInput = row.querySelector('.mytsuji-base-alt');
-    if (azInput) azInput.value = t.baseAz;
-    if (altInput) altInput.value = t.baseAlt;
+    if (azInput) azInput.value = t.baseAz != null ? t.baseAz.toFixed(4) : '';
+    if (altInput) altInput.value = t.baseAlt != null ? t.baseAlt.toFixed(4) : '';
 }
 
 // ============================================================
@@ -4088,9 +4089,11 @@ function copyMyTsujiSearchUrl(includeDateTime) {
 // ============================================================
 
 /** 単一のMy辻検索行を実行し、body単位の結果配列を返す */
-async function executeSingleMyTsujiSearch(t) {
-    const obs = appState.myObservations.find(o => o.id === t.obsId);
-    const tgt = appState.myTargets.find(g => g.id === t.tgtId);
+async function executeSingleMyTsujiSearch(t, searchStartMsOverride, snapshotObs, snapshotTgt) {
+    const obsSource = snapshotObs || appState.myObservations;
+    const tgtSource = snapshotTgt || appState.myTargets;
+    const obs = obsSource.find(o => o.id === t.obsId);
+    const tgt = tgtSource.find(g => g.id === t.tgtId);
     if (!obs || !tgt) return null;
 
     const observerData = {
@@ -4099,9 +4102,14 @@ async function executeSingleMyTsujiSearch(t) {
         elev: (obs.elev || 0) + (obs.height || 0)
     };
     const refractionEnabled = appState.refractionEnabled;
-    const searchStart = new Date(appState.currentDate);
-    searchStart.setHours(0, 0, 0, 0);
-    const searchStartMs = searchStart.getTime();
+    let searchStartMs;
+    if (searchStartMsOverride != null) {
+        searchStartMs = searchStartMsOverride;
+    } else {
+        const searchStart = new Date(appState.currentDate);
+        searchStart.setHours(0, 0, 0, 0);
+        searchStartMs = searchStart.getTime();
+    }
     const MAX_RESULTS_PER_BODY = 36500;
 
     const targetAz = ((t.baseAz || 0) + (t.offsetAz || 0) + 360) % 360;
@@ -4218,11 +4226,18 @@ async function runBatchMyTsujiSearch() {
     tsujiActiveWorkers.forEach(w => { try { w.terminate(); } catch(_) {} });
     tsujiActiveWorkers = [];
 
+    // 計算開始時の日時・観測点・目的点を固定 (計算中にユーザーが変更しても影響しない)
+    const batchStartDate = new Date(appState.currentDate);
+    batchStartDate.setHours(0, 0, 0, 0);
+    const batchStartMs = batchStartDate.getTime();
+    const snapshotObs = JSON.parse(JSON.stringify(appState.myObservations));
+    const snapshotTgt = JSON.parse(JSON.stringify(appState.myTargets));
+
     const allResults = [];
     for (let i = 0; i < checked.length; i++) {
         const t = checked[i];
         statusEl.textContent = `⏳ 実行中... ${i+1}/${checked.length} (ID:${t.id} ${t.name || ''})`;
-        const res = await executeSingleMyTsujiSearch(t);
+        const res = await executeSingleMyTsujiSearch(t, batchStartMs, snapshotObs, snapshotTgt);
         if (!res) continue;
         for (const br of res.bodyResults) {
             for (const r of br.results) {
@@ -4431,11 +4446,18 @@ async function fileBatchMyTsujiSearch() {
     tsujiActiveWorkers.forEach(w => { try { w.terminate(); } catch(_) {} });
     tsujiActiveWorkers = [];
 
+    // 計算開始時の日時・観測点・目的点を固定 (計算中にユーザーが変更しても影響しない)
+    const batchStartDate = new Date(appState.currentDate);
+    batchStartDate.setHours(0, 0, 0, 0);
+    const batchStartMs = batchStartDate.getTime();
+    const snapshotObs = JSON.parse(JSON.stringify(appState.myObservations));
+    const snapshotTgt = JSON.parse(JSON.stringify(appState.myTargets));
+
     const allResults = [];
     for (let i = 0; i < checked.length; i++) {
         const t = checked[i];
         statusEl.textContent = `⏳ File出力処理中... ${i+1}/${checked.length} (ID:${t.id} ${t.name || ''})`;
-        const res = await executeSingleMyTsujiSearch(t);
+        const res = await executeSingleMyTsujiSearch(t, batchStartMs, snapshotObs, snapshotTgt);
         if (!res) continue;
         for (const br of res.bodyResults) {
             for (const r of br.results) {
@@ -4531,9 +4553,9 @@ function renderMyTsujiSearches() {
             <div class="mytsuji-row-error"></div>
             <div class="control-row">
                 <label class="mytsuji-label">基準方位角(°):</label>
-                <input type="number" class="mytsuji-base-az" value="${t.baseAz !== undefined && t.baseAz !== null ? t.baseAz : ''}" placeholder="基準方位角(°)" step="0.0001" min="0" max="360" data-id="${t.id}">
+                <input type="number" class="mytsuji-base-az" value="${t.baseAz !== undefined && t.baseAz !== null ? t.baseAz.toFixed(4) : ''}" placeholder="基準方位角(°)" step="0.0001" min="0" max="360" data-id="${t.id}">
                 <label class="mytsuji-label">基準視高度(°):</label>
-                <input type="number" class="mytsuji-base-alt" value="${t.baseAlt !== undefined && t.baseAlt !== null ? t.baseAlt : ''}" placeholder="基準視高度(°)" step="0.0001" min="-360" max="360" data-id="${t.id}">
+                <input type="number" class="mytsuji-base-alt" value="${t.baseAlt !== undefined && t.baseAlt !== null ? t.baseAlt.toFixed(4) : ''}" placeholder="基準視高度(°)" step="0.0001" min="-360" max="360" data-id="${t.id}">
             </div>
             <div class="control-row">
                 <label class="mytsuji-label">オフセット方位角(°):</label>
@@ -4858,10 +4880,10 @@ function updateTsujiSearchInputs() {
     const az = calculateBearing(appState.start.lat, appState.start.lng,
                                 appState.end.lat, appState.end.lng);
     const alt = calculateApparentAltitude(dist, appState.start.elev, appState.end.elev);
-    appState.tsujiSearchBaseAz = parseFloat(az.toFixed(4));
-    appState.tsujiSearchBaseAlt = parseFloat(alt.toFixed(4));
-    document.getElementById('input-tsuji-az').value = appState.tsujiSearchBaseAz;
-    document.getElementById('input-tsuji-alt').value = appState.tsujiSearchBaseAlt;
+    appState.tsujiSearchBaseAz = az;
+    appState.tsujiSearchBaseAlt = alt;
+    document.getElementById('input-tsuji-az').value = az.toFixed(4);
+    document.getElementById('input-tsuji-alt').value = alt.toFixed(4);
     saveAppState();
     updateOffsetDistances();
 }
