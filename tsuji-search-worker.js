@@ -21,12 +21,15 @@ function isAzimuthInRange(az, targetAz, tolerance) {
     return Math.abs(diff) <= tolerance;
 }
 
-// 角距離 (Az,Alt の擬似ユークリッド距離。既存実装と同じ)
+// 球面角距離 (Az,Alt 座標系での厳密な角距離)
+// 観測点天球上の2点 (az1,alt1) と (az2,alt2) の角距離を計算する。
+// 高度が低いほど方位角の単位距離が cos(alt) で縮むため、擬似ユークリッドより厳密。
 function angularDistance(az1, alt1, az2, alt2) {
-    let azDiff = az1 - az2;
-    azDiff = ((azDiff + 540) % 360) - 180;
-    const altDiff = alt1 - alt2;
-    return Math.sqrt(azDiff * azDiff + altDiff * altDiff);
+    const toRad = Math.PI / 180;
+    const sinDelta = Math.sin(alt1*toRad) * Math.sin(alt2*toRad) +
+                     Math.cos(alt1*toRad) * Math.cos(alt2*toRad) * Math.cos((az1-az2)*toRad);
+    const clamped = Math.max(-1, Math.min(1, sinDelta));
+    return Math.acos(clamped) * 180 / Math.PI;
 }
 
 // 1ステップ計算: 指定時刻での body の方位角・視高度を返す

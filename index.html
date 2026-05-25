@@ -64,6 +64,7 @@ GNU General Public License for more details.
 
     <div id="tsujisearch-panel" class="hidden">
         <div id="tsujisearch-header">辻検索結果 <span id="tsujisearch-status"></span></div>
+        <div id="tsujisearch-progress" class="tsuji-progress-bar hidden"><div id="tsujisearch-progress-fill"></div></div>
         <div id="tsujisearch-content"></div>
     </div>
 
@@ -134,7 +135,7 @@ GNU General Public License for more details.
 
                     <div class="control-row">
                         <div class="btn-group-left">
-                            <div class="spacer-btn"></div>
+                            <button id="btn-dp365" class="nav-btn small" title="辻ライン365(直近1年の辻ラインを描画します)">辻</button>
                         </div>
                         <label class="input-label">目的点標高(m):</label>
                         <input type="number" id="input-end-api-elev" class="elev-input" value="0" step="0.1" placeholder="標高 m">
@@ -164,7 +165,7 @@ GNU General Public License for more details.
                 <div id="sec-tsujisearch" class="section-content closed">
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">検索期間(日):</label>
-                        <input type="number" id="input-tsuji-search-days" placeholder="最大36500日(100年間)" step="1" min="1" max="36500">
+                        <input type="number" id="input-tsuji-search-days" placeholder="最大36500日(100年間)" step="365" min="0" max="36500">
                     </div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">基準方位角(°):</label>
@@ -666,7 +667,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="panel-footer">
-                &copy; 2026- Sora no Tsuji Project - v1.19.2
+                &copy; 2026- Sora no Tsuji Project - v1.20.0
             </div>
         </div>
     </div>
@@ -728,123 +729,116 @@ GNU General Public License for more details.
                 <section class="help-section">
                     <h3>概要</h3>
                     <p class="lead-text">「時」と「場所」が交差する瞬間を、地図上で探す。</p>
-                    <p>「宙の辻 - Sora no Tsuji」は、天体シミュレーションと地図情報を組み合わせたWebアプリケーションです。特定の日時・場所における太陽、月、惑星、恒星の位置を計算し、ダイヤモンド富士やパール富士、ダイヤモンド槍ヶ岳に、特定の山の『推し山』ダイヤモンドが見られる時間と場所の「辻(交差点)」をマップ上に可視化します。</p>
+                    <p>「宙の辻 - Sora no Tsuji」は、特定の日時・場所における太陽・月・惑星・恒星の位置を計算し、ダイヤモンド富士やパール富士、推し山ダイヤモンドなどが見える時間と場所の「辻 (交差点)」を地図上に可視化するWebアプリです。</p>
                 </section>
-                
+
                 <section class="help-section">
-                    <h3>位置情報の設定</h3>
+                    <h3>位置情報メニュー</h3>
                     <ul class="help-list">
-                        <li><strong>GPS:</strong> 現在地を観測点に設定します。</li>
-                        <li><strong>観測点/目的点:</strong> 地図をクリック、または、「東京タワー」「富士山」などの地名・およその住所、または、緯度,経度を入力してEnterキーを押すと検索・設定できます。ラジオボタンは、観測点/目的点のクリック時の入力切り替えです。初期値は、東京タワー(観測点)と富士山(目的点)です。</li>
-                        <li><strong>観測点標高/目的点標高:</strong> 観測点/目的点が入力されると自動で標高を取得します。</li>
-                        <li><strong>観測点高/目的点高:</strong> 標高に加算する高さを設定できます。</li>
-                        <li><strong>Hom(e):</strong> 観測点/観測点高の登録・呼出ボタンです。未登録時は現在の値を登録(背景色変化)し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除(リセット)します。</li>
-                        <li><strong>推(し)山:</strong> 目的点/目的点高の登録・呼出ボタンです。未登録時は現在の値を登録(背景色変化)し、登録済みの場合は保存された値を呼び出します。入力欄を空にして押すと登録を解除(リセット)します。</li>
-                        <li><strong>URL:</strong> 現在の位置情報と日時情報と表示天体を記憶/復元して表示するURLをクリップボードにコピーします。日時情報は、日時固定、日時半固定(アクセス年の月日時を固定)、アクセスした時の現在日時のアクセス日時を選択できます。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
+                        <li><strong>観測点 / 目的点</strong>: 地図クリックまたは「東京タワー」「富士山」などの地名・住所・「緯度,経度」を入力して設定。ラジオボタンで地図クリック対象を切替。</li>
+                        <li><strong>標高 / 高さ</strong>: 標高は自動取得。高さ (高層階・三脚等) を加算可能。</li>
+                        <li><strong>GPS</strong>: 現在地を観測点に設定。</li>
+                        <li><strong>Hom(e) / 推(し)山</strong>: 観測点・目的点を1組登録/呼出。空欄で押すとリセット。</li>
+                        <li><strong>辻 (辻ライン365)</strong>: 直近365日分の辻ラインを実線で一括表示 (重い計算のため起動時は常にOFF)。</li>
+                        <li><strong>URL</strong>: 現在の状態を共有/復元するURLをコピー (日時固定/半固定/アクセス日時から選択)。</li>
                     </ul>
                 </section>
 
                 <section class="help-section">
-                    <h3>日時情報の設定</h3>
+                    <h3>日時情報メニュー</h3>
                     <ul class="help-list">
-                        <li><strong>Now:</strong> 現在日時にリセットします。</li>
-                        <li><strong>◀◀/▶▶:</strong> 月単位で日付を移動、もしくは、時単位で時刻を移動します。</li>
-                        <li><strong>◀/▶:</strong> 日単位で日付を移動、もしくは、分単位で時刻を移動します。</li>
-                        <li><strong>月/秒・日/秒・時/秒・分/秒:</strong> 選択した速度で時間を自動再生します(アニメーション)。クリックでストップします。</li>
-                        <li><strong>日出/日入/月出/月入:</strong> 各時刻にワンタッチでジャンプします。</li>
-                        <li><strong>月齢:</strong> 数値を変更して任意の月齢の日へジャンプ。◀/▶で約1朔望月前後へ移動。</li>
-                        <li><strong>薄明:</strong> 各時刻にワンタッチでジャンプします。</li>
+                        <li><strong>Now</strong>: 現在日時にリセット。</li>
+                        <li><strong>◀◀/▶▶ ・ ◀/▶</strong>: 月/時単位、日/分単位で日時を移動。</li>
+                        <li><strong>月秒・日秒・時秒・分秒</strong>: 自動再生 (アニメーション)。クリックで停止。</li>
+                        <li><strong>日出/日入/月出/月入/薄明</strong>: 各時刻にワンタッチでジャンプ。</li>
+                        <li><strong>月齢</strong>: 数値入力、または ◀/▶ で約1朔望月前後に移動。</li>
                     </ul>
                 </section>
 
                 <section class="help-section">
-                    <h3>「辻ライン」機能</h3>
-                    <p>「辻ライン」ボタンをオンにすると、目的点(山頂など)の背後に天体が重なって見える観測位置の軌跡を、地図上に曲線で表示します。</p>
+                    <h3>辻ライン</h3>
+                    <p>「辻ライン」ボタンON時に、目的点の背後に天体が重なって見える観測位置の軌跡 (当日 + 前日 + 翌日) を地図上に描画します。</p>
                     <ul class="help-list">
-                        <li><strong>破線(- - -):</strong> 当日の辻ライン。5分刻みの●マーカーと時刻を表示。</li>
-                        <li><strong>一点鎖線(-·-·-):</strong> 天体の視半径(見かけの大きさ)を考慮したエッジライン。天体の縁が目的点に接する位置を示します。</li>
-                        <li><strong>点線(· · ·):</strong> 前日・翌日の辻ライン。</li>
+                        <li><strong>実線 ───</strong>: 天体の中心が目的点に**完全に**重なる位置 (当日)。5分刻みの●マーカーと時刻表示付き。</li>
+                        <li><strong>破線 - - -</strong>: ◎精度の境界 (±0.125°、視半径以内)。</li>
+                        <li><strong>一点鎖線 -·-·-</strong>: ○精度の境界 (天体の視半径エッジライン)。</li>
+                        <li><strong>二点鎖線 -··-··-</strong>: △精度の境界 (±1°)。</li>
+                        <li><strong>点線 · · ·</strong>: 前日・翌日の辻ライン。</li>
                     </ul>
-                    <p>表示中のすべての天体について、それぞれの色で描画されます。</p>
+                    <p>表示中の天体ごとに色分けされます。線は5秒間隔で計算され、100km地点で約30m刻み・200km地点で約60m刻みの曲線になります。位置精度は WGS84 楕円体ベースで概ね数m以内 (子午線収差・気差・月の視差を補正済)。</p>
+                    <p><strong>辻ラインと辻検索の精度記号の違い:</strong> 辻ラインの◎/○/△バンドは「<strong>方位角のオフセット</strong>のみ」で定義されていますが、辻検索の精度角距離は「方位差²+高度差²の合成 (球面角距離)」です。辻ラインは観測位置の<strong>目安</strong>としてご活用ください。正確な判定は辻検索の精度角距離に基づきます。</p>
                 </section>
 
                 <section class="help-section">
-                    <h3>「辻検索」機能</h3>
-                    <p>「辻検索」ボタンをオンにすると、指定した方位角・視高度の範囲内に天体が現れる日時を検索します。例えば、富士山の山頂の右斜め上に満月が見える日時を探すことができます。</p>
+                    <h3>辻ライン365</h3>
+                    <p>位置情報メニューの「辻」ボタンで切替。直近365日分の◎中心線を実線で一括表示し、年間どこに観測点があれば撮れるかを俯瞰できます。</p>
                     <ul class="help-list">
-                        <li><strong>検索期間:</strong> 検索する日数(最大36500日 = 100年間)。日時情報メニューの日付を基準として検索します(現在日時ではありません)。</li>
-                        <li><strong>基準方位角:</strong> 検索する方位角の基準値。初期値は観測点→目的点の方位角。</li>
-                        <li><strong>基準視高度:</strong> 検索する視高度の基準値。初期値は観測点→目的点の視高度。</li>
-                        <li><strong>オフセット方位角:</strong> 基準方位角からのズレ(度)。正の値で時計回り方向にずらします(初期値: 0°)。</li>
-                        <li><strong>オフセット視高度:</strong> 基準視高度からのズレ(度)。正の値で上方向にずらします(初期値: 0°)。</li>
-                        <li><strong>オフセット方位距離:</strong> 観測点でのオフセット方位角を目的点での水平距離(m)に換算した値です(読み取り専用)。目的点でどのくらい横にずれるかの目安になります。</li>
-                        <li><strong>オフセット視高距離:</strong> 観測点でのオフセット視高度を目的点での垂直距離(m)に換算した値です(読み取り専用)。目的点でどのくらい上下にずれるかの目安になります。</li>
-                        <li><strong>許容範囲方位角: ±</strong> 検索中心(基準方位角+オフセット方位角)からの許容範囲(初期値: 15°)。</li>
-                        <li><strong>許容範囲視高度: ±</strong> 検索中心(基準視高度+オフセット視高度)からの許容範囲(初期値: 2.5°)。</li>
-                        <li><strong>月齢フィルタ:</strong> 検索結果を対象とする月齢の範囲でフィルタします。満月(15)や新月(0)の近傍を抽出します。</li>
-                        <li><strong>基準月齢:</strong> フィルタする月齢の基準値。初期値は15。</li>
-                        <li><strong>許容範囲月齢: ±</strong> フィルタする月齢からの許容範囲(初期値: 2)。</li>
-                        <li><strong>精度フィルタ:</strong> 検索結果を精度記号(◎○△-)で絞り込みます。チェックした精度記号の結果のみ表示します。</li>
-                        <li><strong>◎:</strong> 天体の中心がほぼ目的点に重なる日(誤差±0.125°[誤差範囲0.25°、およそ視半径以内])</li>
-                        <li><strong>○:</strong> 天体の縁が目的点に接する範囲の日(誤差±0.25°[誤差範囲0.5°、およそ視直径以内])</li>
-                        <li><strong>△:</strong> 目的点との誤差が天体の直径4倍以内の日(誤差±1°[誤差範囲2°、およそ視直径×4以内])</li>
-                        <li><strong>-:</strong> 目的点との誤差が上記以上で、指定した許容範囲以内に収まる日</li>
-                        <li><strong>URL取得:</strong> 現在の辻検索情報/位置情報/日時情報/表示天体で辻検索を実行するURLをクリップボードにコピーします。日時情報は、日時固定、日時半固定(アクセス年の月日時を固定)、アクセスした時の現在日時のアクセス日時を選択できます。そのURLをブラウザのお気に入りなどに追加してご活用ください。</li>
+                        <li>計算は重いため起動時は常にOFF。ONで計算開始 (進捗 % をボタンに表示)。</li>
+                        <li>計算済みの天体はキャッシュされ、表示天体メニューで個別の表示/非表示を高速切替できます。</li>
+                        <li>観測点・目的点・日付を変更した場合は、OFF→ON で再計算してください。</li>
                     </ul>
-                    <p>検索は設定日時から最大36500日間(100年間)、1分間隔で行われます。結果をタップすると、その日時にジャンプして確認できます。各天体の結果は最大365件です。また、太陽と月の視半径は、およそ0.26°です。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>辻検索</h3>
+                    <p>「辻検索」ボタンON時に、指定した方位角・視高度の範囲内に天体が現れる日時を検索します。例: 富士山頂の右斜め上に満月が見える日時。</p>
+                    <ul class="help-list">
+                        <li><strong>検索期間</strong>: 検索する日数 (最大36500日 = 100年間)。日時情報メニューの日付が起点。</li>
+                        <li><strong>基準方位角・基準視高度</strong>: 観測点→目的点の方位角・視高度 (自動計算)。</li>
+                        <li><strong>オフセット方位角/視高度</strong>: 基準値からのズレ (度)。</li>
+                        <li><strong>オフセット方位距離/視高距離</strong>: 上記オフセットを目的点での横/縦の距離 (m) に換算した参考値。</li>
+                        <li><strong>許容範囲方位角/視高度: ±</strong>: 検索中心からの許容範囲 (初期値 ±15°)。</li>
+                        <li><strong>月齢フィルタ</strong>: 月齢で結果を絞り込み (満月 ≈ 14.8、新月 = 0)。</li>
+                        <li><strong>精度フィルタ ◎/○/△/-</strong>: 精度記号で結果を絞り込み。</li>
+                        <li><strong>URL取得</strong>: 現在の検索条件で開くURLをコピー。</li>
+                    </ul>
+                    <p>精度記号:</p>
+                    <ul class="help-list">
+                        <li><strong>◎</strong>: 天体の中心が目的点に重なる (誤差 ±0.125°、視半径以内)</li>
+                        <li><strong>○</strong>: 天体の縁が目的点に接する (誤差 ±0.25°、視直径以内)</li>
+                        <li><strong>△</strong>: 視直径×4以内 (誤差 ±1°)</li>
+                        <li><strong>-</strong>: 上記以外で許容範囲内</li>
+                    </ul>
+                    <p>検索は1分間隔の粗スキャン → ベスト時刻の前後60秒を1秒単位リファインで実行。各天体最大36500件 (100年分)。太陽・月の視半径は ≈ 0.26°。</p>
                 </section>
 
                 <section class="help-section">
                     <h3>標高グラフ</h3>
-                    <p>観測点と目的点の間の地形断面を表示します。国土地理院のDEM標高タイルから2000地点で標高を取得します。</p>
+                    <p>「標高グラフ」ボタンON時に、観測点〜目的点の地形断面を表示。国土地理院のDEM標高タイルから2000地点で標高を取得します。</p>
+                    <p>取得完了後、観測点高・目的点高を加えた可視直線 (赤線) に対して地形が遮らないかを判定し、可視なら「OK」、不可視なら「NG」をポップアップで通知します。屈折・地球曲率は考慮していない単純な直線判定なので、遠距離見通しでは精度に注意してください。</p>
                 </section>
 
                 <section class="help-section">
-                    <h3>My辻検索</h3>
-                    <p>辻検索の条件を複数登録・管理し、一括で計算・CSV出力できます。「辻検索取得」で現在の辻検索メニューの条件を取得、「行追加」で空行を追加できます。観測点ID・目的点IDは、My観測点・My目的点メニューで登録したIDを指定してください。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>My観測点</h3>
-                    <p>複数の観測点を登録・管理できます。「観測点取得」で現在の位置情報の観測点を追加、「位置反映」で選択中の観測点を位置情報に反映します。「全て登録」でローカルストレージに保存し、地図上に緑色のマーカーで表示されます。CSV入出力にも対応しています。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>My目的点</h3>
-                    <p>複数の目的点を登録・管理できます。「目的点取得」で現在の位置情報の目的点を追加、「位置反映」で選択中の目的点を位置情報に反映します。「全て登録」でローカルストレージに保存し、地図上に橙色のマーカーで表示されます。CSV入出力にも対応しています。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>バックアップ/インポート</h3>
-                    <p>Homeボタン、推し山ボタン、表示天体、My天体、My観測点、My目的点、My辻検索、設定の全データをJSON形式で一括バックアップ・インポートできます。デバイス間のデータ移行やバックアップに利用してください。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>天体検索</h3>
-                    <p>celestial_db.jsonから天体を検索し、My天体に登録できます。検索オプションで等級を絞り込めます。検索結果から天体を選択し、天体名を編集して登録できます。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>表示天体</h3>
-                    <p>太陽、月、水星、金星、火星、木星、土星、天王星、海王星、冥王星、北極星、北斗七星メラク、オリオン座ミンタカ、すばる、オリオン大星雲M42、こと座ベガ、わし座アルタイル、はくちょう座デネブ、オリオン座ベテルギウス、おおいぬ座シリウス、こいぬ座プロキオンのそれぞれを出没時刻、南中時刻、入没時刻、方位角、視高度、視半径がわかります。高度が負数(およそ地平線下)になると線が半透明になります。チェックボックスで表示・非表示にできます。また、カラーパレットで、色と線種を変更できます。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>My天体</h3>
-                    <p>天体検索で登録した天体の一覧です。ラジオボタンで選択し、上下移動や削除ができます。チェックボックスで辻ラインの表示/非表示、カラーパレットで色と線種を変更できます。CSV入出力にも対応しています。</p>
-                </section>
-
-                <section class="help-section">
-                    <h3>地図上の線のズレについて</h3>
-                    <p>距離が遠い場合、<strong>地図上の「観測点からの色付きの方位線」と「観測点と目的点を結ぶ黒い線」と「辻ラインのマーカー(破線と点線の曲線)」</strong>がズレて見えることがあります。</p>
-                    <p>これは、<strong>「地球は丸いのに、地図は平ら」</strong>であるために起こる現象です。</p>
+                    <h3>My辻検索 / My観測点 / My目的点</h3>
                     <ul class="help-list">
-                        <li><strong>方位線:</strong> 地球の丸みを考慮した方位になります。</li>
-                        <li><strong>黒い線:</strong> 破線は、平面上の単純な2点間の方位になります。実線は、大圏航路を示します。</li>
-                        <li><strong>辻ライン:</strong> 目的点上に天体が見える位置の時間の軌跡のため、方位を表してはいません。</li>
+                        <li><strong>My辻検索</strong>: 辻検索の条件を複数(最大1000件まで)登録・管理。「一括計算」で全件をWorkerプール並列実行、「File取得」でCSV出力。CSV出力の方が<strong>画面出力より詳細</strong>です。</li>
+                        <li><strong>My観測点 / My目的点</strong>: 複数(最大1000件まで)の観測点・目的点を登録・管理。地図上に緑/橙のマーカー表示。「位置反映」で位置情報メニューに反映。CSV入出力対応。</li>
                     </ul>
-                    <p>距離が遠くなるほど、メルカトル図法の性質上、方位線と黒い線はズレて表示されます。辻ラインは、そもそも、方位線と黒い線とは重なりません。</p>
-                    <p><strong>辻ライン上の位置と時刻に観測点を設定した時が、天文学的・地理学的に正しい位置と方位を示します。</strong></p>
+                </section>
+
+                <section class="help-section">
+                    <h3>表示天体 / My天体 / 天体検索</h3>
+                    <ul class="help-list">
+                        <li><strong>表示天体</strong>: 太陽・月・8惑星 + 主要恒星 (北極星・北斗七星メラク・オリオン座ミンタカ・すばる・M42・ベガ・アルタイル・デネブ・ベテルギウス・シリウス・プロキオン)。チェックボックスで表示/非表示、カラーパレットで色・線種を変更。各天体の出没/南中時刻・方位角・視高度・視半径を表示。</li>
+                        <li><strong>My天体</strong>: 天体検索で登録した天体の一覧。並べ替え・削除・色変更が可能。CSV入出力対応。</li>
+                        <li><strong>天体検索</strong>: celestial_db.json から天体を検索 (等級で絞り込み可能)。検索結果から選択し、My天体に登録(最大1000件まで)できます。</li>
+                    </ul>
+                </section>
+
+                <section class="help-section">
+                    <h3>バックアップ / インポート</h3>
+                    <p>Home/推し山、表示天体、My天体、My観測点、My目的点、My辻検索、設定の全データを JSON で一括バックアップ・インポート。デバイス間の移行に便利です。</p>
+                </section>
+
+                <section class="help-section">
+                    <h3>地図上の線について</h3>
+                    <p>地図上には3種類の線が描画されます。距離が遠いと、地球の曲率と地図の平面表現の違いで、見た目に少しズレて見えることがありますが、これは描画の都合です。</p>
+                    <ul class="help-list">
+                        <li><strong>方位線 (色付き)</strong>: 観測点から各天体方向の方位 (WGS84 楕円体)。</li>
+                        <li><strong>黒い線</strong>: 観測点〜目的点の大圏航路 (実線) と等角航路 (破線)。</li>
+                        <li><strong>辻ライン</strong>: 目的点の背後に天体が重なる観測位置の軌跡 (時間軸の曲線)。方位を表すものではありません。</li>
+                    </ul>
+                    <p><strong>辻ライン上の位置と時刻に観測点を設定したとき、天文学的・地理学的に正しい位置関係になります。</strong></p>
                 </section>
 
                 <div class="k-knowledge-section-formal">
@@ -942,16 +936,18 @@ GNU General Public License for more details.
                     <div class="advice-formal">
                         <strong>ヒント:</strong> ダイヤモンド富士のラインが実測と合わないときは、この表を参考に \( K \) の値や気温減率を調整してみてください。
                         (日中なら気温減率を <b>\(0.0125\)</b> 程度にすると、測量標準の \( K=0.132 \) に近づきます)
-                        また、テクニックとして、近距離(20km以内ぐらい)の場合は、気差係数\( K \)を0にすると、何故だか辻ラインの精度がアップします。
-                        (設定では、気圧\( P \)(hPa)を0にすると、\( K \)が0になります。)
-                        本栖湖や竜ヶ岳など、近距離のダイヤモンド富士を狙うときは、ぜひ試してみてください。
-                        (年末年始は、竜ヶ岳からのダイヤモンド富士が近距離で狙えるので、\( K=0 \) で試してみるのがおすすめです！)
                     </div>
                 </div>
                 
                 <section class="help-section">
                     <h3>注意事項・免責事項</h3>
                     <ul class="help-list">
+                        <li>本サイト：</li>
+                            <ul>
+                                <li><a href="https://soranotsuji.net/" target="_blank" rel="noopener noreferrer">https://soranotsuji.net/</a></li>
+                                <li><a href="https://note.com/takeyosui" target="_blank" rel="noopener noreferrer">https://note.com/takeyosui</a></li>
+                                <li><a href="https://github.com/takeyosui15" target="_blank" rel="noopener noreferrer">https://github.com/takeyosui15</a></li>
+                            </ul>
                         <li>本サイトでの表示内容は、その情報の正確性を保証するものではありません。実際の観測には十分な余裕を持って行動してください。</li>
                         <li>本サイトは、国土地理院などの無料サービスを利用して成り立っています。サーバーに高負荷をかける行為はご遠慮ください。</li>
                         <li>本サイトを利用したことにより生じたいかなる損害についても責任を負いません。</li>

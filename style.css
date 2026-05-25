@@ -71,6 +71,19 @@ html {
     flex-shrink: 0;
 }
 
+.tsuji-progress-bar {
+    height: 3px;
+    background: #333;
+    flex-shrink: 0;
+}
+.tsuji-progress-bar.hidden { display: none; }
+.tsuji-progress-bar > div {
+    width: 0%;
+    height: 100%;
+    background: #ffd700;
+    transition: width 0.2s;
+}
+
 #tsujisearch-content {
     flex: 1;
     overflow-y: auto;
@@ -614,6 +627,7 @@ input[type="radio"] {
 #btn-reg-start,
 #btn-reg-end,
 #btn-url-location,
+#btn-dp365,
 #btn-reg-settings {
     width: 46px;
     min-width: 46px;
