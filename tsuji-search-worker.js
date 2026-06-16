@@ -72,10 +72,11 @@ self.onmessage = (e) => {
 
     for (let d = dayStart; d < dayEnd; d++) {
         const dayBase = searchStartMs + d * 86400000;
+        const dayEndMs = dayBase + 86400000;  // 翌日 0:00:00.000 (この時刻は当日に含めない)
         let bestMatch = null;
         let bestDist = Infinity;
 
-        // Pass 1: 1分単位スキャン (24時間 × 60分)
+        // Pass 1: 当日 0:00〜23:59 を 1分単位スキャン (各日のスキャン範囲は重複させない)
         for (let s = 0; s < stepsPerDay; s++) {
             const time = new Date(dayBase + s * 60000);
             const { az, alt } = calcAzAlt(body, time, observer, refractionEnabled);
@@ -103,8 +104,13 @@ self.onmessage = (e) => {
                     }
                 }
             }
-            results.push(bestMatch);
-            if (results.length >= maxResults) break;
+            // リファイン後の最良時刻が当日 [dayBase, dayEndMs) に属する場合のみ採用。
+            // 日付境界をまたいで前日/翌日に移動した場合は、その隣の日のスキャンで
+            // 正しく当日扱いとして拾われるため、ここでは破棄して重複を防ぐ。
+            if (bestMatch.timeMs >= dayBase && bestMatch.timeMs < dayEndMs) {
+                results.push(bestMatch);
+                if (results.length >= maxResults) break;
+            }
         }
     }
 
