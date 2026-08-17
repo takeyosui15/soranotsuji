@@ -1,0 +1,57 @@
+/* Koushi Preview — VSCode Markdownプレビュー用の格子スタイル(class出力のみのレンダラに罫線と寄せを与える)。
+   色はテーマ非依存の半透明グレー(ライト/ダーク両テーマで読める)。正はこのファイル(拡張同梱)。 */
+
+table.koushi {
+    border-collapse: collapse;
+    margin: 8px 0;
+}
+
+table.koushi th,
+table.koushi td {
+    border: 1px solid rgba(128, 128, 128, 0.65);
+    padding: 3px 8px;
+    vertical-align: top;
+    text-align: left;
+}
+
+table.koushi th {
+    background: rgba(128, 128, 128, 0.15);
+    font-weight: 600;
+    text-align: center;
+}
+
+/* 寄せ属性(l/c/r=水平・t/m/b=垂直)。セルのclassとして出力される */
+table.koushi .k-l { text-align: left; }
+table.koushi .k-c { text-align: center; }
+table.koushi .k-r { text-align: right; }
+table.koushi .k-t { vertical-align: top; }
+table.koushi .k-m { vertical-align: middle; }
+table.koushi .k-b { vertical-align: bottom; }
+
+/* セル内の行(素の行)とリスト(行の子) */
+table.koushi .k-line { margin: 1px 0; }
+table.koushi ul {
+    margin: 2px 0 2px 0;
+    padding-left: 1.3em;
+}
+table.koushi li { margin: 1px 0; }
+
+/* 入れ子の格子は外枠より控えめに */
+table.koushi table.koushi { margin: 2px 0; }
+
+/* 罫線属性(第67ラウンド・デッサン01): 行(tr)に付けば「その行の上辺」・セル(td/th)に付けば「そのセルの左辺」。
+   bd=二重・bs=太実線・ba=破線・bo=点線(既定は細実線)。グループ区切りの強調用 */
+table.koushi tr.k-bd > th, table.koushi tr.k-bd > td { border-top: 3px double rgba(128, 128, 128, 0.95); }
+table.koushi tr.k-bs > th, table.koushi tr.k-bs > td { border-top: 2px solid rgba(128, 128, 128, 0.95); }
+table.koushi tr.k-ba > th, table.koushi tr.k-ba > td { border-top: 1px dashed rgba(128, 128, 128, 0.95); }
+table.koushi tr.k-bo > th, table.koushi tr.k-bo > td { border-top: 1px dotted rgba(128, 128, 128, 0.95); }
+table.koushi th.k-bd, table.koushi td.k-bd { border-left: 3px double rgba(128, 128, 128, 0.95); }
+table.koushi th.k-bs, table.koushi td.k-bs { border-left: 2px solid rgba(128, 128, 128, 0.95); }
+table.koushi th.k-ba, table.koushi td.k-ba { border-left: 1px dashed rgba(128, 128, 128, 0.95); }
+table.koushi th.k-bo, table.koushi td.k-bo { border-left: 1px dotted rgba(128, 128, 128, 0.95); }
+
+/* input要素(モックアップ用トークン)は行内に馴染ませる */
+table.koushi input { vertical-align: middle; }
+
+/* 描画エラー時の表示(プレビュー全体は壊さない) */
+pre.koushi-error { color: #d94a4a; }

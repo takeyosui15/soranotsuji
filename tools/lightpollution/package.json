@@ -1,0 +1,8 @@
+{
+  "name": "soranotsuji-lightpollution-tools",
+  "private": true,
+  "description": "光害アセット前処理(Falchi 2016 GeoTIFF → 日本域SQM Uint8格子)",
+  "dependencies": {
+    "geotiff": "^2.1.3"
+  }
+}

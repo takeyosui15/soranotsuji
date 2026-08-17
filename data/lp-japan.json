@@ -1,0 +1,15 @@
+{
+  "source": "Falchi et al. 2016, World Atlas of Artificial Night Sky Brightness (GFZ Data Services, doi:10.5880/GFZ.1.4.2016.001)",
+  "license": "非商用条件・クレジット必須",
+  "west": 121.99987920000004,
+  "north": 46.0041824845001,
+  "east": 153.99986640000006,
+  "south": 24.004191284500095,
+  "width": 960,
+  "height": 660,
+  "dLng": 0.03333332000000001,
+  "dLat": 0.03333332000000001,
+  "sqmMin": 15,
+  "sqmMax": 22,
+  "generatedAt": "2026-07-19T13:19:00.023Z"
+}

@@ -1,0 +1,4 @@
+# vsixに入れないもの(インストール先で不要な開発用ファイル)
+*.vsix
+extension.test.js
+.vscodeignore

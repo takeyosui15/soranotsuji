@@ -1,6 +1,6 @@
 /*
 宙の辻 - Sora no Tsuji
-Copyright (c) 2026- Sora no Tsuji Project
+Copyright (C) 2026 Takeyoshi Watanabe (Sora no Tsuji Project)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,6 +37,74 @@ html {
     z-index: 0;
 }
 
+/* --- 宙断面ビューパネル (骨格。標高グラフ/全天儀/宙の窓と排他・下2/3) --- */
+#soradanmen-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 66.67%;
+    background-color: rgba(30, 30, 30, 0.95);
+    border-top: 1px solid #2a8a5a;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    color: #eee;
+}
+#soradanmen-panel.hidden { display: none; }
+/* 辻検索/辻メッシュ/宙検索結果と併用時は下1/3(結果パネルが上1/3へ)。全天儀と同じ規則 */
+#soradanmen-panel.with-tsuji { height: 33.33%; }
+#soradanmen-panel.maximized { height: 100%; border-top: none; }
+#soradanmen-panel.maximized.with-tsuji { height: 66.67%; }
+#soradanmen-header {
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #7effc8;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+#btn-soradanmen-max {
+    padding: 0 6px;
+    margin-right: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-soradanmen-max.active { background: #1e7a4e; border-color: #7effc8; }
+#btn-soradanmen-close {
+    float: right;
+    padding: 0 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-soradanmen-close:hover { background: rgba(120, 60, 60, 0.8); }
+#soradanmen-ctrl-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    font-size: 12px;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+.sd-mode-radio { white-space: nowrap; }
+#sd-time-slider { flex: 1 1 120px; min-width: 80px; }
+#sd-time-label { margin-right: 0; color: #eee; white-space: nowrap; }
+#sd-legend { white-space: nowrap; }
+#sd-legend.hidden { display: none; }
+#soradanmen-map { flex: 1 1 0; min-height: 0; }
+
 /* --- 断面標高図パネル --- */
 /* --- 辻検索パネル --- */
 #tsujisearch-panel {
@@ -59,9 +127,293 @@ html {
     display: none;
 }
 
-#tsujisearch-panel.with-elevation {
+#tsujisearch-panel.with-elevation,
+#tsujisearch-panel.with-milkyway,
+#tsujisearch-panel.with-soramado {
     bottom: 33.33%;
 }
+
+/* 宙の窓/全天儀が最大化中: 上1/3=辻検索結果、下2/3=プレビュー/全天儀領域 */
+#tsujisearch-panel.with-soramado-max,
+#tsujisearch-panel.with-milkyway-max {
+    bottom: 66.67%;
+}
+
+/* 宙断面と併用時: 上1/3=辻検索結果、下1/3=宙断面(最大化中は下2/3=宙断面) */
+#tsujisearch-panel.with-soradanmen { bottom: 33.33%; }
+#tsujisearch-panel.with-soradanmen-max { bottom: 66.67%; }
+
+/* 最大化: 下に別パネルが無ければ2/3、あれば1/3のまま(地図1/3は常に確保。辻メッシュと同じ) */
+#tsujisearch-panel.maximized { height: 66.67%; }
+#tsujisearch-panel.maximized.with-elevation,
+#tsujisearch-panel.maximized.with-milkyway,
+#tsujisearch-panel.maximized.with-soramado { height: 33.33%; }
+
+/* --- 辻メッシュ検索パネル (辻検索と排他・全天儀/標高グラフ/宙の窓とは併用可) --- */
+#tsujimesh-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 33.33%;
+    background-color: rgba(30, 30, 30, 0.9);
+    border-top: 1px solid #8a7a2a;
+    z-index: 910;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+    color: #eee;
+}
+#tsujimesh-panel.hidden { display: none; }
+/* 下に別パネル(1/3)があるときは1段上へ */
+#tsujimesh-panel.with-elevation,
+#tsujimesh-panel.with-milkyway,
+#tsujimesh-panel.with-soramado { bottom: 33.33%; }
+/* 宙の窓/全天儀が最大化中: 上1/3=辻メッシュ結果、下2/3=プレビュー/全天儀領域 */
+#tsujimesh-panel.with-soramado-max,
+#tsujimesh-panel.with-milkyway-max { bottom: 66.67%; }
+#tsujimesh-panel.with-soradanmen { bottom: 33.33%; }
+#tsujimesh-panel.with-soradanmen-max { bottom: 66.67%; }
+/* 最大化: 下に別パネルが無ければ2/3、あれば1/3のまま(地図1/3は常に確保) */
+#tsujimesh-panel.maximized { height: 66.67%; }
+#tsujimesh-panel.maximized.with-elevation,
+#tsujimesh-panel.maximized.with-milkyway,
+#tsujimesh-panel.maximized.with-soramado { height: 33.33%; }
+
+/* --- 宙検索結果パネル (辻検索/辻メッシュと排他・同じ配置/最大化/積み上げ規則。デッサン18) --- */
+#sorasearch-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 33.33%;
+    background-color: rgba(30, 30, 30, 0.9);
+    border-top: 1px solid #2a5a8a;
+    z-index: 910;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+    color: #eee;
+}
+#sorasearch-panel.hidden { display: none; }
+/* 下に別パネル(1/3)があるときは1段上へ */
+#sorasearch-panel.with-elevation,
+#sorasearch-panel.with-milkyway,
+#sorasearch-panel.with-soramado { bottom: 33.33%; }
+/* 宙の窓/全天儀が最大化中: 上1/3=宙検索結果、下2/3=プレビュー/全天儀領域 */
+#sorasearch-panel.with-soramado-max,
+#sorasearch-panel.with-milkyway-max { bottom: 66.67%; }
+#sorasearch-panel.with-soradanmen { bottom: 33.33%; }
+#sorasearch-panel.with-soradanmen-max { bottom: 66.67%; }
+/* 最大化: 下に別パネルが無ければ2/3、あれば1/3のまま(地図1/3は常に確保) */
+#sorasearch-panel.maximized { height: 66.67%; }
+#sorasearch-panel.maximized.with-elevation,
+#sorasearch-panel.maximized.with-milkyway,
+#sorasearch-panel.maximized.with-soramado { height: 33.33%; }
+
+#sorasearch-header {
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #7ec8ff;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+#btn-sorasearch-max {
+    padding: 0 6px;
+    margin-right: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-sorasearch-max.active { background: #1e5c96; border-color: #7ec8ff; }
+#btn-sorasearch-close {
+    float: right;
+    padding: 0 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-sorasearch-close:hover { background: rgba(120, 60, 60, 0.8); }
+
+#sorasearch-content {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 10px;
+    font-size: 14px;
+}
+#sorasearch-content .td-table { width: 100%; border-collapse: collapse; }
+#sorasearch-content .td-table th,
+#sorasearch-content .td-table td { padding: 3px 6px; text-align: left; white-space: nowrap; }
+#sorasearch-content .td-table th {
+    color: #aaa; font-weight: normal; font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky; top: 0; background: #16222e; z-index: 1; cursor: pointer;
+}
+#sorasearch-content .td-table th:hover { color: #fff; }
+#sorasearch-content .td-table tr.td-data-row { cursor: pointer; }
+#sorasearch-content .td-table tr.td-data-row:hover { background: rgba(255, 255, 255, 0.12); }
+#sorasearch-content .td-table tr.td-data-row.selected { background: rgba(126, 200, 255, 0.22); }
+
+/* 詳細リスト(選択行の標本毎の内訳と因子別の加減点。辻メッシュ詳細と同型) */
+#sorasearch-detail {
+    border-top: 1px solid #2a5a8a;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px 4px;
+}
+#sorasearch-detail.hidden { display: none; }
+#sorasearch-detail-header {
+    font-weight: bold;
+    font-size: 12px;
+    color: #7ec8ff;
+    padding: 3px 0;
+    flex-shrink: 0;
+}
+#sorasearch-detail-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+#sorasearch-detail-body .td-table { width: auto; min-width: 50%; border-collapse: collapse; margin-bottom: 8px; }
+#sorasearch-detail-body .td-table th,
+#sorasearch-detail-body .td-table td { padding: 2px 6px; text-align: left; white-space: nowrap; }
+#sorasearch-detail-body .td-table th {
+    color: #aaa; font-weight: normal; font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky; top: 0; background: #16222e; z-index: 1;
+}
+#sorasearch-detail-body .ss-detail-note { color: #999; font-size: 12px; padding: 2px 0 6px; }
+
+#tsujimesh-header {
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #ffd700;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+#btn-tsujimesh-max,
+#btn-tsujisearch-max {
+    padding: 0 6px;
+    margin-right: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-tsujimesh-max.active,
+#btn-tsujisearch-max.active { background: #b8860b; border-color: #ffd700; }
+
+/* 閉じるボタン(パネルヘッダの右端。第36ラウンド: 最大化⛶と対の✕) */
+.panel-close-btn {
+    float: right;
+    padding: 0 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.panel-close-btn:hover { background: rgba(120, 60, 60, 0.9); }
+
+#tsujimesh-content {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 10px;
+    font-size: 14px;
+}
+#tsujimesh-content .td-table { width: 100%; border-collapse: collapse; }
+#tsujimesh-content .td-table th,
+#tsujimesh-content .td-table td { padding: 3px 6px; text-align: left; white-space: nowrap; }
+#tsujimesh-content .td-table th {
+    color: #aaa; font-weight: normal; font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky; top: 0; background: #2a2416; z-index: 1; cursor: pointer;
+}
+#tsujimesh-content .td-table th:hover { color: #fff; }
+#tsujimesh-content .td-table tr.td-data-row { cursor: pointer; }
+#tsujimesh-content .td-table tr.td-data-row:hover { background: rgba(255, 255, 255, 0.12); }
+#tsujimesh-content .td-table tr.td-data-row.selected { background: rgba(255, 215, 0, 0.22); }
+
+/* 開閉式コントロール領域 (宙の窓ctrlと同型) */
+#tsujimesh-ctrl {
+    flex: 0 0 auto;
+    width: 100%;
+    background: #3a3a3a;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+#tsujimesh-ctrl.open { flex: 0 0 50%; }   /* 開いている時は最大化の有無に関わらず結果リストと2分する(表示詳細結果リスト非表示時) */
+/* 表示詳細結果リスト表示中: コントロール開は結果リスト・表示詳細結果リスト・コントロールで3分割 */
+#tsujimesh-panel.with-detail #tsujimesh-ctrl.open { flex: 0 0 33.33%; }
+#tsujimesh-ctrl-body.hidden { display: none; }
+#tsujimesh-ctrl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #eee;
+    border-top: 1px solid #555;
+    cursor: pointer;
+    user-select: none;
+    flex: 0 0 auto;
+}
+#tsujimesh-ctrl-header { max-width: 360px; width: 100%; margin: 0 auto; box-sizing: border-box; }   /* 宙の窓ctrlと同じ中央寄せ */
+
+/* 地図パンボタン(◀▶/▲▼): ドラッグせずに半画面ずつスクロールする(左上・ズームコントロールの下) */
+.map-pan-control { display: flex; flex-direction: column; align-items: flex-start; }   /* ▲▼の枠がボタン幅(1×2)になるようシュリンク */
+/* ◀▶と▲▼の間隔は他のコントロールの間隔(Leaflet既定10px)と同じにする */
+.map-pan-control .map-pan-h { display: flex; flex-direction: row; margin-bottom: 10px; }
+/* ◀▶のサイズは指定しない(▲▼と同じLeaflet標準のボタンサイズを継承する) */
+.map-pan-control .map-pan-h a { display: flex; align-items: center; justify-content: center; }
+.map-pan-control .map-pan-h a:first-child { border-radius: 4px 0 0 4px; border-bottom: none; border-right: 1px solid #ccc; }
+.map-pan-control .map-pan-h a:last-child { border-radius: 0 4px 4px 0; }
+.map-pan-control a { font-size: 12px; color: black; text-decoration: none; }
+/* ⌖(照準): 選択中のマーカー(観測点/目的点)を画面中心に表示。
+   地図レイヤー選択ボタンとズームボタンの間に独立コントロールとして置く。
+   アイコンはSVGをflexで中央配置(フォント依存の縦ズレを避ける) */
+.map-center-control a { display: flex; align-items: center; justify-content: center; color: black; }
+.map-center-control a svg { display: block; }
+#tsujimesh-ctrl-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 6px;
+    border-top: 1px solid #4a4a4a;
+}
+#tsujimesh-ctrl-body .control-row { max-width: 360px; margin: 4px auto; }
+#tsujimesh-ctrl-body label { color: #eee; }
+#tsujimesh-ctrl-body .control-row.center-row { justify-content: center; }
+.tsujimesh-ctrl-label { color: #ffd700; font-size: 13px; font-weight: bold; margin: 0 8px; }
+#tsujimesh-row-slider { flex: 1 1 auto; min-width: 0; }
+#tsujimesh-time-slider { flex: 1 1 auto; min-width: 0; }
+#tsujimesh-ctrl-body .tsujimesh-time-label2 { width: 175px; flex-shrink: 0; text-align: right; margin-right: 5px; }   /* メニューの縦並びラベルと同幅(.input-labelの105pxより優先) */
+/* コントロール領域の入力はメニューの縦並びテキストボックスと同幅(155px)に揃える */
+#input-tsujimesh-time-width,
+#select-tsujimesh-time-eps { width: 155px; flex: 0 0 auto; box-sizing: border-box; }
+#tsujimesh-mesh-gray { flex: 1 1 auto; min-width: 0; }
 
 #tsujisearch-header {
     padding: 4px 10px;
@@ -164,6 +516,439 @@ html {
     height: 100%;
     display: block;
 }
+
+/* 全天儀パネル(標高グラフと同じ画面下1/3) */
+/* 全天儀領域 (最大化×辻検索の組み合わせで高さが変わる。デッサン01)
+   通常+辻検索OFF: 下2/3 / 通常+辻検索ON: 下1/3 / 最大化+辻検索OFF: 全面 / 最大化+辻検索ON: 下2/3 */
+#milkyway-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 66.67%;
+    background-color: #000;
+    border-top: 1px solid #555;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+#milkyway-panel.with-tsuji { height: 33.33%; }   /* 地図1/3+辻検索1/3+全天儀1/3 */
+/* 全天儀の最大化(トグル): 辻検索OFFなら全面、ONなら上1/3=辻検索結果+下2/3=全天儀領域 */
+#milkyway-panel.maximized { height: 100%; border-top: none; }
+#milkyway-panel.maximized.with-tsuji { height: 66.67%; }
+/* 全天儀画面(コントロールメニューを除いた上部)。ラベルSVG・クレジットはこの中で位置決め */
+#milkyway-view {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+/* 全天儀のコントロールメニュー(宙の窓のctrlメニューと同構成。開=領域の縦1/2分割) */
+#milkyway-ctrl {
+    flex: 0 0 auto;
+    width: 100%;
+    background: #3a3a3a;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+#milkyway-ctrl.open { height: 50%; }
+/* 最大化+辻検索OFF時: 全天儀画面2/3・コントロールメニュー1/3(デッサン01) */
+#milkyway-panel.maximized:not(.with-tsuji) #milkyway-ctrl.open { height: 33.333%; }
+#milkyway-ctrl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #eee;
+    border-top: 1px solid #555;
+    cursor: pointer;
+    max-width: 360px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+#milkyway-ctrl-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 6px;
+    border-top: 1px solid #4a4a4a;
+}
+#milkyway-ctrl-body.hidden { display: none; }
+#milkyway-ctrl-body .control-row { max-width: 360px; margin: 4px auto; }
+#milkyway-ctrl-body .input-label,
+#milkyway-ctrl-body .baseopt-radio { color: #eee; }
+/* 完全複製で増えた部品(TZ表示・月齢行など)もダーク背景向けの文字色に(第94ラウンド。宙の窓ctrlと同じ規則) */
+#milkyway-ctrl-body .control-row span { color: #eee; }
+#milkyway-ctrl-body .control-row label:not(.soramado-ctrl-group) { color: #eee; }
+#btn-mw-ctrl-month-prev, #btn-mw-ctrl-date-prev, #btn-mw-ctrl-date-next, #btn-mw-ctrl-month-next,
+#btn-mw-ctrl-hour-prev, #btn-mw-ctrl-time-prev, #btn-mw-ctrl-time-next, #btn-mw-ctrl-hour-next {
+    width: 34px;
+    min-width: 34px;
+}
+#mw-ctrl-date, #mw-ctrl-time { flex: 1 1 auto; min-width: 0; }
+
+#milkyway-panel.hidden {
+    display: none;
+}
+
+#milkyway-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+    cursor: grab;
+}
+
+#milkyway-canvas:active {
+    cursor: grabbing;
+}
+
+/* 全天儀: 表示天体名称と引き出し線のオーバーレイ */
+#milkyway-labels {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+#milkyway-labels text {
+    font-size: 11px;
+    paint-order: stroke;
+    stroke: rgba(0, 0, 0, 0.75);
+    stroke-width: 2px;
+}
+#milkyway-labels text.const-label {
+    pointer-events: auto;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+#milkyway-credit {
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+    margin: 0;
+    padding: 1px 6px;
+    font-size: 10px;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(0, 0, 0, 0.35);
+    border-radius: 3px;
+    pointer-events: none;
+    max-width: 70%;
+    text-align: right;
+}
+
+/* 宙の窓プレビュー領域 (最大化×辻検索の組み合わせで高さが変わる)
+   通常+辻検索OFF: 下2/3 / 通常+辻検索ON: 下1/3 / 最大化+辻検索OFF: 全面 / 最大化+辻検索ON: 下2/3 */
+#soramado-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 66.67%;
+    background-color: #000;
+    border-top: 1px solid #555;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#soramado-panel.hidden { display: none; }
+#soramado-panel.with-tsuji { height: 33.33%; }   /* 地図1/3+辻検索1/3+プレビュー1/3 */
+
+/* プレビュー最大化(トグル): 辻検索OFFなら全面、ONなら上1/3=辻検索結果+下2/3=プレビュー領域。
+   メニュー(.control-panel, z-index:1000)は最前列のまま操作可 */
+#soramado-panel.maximized { height: 100%; border-top: none; }
+#soramado-panel.maximized.with-tsuji { height: 66.67%; }
+
+/* プレビュー画面(コントロールメニューを除いた上部)。枠・十字・進捗・最大化ボタンはこの中で位置決め */
+#soramado-view {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* 画面最大化トグルボタン(パネル左上。宙の窓/全天儀共通) */
+#btn-milkyway-max,
+#btn-soramado-max {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 930;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 30px;
+    color: #fff;
+    background: rgba(30, 30, 30, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-milkyway-max:hover,
+#btn-soramado-max:hover { background: rgba(70, 70, 70, 0.85); }
+#btn-milkyway-max.active,
+#btn-soramado-max.active { background: #b8860b; border-color: #ffd700; }
+
+/* 閉じるボタン(パネル右上。第36ラウンド: 左上の最大化⛶と対の✕。全天儀/宙の窓/標高グラフ共通) */
+.panel-close-btn-abs {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 930;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 30px;
+    color: #fff;
+    background: rgba(30, 30, 30, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.panel-close-btn-abs:hover { background: rgba(120, 60, 60, 0.9); }
+
+/* プレビュー内コントロールメニュー(プレビュー画面と縦分割・開閉式・不透明グレー)
+   開: パネル高さの1/2(最大化+辻検索OFF時は1/3) / 閉: ヘッダー行のみが一番下に残る */
+#soramado-ctrl {
+    flex: 0 0 auto;
+    width: 100%;
+    background: #3a3a3a;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+#soramado-ctrl.open { height: 50%; }
+#soramado-panel.maximized:not(.with-tsuji) #soramado-ctrl.open { height: 33.333%; }
+#soramado-ctrl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #eee;
+    border-top: 1px solid #555;
+    cursor: pointer;
+    user-select: none;
+    flex: 0 0 auto;
+}
+#soramado-ctrl-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 6px;
+    border-top: 1px solid #4a4a4a;
+}
+/* コントロール領域(3段目以降)の横幅は宙の辻のコントロールメニュー(max-width:360px)と同じにし、中央に配置する */
+#soramado-ctrl-header { max-width: 360px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+#soramado-ctrl-body .control-row,
+#soramado-ctrl-body hr { max-width: 360px; margin-left: auto; margin-right: auto; }
+#soramado-ctrl-body .control-row.center-row { justify-content: center; }
+#soramado-ctrl-body.hidden { display: none; }
+#soramado-ctrl-body .control-row { margin: 4px auto; }   /* 上下4px+左右autoで中央配置 */
+#soramado-ctrl-body .input-label,
+#soramado-ctrl-body .sora-val { color: #eee; }
+/* 暗背景のctrl内はクラス無しのspan(取得状況・表示タイル数・ばらつき値)と通常ラベルも白に
+   (第79ラウンド: 「30タイル/3,490棟」「30枚」「0」が黒字・「:花火点(+)」が灰色で沈んでいた修正。
+   金色のグループ見出し.soramado-ctrl-groupは:notで除外して従来色を維持) */
+#soramado-ctrl-body .control-row span { color: #eee; }
+#soramado-ctrl-body .control-row label:not(.soramado-ctrl-group) { color: #eee; }
+.soramado-ctrl-group {
+    font-weight: bold;
+    font-size: 12px;
+    color: #ffd700;
+}
+/* チェックボックスのラベルにグループ見出し色を使う場合(.control-row labelの#333より優先させる。
+   第37ラウンド: ctrlの「:花火モード」が黒字で沈んでいた修正) */
+.control-row label.soramado-ctrl-group { color: #ffd700; }
+#soramado-ctrl-body .sora-mov-num { width: 90px; }
+/* ctrlの日時コントロール: 日時情報メニューと同じボタンサイズ(34px)に統一し、
+   日付/時刻ピッカーを行いっぱいに伸ばして両行の縦のラインを揃える */
+#btn-sora-ctrl-month-prev, #btn-sora-ctrl-date-prev, #btn-sora-ctrl-date-next, #btn-sora-ctrl-month-next,
+#btn-sora-ctrl-hour-prev, #btn-sora-ctrl-time-prev, #btn-sora-ctrl-time-next, #btn-sora-ctrl-hour-next {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+}
+/* ctrlのNowボタン: 日時情報メニューの#btn-nowと同じ46px固定に(第97ラウンド。
+   自然幅のままだと下段のスペーサー(.spacer-btn-now=46px)と数px合わず、縦のラインがずれていた修正) */
+#btn-sora-ctrl-now, #btn-mw-ctrl-now {
+    width: 46px;
+    min-width: 46px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+}
+#sora-ctrl-date, #sora-ctrl-time {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+#sora-mov-total { background: #555; color: #eee; border: 1px solid #666; }
+#btn-sora-mov-play { min-width: 72px; }
+#btn-sora-mov-play.active { background: #b8860b; color: #fff; border-color: #ffd700; }
+#soramado-ctrl-body .baseopt-radio { color: #eee; }
+/* ctrlメニュー内の薄明ジャンプ(ダーク背景向けの文字色。レイアウトは薄明メニューと共通) */
+#sora-ctrl-twilight, #mw-ctrl-twilight { max-width: 360px; margin: 4px auto; }
+#sora-ctrl-twilight .twilight-group-title,
+#sora-ctrl-twilight .shortcut-item label,
+#mw-ctrl-twilight .twilight-group-title,
+#mw-ctrl-twilight .shortcut-item label { color: #eee; }
+/* ctrlメニュー内の日の出〜月の入ショートカット: 他の段と同じ360px中央寄せに収める
+   (第94ラウンド: 全幅に伸びてコントロールの縦枠からはみ出していた修正) */
+#soramado-ctrl-body .shortcuts,
+#milkyway-ctrl-body .shortcuts { max-width: 360px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+#btn-sora-export { min-width: 96px; }
+#btn-sora-export.active { background: #b8860b; color: #fff; border-color: #ffd700; }
+
+/* 書き出し・再生の進捗表示(プレビュー画面の中央下部のオーバーレイ。空に文字が被らないよう下部に置く) */
+#soramado-export-progress {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 940;
+    padding: 4px 14px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid #ffd700;
+    border-radius: 4px;
+    color: #ffd700;
+    font-size: 12px;
+    pointer-events: none;
+}
+#soramado-export-progress.hidden { display: none; }
+
+#soramado-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;   /* 2本指パン操作をブラウザ既定のスクロール/ズームに取られないように */
+    cursor: grab;
+}
+/* プレビュー画面のオーバーレイ(枠・十字)は #soramado-view 内で中央配置される */
+
+/* ファインダー枠(中央にアスペクト比でレターボックス) */
+#soramado-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+}
+
+/* 再生オプション②: 生成した動画をファインダー矩形に重ねて再生するオーバーレイ */
+#soramado-movplay-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: fill;
+    background: #000;
+    pointer-events: none;
+}
+
+/* 地形取得の進捗バー(パネル上端) */
+#soramado-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 920;
+    pointer-events: none;
+}
+#soramado-progress.hidden { display: none; }
+#soramado-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #ffd700;
+    transition: width 0.15s;
+}
+
+/* 画面中心の十字(+) */
+.soramado-cross {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+.soramado-cross::before,
+.soramado-cross::after {
+    content: "";
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+}
+.soramado-cross::before { left: 50%; top: 0; width: 1px; height: 100%; transform: translateX(-50%); }
+.soramado-cross::after { top: 50%; left: 0; height: 1px; width: 100%; transform: translateY(-50%); }
+.soramado-cross.hidden { display: none; }
+
+#soramado-info {
+    position: absolute;
+    left: 6px;
+    bottom: 4px;
+    margin: 0;
+    padding: 1px 6px;
+    font-size: 10px;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(0, 0, 0, 0.35);
+    border-radius: 3px;
+    pointer-events: none;
+    max-width: 80%;
+}
+/* 通常は空(中心・画角キャプションは削除)。three.js読込失敗時のエラーのみ表示し、空のときは隠す */
+#soramado-info:empty { display: none; }
+
+/* 宙の窓メニューのフォーム小物 */
+.sora-val {
+    color: #555;
+    font-size: 14px;     /* ラベルと同じ文字サイズ */
+    font-weight: normal; /* 太字にはしない */
+    margin-right: 8px;
+}
+.sora-aspect { width: 3.2em; }
+.sora-slider { width: 100%; }
+/* 移動量の読み: 文字サイズは指定しない=同じctrl内のタイムゾーン表示(素のspan)と同じ継承サイズになる
+   (第97ラウンド: 11px指定で他の行より小さかった修正。依頼者指定「タイムゾーンの文字サイズと同じに」) */
+.sora-move-readout { color: #9ab; margin-left: 6px; white-space: nowrap; }
+.myset-fav { background: none; border: none; cursor: pointer; padding: 0 6px; font-size: inherit; line-height: 1; }
+
+/* 宙検索: 重みスライダー行(ラベル+スライダー+値を1行に収める) */
+.ss-w-row { display: flex; align-items: center; gap: 4px; }
+.ss-w-row .input-label { flex: 0 0 72px; }
+.ss-w-slider { flex: 1 1 auto; min-width: 0; }
+.ss-w-val { flex: 0 0 28px; text-align: right; margin-right: 0; }
+#ss-weights-header { cursor: pointer; user-select: none; }
+.ss-disabled-label { color: #888; }
 
 /* プログレスバー */
 #progress-overlay {
@@ -449,7 +1234,11 @@ html {
     font-family: sans-serif;
     font-size: 14px;
     overflow: hidden;
-    max-height: 90vh;
+    /* スマホのvhはアドレスバーを含む「最大」ビューポート基準のため、90vhだと
+       アドレスバー表示中にパネル下端(バージョン・ポリシーリンク)が画面外に隠れる。
+       dvh(その時々の実表示域)基準にして、常に下端まで画面内に収める */
+    max-height: 90vh;   /* dvh非対応の古いブラウザ向けフォールバック */
+    max-height: calc(100dvh - 20px - env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease;
@@ -562,6 +1351,9 @@ html {
 #sec-myobs { background-color: rgba(144, 238, 144, 0.15); }
 #sec-mytgt { background-color: rgba(255, 165, 0, 0.15); }
 #sec-mytsuji { background-color: rgba(186, 85, 211, 0.15); }
+#sec-soramado { background-color: rgba(30, 144, 255, 0.15); }
+/* 辻メッシュ検索は辻検索とフォームが似ているため、間違わないように薄い金色の背景にする */
+#sec-tsujimesh { background-color: rgba(255, 215, 0, 0.12); }
 
 .control-row {
     display: flex;
@@ -628,6 +1420,7 @@ input[type="radio"] {
 #btn-reg-end,
 #btn-url-location,
 #btn-dp365,
+#btn-move-peak,
 #btn-reg-settings {
     width: 46px;
     min-width: 46px;
@@ -739,6 +1532,56 @@ input[type="radio"] {
     margin-right: 2px;
 }
 
+/* 時間フィルタ: 開始(薄青)/終了(薄赤)グループ */
+/* 基本オプションメニュー */
+.baseopt-group-label {
+    font-weight: bold;
+}
+.baseopt-radio {
+    font-size: 12px;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+/* ラジオ/チェックボックスと右側テキストの垂直センタリング(全メニュー共通) */
+.control-row input[type="checkbox"],
+.control-row input[type="radio"] { vertical-align: middle; }
+label:has(> input[type="radio"]),
+label:has(> input[type="checkbox"]) { display: inline-flex; align-items: center; gap: 3px; }
+label > input[type="radio"],
+label > input[type="checkbox"] { margin-top: 0; margin-bottom: 0; }
+.baseopt-hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 6px 0;
+}
+
+/* 時間フィルタのグループ見出し(開始時刻/終了時刻) */
+.tsuji-time-group-label {
+    font-size: 14px;   /* 時間フィルタラベルと同じ文字サイズ */
+    font-weight: bold;
+    color: #333;
+}
+.tsuji-time-group {
+    padding: 3px 4px;
+    border-radius: 4px;
+    margin: 3px 0;
+}
+.tsuji-time-start { background-color: rgba(100, 150, 255, 0.15); }
+.tsuji-time-end { background-color: rgba(255, 120, 120, 0.15); }
+.tsuji-time-radio-grid {
+    flex-wrap: wrap;
+    gap: 1px 6px;
+}
+.tsuji-time-mode {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.82em;
+    white-space: nowrap;
+    margin-right: 2px;
+}
+.tsuji-time-mode input { margin-right: 1px; }
+
 
 /* 月齢フィルタの入力不可時の背景色 */
 input[type="number"]:disabled {
@@ -751,6 +1594,68 @@ input[type="number"]:disabled {
     background-color: yellow !important;
     color: black !important;
     font-weight: bold !important;
+}
+
+/* Myセットメニュー (辻検索の終了時刻と同じ赤・少し透明) */
+#sec-myset { background-color: rgba(255, 120, 120, 0.15); }
+/* 表示中のMyセット行: 太字+My観測点と同じ見た目の薄緑。
+   メニューの赤背景と混ざって茶色くならないよう、「白+緑15%」を合成した不透明色で赤を覆う */
+.myset-row.myset-current {
+    background-color: rgb(238, 252, 238);
+    font-weight: bold;
+    border-radius: 6px;
+}
+/* ヘッダの表示中セット名: 長い名前は…で省略 */
+#myset-header-current {
+    display: inline-block;
+    max-width: 7em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+/* Myセット 一括選択トグル: 「一括解除」状態 */
+.myset-toggle-active {
+    background-color: yellow !important;
+    color: black !important;
+    font-weight: bold !important;
+}
+/* Myセット行の状態アイコンボタン */
+.myset-status { min-width: 34px; }
+
+/* ヘッダのGoogleログイン/同期状態アイコン */
+#btn-google-login { cursor: pointer; }
+
+/* 同期ダイアログ: 日時表示行(左寄せ)と項目内の中央揃え行 (文字サイズは13pxで統一) */
+.gdrive-sync-info {
+    padding: 3px 8px;
+    font-size: 13px;
+    color: #ffd;
+    text-align: left;
+}
+
+.gdrive-sync-title {
+    font-size: 13px;
+    text-align: left;
+}
+
+.gdrive-sync-center {
+    font-size: 13px;
+    text-align: center;
+    padding: 3px 0;
+    white-space: nowrap;   /* 「ローカルストレージ ➡️ Googleドライブ」を折り返さない */
+}
+
+/* 同期ダイアログの[New]マーク */
+.gdrive-sync-new {
+    color: #ff5252;
+    font-weight: bold;
+}
+
+/* バックアップメニューのGoogleドライブ欄: 非活性ボタン */
+#btn-gdrive-login:disabled, #btn-gdrive-logout:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 /* API取得標高の読み取り専用テキストボックス */
@@ -1099,9 +2004,23 @@ input[type="range"] {
     color: #aaa;
 }
 
+/* URL取得ポップアップ: 短いURL/長いURLの選択チェックボックス */
+.url-picker-short-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+/* 「:短いURL」と「:QRコード」を1段に横並び(第95ラウンド。QRは短いURLの右側) */
+.url-picker-opts-row { display: flex; }
+.url-picker-opts-row .url-picker-short-row { flex: 1 1 50%; }
+
 .palette-colors {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-bottom: 15px;
 }
@@ -1214,6 +2133,15 @@ input[type="range"] {
     background: #fafafa;
 }
 
+.panel-footer a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.panel-footer a:hover {
+    text-decoration: underline;
+}
+
 /* --- 訪問者カウンター --- */
 .visitor-counter {
     padding: 10px;
@@ -1260,21 +2188,9 @@ input[type="range"] {
 }
 
 /* 地図マーカー */
-.location-marker {
-    width: 24px;
-    height: 24px;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    translate: -1.3px -13px;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-.location-marker-observer {
-    background-color: #2196F3;
-}
-.location-marker-target {
-    background-color: #F44336;
-}
+/* 地点ピン(観測点/目的点/My地点/優辻)は第36ラウンドでMapLibre標準ピン(maplibregl.Marker({color}))へ
+   置換した。.location-marker-* クラスは種別の識別子としてマーカー要素に残る(装飾はライブラリ側)。
+   色: 観測点#2196F3 / 目的点#F44336 / My観測点#4CAF50 / My目的点#FF9800 / 優辻#ffd700 */
 
 /* --- 天体検索ポップアップ --- */
 .starsearch-popup {
@@ -1453,7 +2369,7 @@ input[type="range"] {
 }
 
 .mytsuji-label {
-    width: 73px;
+    width: 80px;   /* 「辻オフセット…」の1文字増に対応(入力側を同量狭めて合計幅は維持) */
     white-space: wrap;
     margin-right: 2px;
 }
@@ -1466,11 +2382,13 @@ input[type="range"] {
 .mytsuji-offset-alt,
 .mytsuji-offset-az-dist,
 .mytsuji-offset-alt-dist,
+.mytsuji-offset-rot,
+.mytsuji-offset-rot-alt,
 .mytsuji-tol-az,
 .mytsuji-tol-alt,
 .mytsuji-moon-base,
 .mytsuji-moon-tol {
-    width: 75px;
+    width: 68px;   /* ラベル+入力の合計148pxを維持し、全入力を同幅にして縦のラインを揃える */
 }
 
 /* 「全て登録」ボタンの dirty 状態 */
@@ -1480,12 +2398,122 @@ input[type="range"] {
 }
 
 /* My観測点マーカー (緑) */
-.location-marker-myobs {
-    background-color: #4CAF50;
+/* My観測点/My目的点ピンも標準ピン化(クラスは識別子のみ。上のlocation-marker注記を参照) */
+
+
+/* 辻メッシュ: マーカーのポップアップの内容ブロック(辻・優辻)。
+   ホバーでハイライトし、クリック/タップで該当行の表示+観測点に設定する
+   (メッシュマーカーのポップアップは件数のみで、クリック要素はない) */
+.tm-popup-block {
+    cursor: pointer;
+    padding: 1px 3px;
+    border-radius: 3px;
+}
+.tm-popup-block:hover {
+    background-color: #dbeafe;
 }
 
-/* My目的点マーカー (橙) */
-.location-marker-mytgt {
-    background-color: #FF9800;
+/* 辻メッシュ: 表示詳細結果リスト(結果リスト表示領域とコントロール領域の間・同じ幅)。
+   背景・表のスタイルは結果リスト(#tsujimesh-content)と同じ(パネルの暗色背景に透過) */
+/* 表示中は結果リストと同じ flex 配分(コントロール閉=2分割・開=3分割)で均等に高さを分け合う */
+#tsujimesh-detail {
+    border-top: 1px solid #8a7a2a;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+#tsujimesh-detail.hidden { display: none; }
+#tsujimesh-detail-header {
+    font-weight: bold;
+    font-size: 12px;
+    color: #ffd700;
+    padding: 3px 0;
+    flex-shrink: 0;
+}
+#tsujimesh-detail-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+#tsujimesh-detail-body .td-table { width: 100%; border-collapse: collapse; }
+#tsujimesh-detail-body .td-table th,
+#tsujimesh-detail-body .td-table td { padding: 2px 6px; text-align: left; white-space: nowrap; }
+#tsujimesh-detail-body .td-table th {
+    color: #aaa; font-weight: normal; font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky; top: 0; background: #2a2416; z-index: 1;
+}
+#tsujimesh-detail-body .td-data-row { cursor: pointer; }
+#tsujimesh-detail-body .td-data-row:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* 辻メッシュ: メッシュマーカーのオーバーレイは拡大時もシャープに(縞模様が滲まないように) */
+.tm-mesh-overlay {
+    image-rendering: pixelated;
 }
 
+/* 花火モード: 打ち上げ点の地図マーカー(🎆) */
+.fw-map-icon {
+    font-size: 20px;
+    line-height: 24px;
+    text-align: center;
+    text-shadow: 0 0 3px #000;
+}
+
+/* ==== MapLibre移行(手順3・?maplibre=1)専用 ==== */
+/* レイヤ切替(MapLibre版): アイコンボタン+開閉式のラジオリスト */
+.gl-layer-control { position: relative; }
+.gl-layer-control > a { display: flex; align-items: center; justify-content: center; color: black; }
+.gl-layer-control > a svg { display: block; }
+.gl-layer-list {
+    position: absolute;
+    left: 33px;
+    top: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+}
+.gl-layer-list.hidden { display: none; }
+.gl-layer-list label { font-size: 12px; color: #000; margin: 2px 0; cursor: pointer; }
+/* 選択肢は縦4行に積む(スマホは横幅が狭く、横4列だと画面外へはみ出て押せない)。
+   全メニュー共通の label:has(>input)=inline-flex(詳細度0,1,2)が「.gl-layer-list label」(0,1,1)に
+   勝って横並びへ戻すため、同じ:has形で詳細度(0,2,2)にして縦積みを確定させる */
+.gl-layer-list label:has(> input[type="radio"]) { display: flex; }
+/* MapLibreの角コンテナ内でもLeaflet風コントロールの白背景/枠線を維持する */
+.maplibregl-ctrl.gl-bar { background: transparent; }
+/* 旧leaflet.cssのコントロール地スタイル相当(手順4のLeaflet撤去でここへ移植) */
+.gl-bar { border-radius: 4px; box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65); }
+.gl-bar a {
+    display: flex;               /* SVGアイコン/文字をボタン中央へ(blockだと後続のflex指定を上書きしてずれる) */
+    align-items: center;
+    justify-content: center;
+    width: 29px;                 /* MapLibre標準のズームボタン(29px)とサイズを統一 */
+    height: 29px;
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+    color: black;
+    text-decoration: none;
+}
+.gl-bar a:hover { background-color: #f4f4f4; }
+.gl-bar a:first-child { border-top-left-radius: 4px; border-top-right-radius: 4px; }
+.gl-bar a:last-child { border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; border-bottom: none; }
+
+/* 結果コントロール(辻検索/My辻検索結果。第62ラウンド・辻メッシュctrlと同型) */
+#tsujires-ctrl { flex: 0 0 auto; width: 100%; background: #3a3a3a; box-sizing: border-box; display: flex; flex-direction: column; min-height: 0; }
+#tsujires-ctrl.hidden { display: none; }
+#tsujires-ctrl.open { flex: 0 0 50%; }
+#tsujires-ctrl-body.hidden { display: none; }
+#tsujires-ctrl-header { display: flex; justify-content: space-between; align-items: center; padding: 3px 10px; font-weight: bold; font-size: 12px; color: #eee; border-top: 1px solid #555; cursor: pointer; user-select: none; flex: 0 0 auto; max-width: 360px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+#tsujires-ctrl-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 8px 6px; border-top: 1px solid #4a4a4a; }
+#tsujires-ctrl-body .control-row { max-width: 360px; margin: 4px auto; }
+#tsujires-ctrl-body label { color: #eee; }
+
+/* 結果コントロール内の時間フィルタ群と水平線は宙の窓ctrlと同じ中央寄せ(第63ラウンド・依頼者指摘) */
+#tsujires-ctrl-body .tsuji-time-group, #tsujimesh-ctrl-body .tsuji-time-group { max-width: 360px; margin: 4px auto; box-sizing: border-box; }
+#tsujires-ctrl-body hr.tsujisearch-separator, #tsujimesh-ctrl-body hr.tsujisearch-separator { max-width: 360px; margin: 6px auto; }

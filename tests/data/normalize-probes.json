@@ -1,0 +1,1625 @@
+{
+ "note": "normalizeAppStateの挙動の凍結標本(第41ラウンド)。各スカラーキーに8種の崩れた値(neg/pos/frac/str/empty/nul/bfalse/btrue)を入れた時の正規化結果。正規化規則を意図的に変える時だけ更新する",
+ "scenarios": {
+  "neg": -1000000000,
+  "pos": 1000000000,
+  "frac": 3.7,
+  "str": "garbage",
+  "empty": "",
+  "nul": null,
+  "bfalse": false,
+  "btrue": true
+ },
+ "probes": {
+  "startApiElev": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "endApiElev": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "startHeight": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "endHeight": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "homeStart": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "homeEnd": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mySetCurrentId": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mySetHomeData": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraFolderName": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "refractionEnabled": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "refractionK": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "lastVisitDate": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isMoving": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "moveSpeed": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isDPActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isDP365Active": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "locMode": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isElevationActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isMilkyWayActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isSoramadoActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isTsujiSearchActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraSensorKey": {
+   "neg": "fullframe",
+   "pos": "fullframe",
+   "frac": "fullframe",
+   "str": "fullframe",
+   "empty": "fullframe",
+   "nul": "fullframe",
+   "bfalse": "fullframe",
+   "btrue": "fullframe"
+  },
+  "soraAspectW": {
+   "neg": 1,
+   "pos": 100,
+   "frac": 3.7,
+   "str": 3,
+   "empty": 3,
+   "nul": 3,
+   "bfalse": 3,
+   "btrue": 3
+  },
+  "soraAspectH": {
+   "neg": 1,
+   "pos": 100,
+   "frac": 3.7,
+   "str": 2,
+   "empty": 2,
+   "nul": 2,
+   "bfalse": 2,
+   "btrue": 2
+  },
+  "soraFocal": {
+   "neg": 1,
+   "pos": 3000,
+   "frac": 3.7,
+   "str": 24,
+   "empty": 24,
+   "nul": 24,
+   "bfalse": 24,
+   "btrue": 24
+  },
+  "soraFNumberIdx": {
+   "neg": 0,
+   "pos": 28,
+   "frac": 4,
+   "str": 10,
+   "empty": 10,
+   "nul": 10,
+   "bfalse": 10,
+   "btrue": 10
+  },
+  "soraFocusDist": {
+   "neg": 0,
+   "pos": 300000,
+   "frac": 3.7,
+   "str": 1000,
+   "empty": 1000,
+   "nul": 1000,
+   "bfalse": 1000,
+   "btrue": 1000
+  },
+  "soraFisheye": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraPeaking": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraGrayscale": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": true,
+   "nul": true,
+   "bfalse": true,
+   "btrue": true
+  },
+  "soraBaseAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraBaseAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraOffsetAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraOffsetAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraViewRange": {
+   "neg": 1,
+   "pos": 300,
+   "frac": 3.7,
+   "str": 10,
+   "empty": 10,
+   "nul": 10,
+   "bfalse": 10,
+   "btrue": 10
+  },
+  "soraTraj": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraCenterCross": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraTargetCross": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": true,
+   "nul": true,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraSearchCenter": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": true,
+   "nul": true,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraOrient": {
+   "neg": "landscape",
+   "pos": "landscape",
+   "frac": "landscape",
+   "str": "landscape",
+   "empty": "landscape",
+   "nul": "landscape",
+   "bfalse": "landscape",
+   "btrue": "landscape"
+  },
+  "soraFisheyeStrength": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 3.7,
+   "str": 50,
+   "empty": 50,
+   "nul": 50,
+   "bfalse": 50,
+   "btrue": 50
+  },
+  "soraFisheyeShape": {
+   "neg": "rect",
+   "pos": "rect",
+   "frac": "rect",
+   "str": "rect",
+   "empty": "rect",
+   "nul": "rect",
+   "bfalse": "rect",
+   "btrue": "rect"
+  },
+  "soraPanorama": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "soraPanoAov": {
+   "neg": 0,
+   "pos": 360,
+   "frac": 3.7,
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
+  },
+  "soraMovInterval": {
+   "neg": 0.5,
+   "pos": 86400,
+   "frac": 3.7,
+   "str": 15,
+   "empty": 15,
+   "nul": 15,
+   "bfalse": 15,
+   "btrue": 15
+  },
+  "soraMovShots": {
+   "neg": 1,
+   "pos": 99999,
+   "frac": 4,
+   "str": 1,
+   "empty": 1,
+   "nul": 1,
+   "bfalse": 1,
+   "btrue": 1
+  },
+  "soraMovFps": {
+   "neg": 30,
+   "pos": 30,
+   "frac": 30,
+   "str": 30,
+   "empty": 30,
+   "nul": 30,
+   "bfalse": 30,
+   "btrue": 30
+  },
+  "soraMovDispStep": {
+   "neg": 0.3,
+   "pos": 0.3,
+   "frac": 0.3,
+   "str": 0.3,
+   "empty": 0.3,
+   "nul": 0.3,
+   "bfalse": 0.3,
+   "btrue": 1
+  },
+  "soraMovImgMb": {
+   "neg": 1,
+   "pos": 102400,
+   "frac": 3.7,
+   "str": 140,
+   "empty": 140,
+   "nul": 140,
+   "bfalse": 140,
+   "btrue": 140
+  },
+  "soraMovPlayMode": {
+   "neg": "anim",
+   "pos": "anim",
+   "frac": "anim",
+   "str": "anim",
+   "empty": "anim",
+   "nul": "anim",
+   "bfalse": "anim",
+   "btrue": "anim"
+  },
+  "soraMwBrightness": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 3.7,
+   "str": 100,
+   "empty": 100,
+   "nul": 100,
+   "bfalse": 100,
+   "btrue": 100
+  },
+  "soraElevShade": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 3.7,
+   "str": 50,
+   "empty": 50,
+   "nul": 50,
+   "bfalse": 50,
+   "btrue": 50
+  },
+  "soraSunShade": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 3.7,
+   "str": 50,
+   "empty": 50,
+   "nul": 50,
+   "bfalse": 50,
+   "btrue": 50
+  },
+  "soraExpFormat": {
+   "neg": "jpeg",
+   "pos": "jpeg",
+   "frac": "jpeg",
+   "str": "jpeg",
+   "empty": "jpeg",
+   "nul": "jpeg",
+   "bfalse": "jpeg",
+   "btrue": "jpeg"
+  },
+  "soraExpW": {
+   "neg": 1,
+   "pos": 8192,
+   "frac": 4,
+   "str": 300,
+   "empty": 300,
+   "nul": 300,
+   "bfalse": 300,
+   "btrue": 300
+  },
+  "soraExpH": {
+   "neg": 1,
+   "pos": 8192,
+   "frac": 4,
+   "str": 200,
+   "empty": 200,
+   "nul": 200,
+   "bfalse": 200,
+   "btrue": 200
+  },
+  "soraLabelScale": {
+   "neg": 0,
+   "pos": 1000,
+   "frac": 4,
+   "str": 100,
+   "empty": 100,
+   "nul": 100,
+   "bfalse": 100,
+   "btrue": 100
+  },
+  "fwEnabled": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "fwLat": {
+   "neg": null,
+   "pos": null,
+   "frac": null,
+   "str": null,
+   "empty": null,
+   "nul": null,
+   "bfalse": null,
+   "btrue": null
+  },
+  "fwLng": {
+   "neg": null,
+   "pos": null,
+   "frac": null,
+   "str": null,
+   "empty": null,
+   "nul": null,
+   "bfalse": null,
+   "btrue": null
+  },
+  "fwElev": {
+   "neg": -500,
+   "pos": 9000,
+   "frac": 3.7,
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
+  },
+  "fwHeight": {
+   "neg": -1000,
+   "pos": 10000,
+   "frac": 3.7,
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
+  },
+  "fwRadius": {
+   "neg": 0,
+   "pos": 10000,
+   "frac": 3.7,
+   "str": 50,
+   "empty": 50,
+   "nul": 50,
+   "bfalse": 50,
+   "btrue": 50
+  },
+  "fwSize": {
+   "neg": "10",
+   "pos": "10",
+   "frac": "10",
+   "str": "10",
+   "empty": "10",
+   "nul": "10",
+   "bfalse": "10",
+   "btrue": "10"
+  },
+  "fwMode": {
+   "neg": "vary",
+   "pos": "vary",
+   "frac": "vary",
+   "str": "vary",
+   "empty": "vary",
+   "nul": "vary",
+   "bfalse": "vary",
+   "btrue": "vary"
+  },
+  "fwSpread": {
+   "neg": -100,
+   "pos": 100,
+   "frac": 4,
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
+  },
+  "fwShowPoint": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": true,
+   "nul": true,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isSoradanmenActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isSoraSearchActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "ssPreset": {
+   "neg": "milkyway",
+   "pos": "milkyway",
+   "frac": "milkyway",
+   "str": "milkyway",
+   "empty": "milkyway",
+   "nul": "milkyway",
+   "bfalse": "milkyway",
+   "btrue": "milkyway"
+  },
+  "ssWL": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 100,
+   "empty": 100,
+   "nul": 100,
+   "bfalse": 100,
+   "btrue": 100
+  },
+  "ssWM": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 85,
+   "empty": 85,
+   "nul": 85,
+   "bfalse": 85,
+   "btrue": 85
+  },
+  "ssWH": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 40,
+   "empty": 40,
+   "nul": 40,
+   "bfalse": 40,
+   "btrue": 40
+  },
+  "ssMoonMode": {
+   "neg": "avoid",
+   "pos": "avoid",
+   "frac": "avoid",
+   "str": "avoid",
+   "empty": "avoid",
+   "nul": "avoid",
+   "bfalse": "avoid",
+   "btrue": "avoid"
+  },
+  "ssWMoon": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 80,
+   "empty": 80,
+   "nul": 80,
+   "bfalse": 80,
+   "btrue": 80
+  },
+  "ssUnkaiMode": {
+   "neg": "avoid",
+   "pos": "avoid",
+   "frac": "avoid",
+   "str": "avoid",
+   "empty": "avoid",
+   "nul": "avoid",
+   "bfalse": "avoid",
+   "btrue": "avoid"
+  },
+  "ssWUnkai": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
+  },
+  "ssWLp": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 70,
+   "empty": 70,
+   "nul": 70,
+   "bfalse": 70,
+   "btrue": 70
+  },
+  "ssWTr": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 40,
+   "empty": 40,
+   "nul": 40,
+   "bfalse": 40,
+   "btrue": 40
+  },
+  "ssObj": {
+   "neg": "mw",
+   "pos": "mw",
+   "frac": "mw",
+   "str": "mw",
+   "empty": "mw",
+   "nul": "mw",
+   "bfalse": "mw",
+   "btrue": "mw"
+  },
+  "ssWObj": {
+   "neg": 0,
+   "pos": 100,
+   "frac": 4,
+   "str": 60,
+   "empty": 60,
+   "nul": 60,
+   "bfalse": 60,
+   "btrue": 60
+  },
+  "ssBandNight": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": true,
+   "nul": true,
+   "bfalse": false,
+   "btrue": true
+  },
+  "ssBandTwilight": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "ssBandGhbh": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "ssBandDay": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "ssDays": {
+   "neg": 1,
+   "pos": 16,
+   "frac": 4,
+   "str": 11,
+   "empty": 11,
+   "nul": 11,
+   "bfalse": 11,
+   "btrue": 11
+  },
+  "ssInterval": {
+   "neg": 1,
+   "pos": 1,
+   "frac": 1,
+   "str": 1,
+   "empty": 1,
+   "nul": 1,
+   "bfalse": 1,
+   "btrue": 1
+  },
+  "ssFan": {
+   "neg": 1,
+   "pos": 180,
+   "frac": 3.7,
+   "str": 24,
+   "empty": 24,
+   "nul": 24,
+   "bfalse": 24,
+   "btrue": 24
+  },
+  "ssRange": {
+   "neg": null,
+   "pos": 300,
+   "frac": 3.7,
+   "str": null,
+   "empty": null,
+   "nul": null,
+   "bfalse": null,
+   "btrue": null
+  },
+  "ssStat": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "baseOptMwBase": {
+   "neg": "center",
+   "pos": "center",
+   "frac": "center",
+   "str": "center",
+   "empty": "center",
+   "nul": "center",
+   "bfalse": "center",
+   "btrue": "center"
+  },
+  "mwOffsetAngle": {
+   "neg": -360,
+   "pos": 360,
+   "frac": 3.7,
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
+  },
+  "mwShowBodies": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mwShowBodyNames": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mwShowConstFig": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mwShowConstBounds": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mwShowConstNames": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "mwConstNameSort": {
+   "neg": "aiueo",
+   "pos": "aiueo",
+   "frac": "aiueo",
+   "str": "aiueo",
+   "empty": "aiueo",
+   "nul": "aiueo",
+   "bfalse": "aiueo",
+   "btrue": "aiueo"
+  },
+  "elevExcludeEnabled": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": true,
+   "nul": true,
+   "bfalse": false,
+   "btrue": true
+  },
+  "elevExcludeRadius": {
+   "neg": 0,
+   "pos": 10000,
+   "frac": 3.7,
+   "str": 15,
+   "empty": 15,
+   "nul": 15,
+   "bfalse": 15,
+   "btrue": 15
+  },
+  "elevExcludeObsRadius": {
+   "neg": 0,
+   "pos": 10000,
+   "frac": 3.7,
+   "str": 10,
+   "empty": 10,
+   "nul": 10,
+   "bfalse": 10,
+   "btrue": 10
+  },
+  "tsujiSearchBaseAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiSearchOffsetAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiSearchToleranceAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiSearchBaseAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiSearchOffsetAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiSearchToleranceAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiSearchDays": {
+   "neg": 1,
+   "pos": 36500,
+   "frac": 3,
+   "str": 365,
+   "empty": 365,
+   "nul": 365,
+   "bfalse": 365,
+   "btrue": 365
+  },
+  "tsujiCenterMode": {
+   "neg": "point",
+   "pos": "point",
+   "frac": "point",
+   "str": "point",
+   "empty": "point",
+   "nul": "point",
+   "bfalse": "point",
+   "btrue": "point"
+  },
+  "tsujiMoonFilterEnabled": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMoonBase": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMoonTolerance": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiAccuracyFilterEnabled": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiAccDblCircle": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiAccCircle": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiAccTriangle": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiAccDash": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiElevationOption": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiElevOK": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiElevNG": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiTimeFilter": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiStartMode": {
+   "neg": "sunset",
+   "pos": "sunset",
+   "frac": "sunset",
+   "str": "sunset",
+   "empty": "sunset",
+   "nul": "sunset",
+   "bfalse": "sunset",
+   "btrue": "sunset"
+  },
+  "tsujiStartTime": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiStartPrePost": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiStartPrePostDir": {
+   "neg": "before",
+   "pos": "before",
+   "frac": "before",
+   "str": "before",
+   "empty": "before",
+   "nul": "before",
+   "bfalse": "before",
+   "btrue": "before"
+  },
+  "tsujiStartOffset": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiEndMode": {
+   "neg": "sunrise",
+   "pos": "sunrise",
+   "frac": "sunrise",
+   "str": "sunrise",
+   "empty": "sunrise",
+   "nul": "sunrise",
+   "bfalse": "sunrise",
+   "btrue": "sunrise"
+  },
+  "tsujiEndTime": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiEndPrePost": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiEndPrePostDir": {
+   "neg": "before",
+   "pos": "before",
+   "frac": "before",
+   "str": "before",
+   "empty": "before",
+   "nul": "before",
+   "bfalse": "before",
+   "btrue": "before"
+  },
+  "tsujiEndOffset": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiMeshDays": {
+   "neg": 1,
+   "pos": 36500,
+   "frac": 3,
+   "str": 365,
+   "empty": 365,
+   "nul": 365,
+   "bfalse": 365,
+   "btrue": 365
+  },
+  "tsujiMeshBaseAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshOffsetAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshToleranceAz": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshBaseAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshOffsetAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshToleranceAlt": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshCenterMode": {
+   "neg": "point",
+   "pos": "point",
+   "frac": "point",
+   "str": "point",
+   "empty": "point",
+   "nul": "point",
+   "bfalse": "point",
+   "btrue": "point"
+  },
+  "tsujiMeshAccuracy": {
+   "neg": "x1",
+   "pos": "x1",
+   "frac": "x1",
+   "str": "x1",
+   "empty": "x1",
+   "nul": "x1",
+   "bfalse": "x1",
+   "btrue": "x1"
+  },
+  "tsujiMeshMoonFilterEnabled": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshMoonBase": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshMoonTolerance": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshTimeFilter": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshStartMode": {
+   "neg": "sunset",
+   "pos": "sunset",
+   "frac": "sunset",
+   "str": "sunset",
+   "empty": "sunset",
+   "nul": "sunset",
+   "bfalse": "sunset",
+   "btrue": "sunset"
+  },
+  "tsujiMeshStartTime": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiMeshStartPrePost": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshStartPrePostDir": {
+   "neg": "before",
+   "pos": "before",
+   "frac": "before",
+   "str": "before",
+   "empty": "before",
+   "nul": "before",
+   "bfalse": "before",
+   "btrue": "before"
+  },
+  "tsujiMeshStartOffset": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiMeshEndMode": {
+   "neg": "sunrise",
+   "pos": "sunrise",
+   "frac": "sunrise",
+   "str": "sunrise",
+   "empty": "sunrise",
+   "nul": "sunrise",
+   "bfalse": "sunrise",
+   "btrue": "sunrise"
+  },
+  "tsujiMeshEndTime": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiMeshEndPrePost": {
+   "neg": true,
+   "pos": true,
+   "frac": true,
+   "str": true,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshEndPrePostDir": {
+   "neg": "before",
+   "pos": "before",
+   "frac": "before",
+   "str": "before",
+   "empty": "before",
+   "nul": "before",
+   "bfalse": "before",
+   "btrue": "before"
+  },
+  "tsujiMeshEndOffset": {
+   "neg": "00:00",
+   "pos": "00:00",
+   "frac": "00:00",
+   "str": "00:00",
+   "empty": "00:00",
+   "nul": "00:00",
+   "bfalse": "00:00",
+   "btrue": "00:00"
+  },
+  "tsujiMeshSymO": {
+   "neg": false,
+   "pos": false,
+   "frac": false,
+   "str": false,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": false
+  },
+  "tsujiMeshSymTri": {
+   "neg": false,
+   "pos": false,
+   "frac": false,
+   "str": false,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": false
+  },
+  "tsujiMeshSymDash": {
+   "neg": false,
+   "pos": false,
+   "frac": false,
+   "str": false,
+   "empty": false,
+   "nul": false,
+   "bfalse": false,
+   "btrue": false
+  },
+  "tsujiMeshElevationOption": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshElevOK": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "tsujiMeshElevNG": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "isTsujiMeshActive": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  }
+ }
+}

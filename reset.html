@@ -1,3 +1,17 @@
+<!--
+宙の辻 - Sora no Tsuji
+Copyright (C) 2026 Takeyoshi Watanabe (Sora no Tsuji Project)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+-->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -90,8 +104,17 @@
     
     <div class="box">
         <p>現在、お使いのブラウザ（このドメイン）に保存されているデータは以下の通りです。</p>
+        <p id="storageUsage" style="font-weight:bold;"></p>
         <div id="dataDisplay">
             </div>
+    </div>
+
+    <div class="box">
+        <p><strong>消去する前に、必ずバックアップを。</strong> 消去すると元に戻せません。My観測点・My目的点・My辻検索などを失わないよう、先に下のボタンでバックアップしてください（アプリ内の「バックアップ」ボタンや各リストの「CSV出力」もご利用いただけます）。</p>
+        <button id="backupBtn" style="background-color:#27ae60;">全データをJSONでバックアップ（ダウンロード）</button>
+        <p style="margin-top:14px;">バックアップから元に戻す場合:</p>
+        <button id="restoreBtn" style="background-color:#2980b9;">バックアップJSONから復元</button>
+        <input type="file" id="restoreFile" accept=".json" style="display:none;">
     </div>
 
     <button id="clearBtn">すべてのデータを消去する</button>
@@ -115,11 +138,24 @@
             });
         }
 
+        // ローカルストレージの使用容量を表示する関数 (UTF-16なので1文字=2バイトで概算)
+        function renderStorageUsage() {
+            let bytes = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                bytes += (k.length + (localStorage.getItem(k) || '').length) * 2;
+            }
+            const kb = bytes / 1024;
+            document.getElementById('storageUsage').textContent =
+                `ローカルストレージ使用容量: ${kb.toLocaleString('ja-JP', { maximumFractionDigits: 1 })}KB（${localStorage.length}項目）`;
+        }
+
         // ローカルストレージの中身を取得して画面に表示する関数
         function renderStorageData() {
             const displayArea = document.getElementById('dataDisplay');
             const clearBtn = document.getElementById('clearBtn');
-            
+            renderStorageUsage();
+
             // データが空の場合
             if (localStorage.length === 0) {
                 displayArea.innerHTML = '<p class="empty-message">✓ 現在、保存されているデータはありません。</p>';
@@ -158,6 +194,63 @@
                 statusMsg.textContent = 'データをすべて消去しました。';
                 statusMsg.style.color = '#27ae60'; // 緑色に変更
             }
+        });
+
+        // ファイル名用の日時文字列
+        function fileStamp() {
+            const d = new Date();
+            const p = n => ('0' + n).slice(-2);
+            return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+        }
+
+        // バックアップ: soranotsuji_プレフィックスのlocalStorageを {キー:値} のJSONにしてダウンロード
+        // (第39ラウンド: 本体のバックアップ/Googleドライブ保存と同一形式・同一の絞り込みに統一。
+        //  同一オリジンの他アプリのキーを混入させない)
+        document.getElementById('backupBtn').addEventListener('click', function() {
+            if (localStorage.length === 0) { alert('保存されているデータがありません。'); return; }
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('soranotsuji_')) data[k] = localStorage.getItem(k);
+            }
+            if (Object.keys(data).length === 0) { alert('宙の辻のデータ(soranotsuji_*)がありません。'); return; }
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `soranotsuji-app-バックアップ-${fileStamp()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.textContent = 'バックアップ（JSON）をダウンロードしました。';
+            statusMsg.style.color = '#27ae60';
+        });
+
+        // 復元: バックアップJSONを読み、各キーをlocalStorageへ書き戻す
+        document.getElementById('restoreBtn').addEventListener('click', function() {
+            document.getElementById('restoreFile').click();
+        });
+        document.getElementById('restoreFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (typeof data !== 'object' || data === null || Array.isArray(data)) throw new Error('バックアップの形式が不正です');
+                    if (!confirm('バックアップの内容で現在のデータを上書きします。よろしいですか？')) return;
+                    // soranotsuji_キーのみ書き戻す(混入した無関係キーは無視=復元で掃除される。第39ラウンド)
+                    Object.keys(data).forEach(k => { if (k.startsWith('soranotsuji_') && typeof data[k] === 'string') localStorage.setItem(k, data[k]); });
+                    renderStorageData();
+                    const statusMsg = document.getElementById('statusMessage');
+                    statusMsg.textContent = 'バックアップから復元しました。';
+                    statusMsg.style.color = '#27ae60';
+                } catch (err) {
+                    alert('復元に失敗しました: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
         });
     </script>
 </body>

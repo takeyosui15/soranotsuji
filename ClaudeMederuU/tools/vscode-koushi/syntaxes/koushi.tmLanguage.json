@@ -1,0 +1,56 @@
+{
+  "information_for_contributors": [
+    "Koushi(格子)記法のトークン文法(編集画面のハイライト用)。記法の正はClaudeMederuU/dessin/01-koushi-dessin.md。",
+    "スコープ名の方針: 箇条書きの`-`はMarkdownのリストと同じスコープ(同じ色に見える)・構造t:/r:/c:はタグ・",
+    "属性(xc2/h/寄せ/罫線)はHTML属性・input22種は関数・\"値\"は文字列。テーマ側の色をそのまま借りる。"
+  ],
+  "name": "Koushi",
+  "scopeName": "source.koushi",
+  "patterns": [
+    {
+      "comment": "箇条書きの`-`(Markdownのリストと同じ色になるスコープ名を使う)",
+      "match": "(^|\\G)\\s*(-)\\s+",
+      "captures": {
+        "2": {
+          "name": "punctuation.definition.list.begin.markdown"
+        }
+      }
+    },
+    {
+      "comment": "構造トークン: t:/r:/c: + 番号・属性(xc2/xr2・h・寄せl,c,r,t,m,b・罫線bd,bs,ba,bo)・終端の`.`",
+      "match": "\\b([trc])(:)([^.]*)(\\.)",
+      "captures": {
+        "1": {
+          "name": "entity.name.tag.koushi"
+        },
+        "2": {
+          "name": "punctuation.separator.koushi"
+        },
+        "3": {
+          "name": "entity.other.attribute-name.koushi"
+        },
+        "4": {
+          "name": "punctuation.terminator.koushi"
+        }
+      }
+    },
+    {
+      "comment": "inputトークン22種(3文字ヘッド。koushi.jsのINPUT_HEADSが正)。値の\"…\"は文字列として塗る",
+      "match": "\\b(btn|chb|clr|dat|dtl|eml|fil|hdn|img|mnt|nmb|pwd|rad|rng|rst|sch|smt|tel|txt|tim|url|wek)(:?)([^.]*)(\\.)",
+      "captures": {
+        "1": {
+          "name": "support.function.koushi"
+        },
+        "2": {
+          "name": "punctuation.separator.koushi"
+        },
+        "3": {
+          "name": "string.quoted.double.koushi"
+        },
+        "4": {
+          "name": "punctuation.terminator.koushi"
+        }
+      }
+    }
+  ]
+}

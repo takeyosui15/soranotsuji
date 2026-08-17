@@ -1,6 +1,6 @@
 /*
 宙の辻 - Sora no Tsuji
-Copyright (c) 2026- Sora no Tsuji Project
+Copyright (C) 2026 Takeyoshi Watanabe (Sora no Tsuji Project)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -92,14 +92,28 @@ function getDateString(dateObj) {
 
 /**
  * シート内で指定日付の行番号を返す（1始まり）。見つからなければ -1。
- * データ行は3行目から始まる。
+ * データ行は3行目=1月1日から日順に1行ずつ並ぶ規約(createNewLogSheets)なので、
+ * 年初からの日数で行番号を直接求める（全行ループしない＝第78ラウンド）。
+ * 求めた行の日付だけ1セル検証し、合わない場合のみ従来の全行走査へフォールバックする
+ * （手動で行を挿入・削除したシートへの保険）。
  */
 function findDateRow(sheet, targetDateStr) {
+  var p = targetDateStr.split('-');
+  var y = parseInt(p[0], 10), m = parseInt(p[1], 10), d = parseInt(p[2], 10);
+  // シート名=年の規約。年が違う日付はこのシートに無い(昨年分は呼び出し側が昨年シートで引き直す)
+  if (String(y) !== sheet.getName()) return -1;
+  // 年初からの日数(閏年もDate.UTCの日数差で正しく出る)→ 行番号(3行目=1月1日)
+  var dayOfYear = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 86400000) + 1;
+  var row = dayOfYear + 2;
+  if (row <= sheet.getLastRow()) {
+    var cell = sheet.getRange(row, 1).getValue();
+    if (cell instanceof Date && getDateString(cell) === targetDateStr) return row;
+  }
+  // フォールバック: 規約通りに並んでいないシートのみ従来の全行走査
   var data = sheet.getRange(3, 1, sheet.getLastRow() - 2, 1).getValues();
   for (var i = 0; i < data.length; i++) {
     if (data[i][0] instanceof Date) {
-      var d = getDateString(data[i][0]);
-      if (d === targetDateStr) return i + 3; // 3行目開始
+      if (getDateString(data[i][0]) === targetDateStr) return i + 3; // 3行目開始
     }
   }
   return -1;

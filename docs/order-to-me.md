@@ -8,7 +8,7 @@
 - order-to-me.mdは、1ファイルにまとめる。増やさない。
 
 ---
-### 1. Claude Code on Webでのセッション開始について
+### 1. Claude Code Desktopでのセッション開始について
 
 #### 結論:
 Claude Code on Webでは、新規セッション毎に新しい `claude/xxx` ブランチが**自動作成される**。
@@ -22,9 +22,9 @@ Claude Code on Webでは、新規セッション毎に新しい `claude/xxx` ブ
 - 新規セッション開始時は、前回の作業内容を引き継ぐために以下で始める:
 
 ```markdown
-/docs/order.md、/docs/todo.md を読んで、前回の作業状態を把握してください。
+/docs/order.md、/docs/todo.md、/docs/order-log/order-YYYY-MM-DD.md を読んで、前回の作業状態を把握してください。
 未解決の質問や気になる点があれば、教えてください。
-そして、今までのように、/docs/order.md にご回答をお願いいたします。
+そして、今までのように、リモートの作業ブランチの変更を取り入れて、/docs/order.md にご回答をお願いいたします。
 ```
 
 - 不要になった `claude/xxx` ブランチは、作業完了後にまとめて削除する
@@ -32,13 +32,18 @@ Claude Code on Webでは、新規セッション毎に新しい `claude/xxx` ブ
   - ローカル: `git branch -d claude/xxx` → `git push origin --delete claude/xxx`
 
 ---
-### ２. Claude Code on Webでのセッション毎の繰り返し作業について
+### ２. Claude Code Desktopでのセッション毎の繰り返し作業について
+
+#### 経緯:
+- ClaudeさんのGitHubのリモートの作業ブランチへ、私がマージ忘れをしていることがあった。
+- DesktopのUIの概要の内容と、order.mdの詳細の内容は、重複しているため、DesktopのUIの概要を読む時間に無駄を感じていた。
 
 #### 結論:
-- 私の最後のコミットハッシュを毎回Claudeさんに伝えること
-- ClaudeさんのGitHubのリモートの作業ブランチへ、私の最後のコミットを毎回マージする
-- Claudeさんに依頼するときは、毎回明示的にUIから「プランモード」を選択する。
+- 私の最後のコミットハッシュを毎回Claudeさんに伝えること。
+- ClaudeさんのGitHubのリモートの作業ブランチへ、私の最後のコミットを毎回マージする。
+- Claudeさんに依頼するときは、自動モードで、order.mdに詳細を、DesktopのUIには、概要を1件1行で記載してもらう。
 
 #####　理由：
 - 間違いなく認識合わせをするため。
-- order.mdでやり取りするプランより、UIのプランモードの方が詳細なプランが分かるため。
+- DesktopのUIに概要を、order.mdに詳細をやり取りする方が、セッションが切り替わっても記録の場所が明確かつ、お互いが探しやすいため。
+- DesktopのUIの概要は、本当に1件1行で良い。何故なら、大枠だけわかれば良いので、詳細の方をきちんと読みたいので、概要に時間をかけたくないため。

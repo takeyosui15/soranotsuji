@@ -1,0 +1,109 @@
+<!--
+宙の辻 - Sora no Tsuji
+Copyright (C) 2026 Takeyoshi Watanabe (Sora no Tsuji Project)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーポリシー - 宙の辻</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.8;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-top: 28px;
+            border-left: 4px solid #3498db;
+            padding-left: 8px;
+        }
+        .box {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .date { color: #777; font-size: 0.9rem; text-align: right; }
+    </style>
+</head>
+<body>
+
+    <h1>プライバシーポリシー</h1>
+
+    <div class="box">
+        <p>「宙の辻 - Sora no Tsuji」(以下「本アプリ」)は、Sora no Tsuji Project(以下「当プロジェクト」)が提供する、サーバーを持たない静的なWebアプリです。当プロジェクトは、利用者の個人情報を収集・保管するサーバーを運用していません。本ポリシーでは、本アプリが扱うデータについて説明します。</p>
+
+        <h2>1. 端末内に保存されるデータ</h2>
+        <p>観測点・目的点・My観測点・My目的点・My辻検索・My天体・Myセット・各種設定などの入力内容は、すべて利用者のブラウザのローカルストレージ(端末内)に保存されます。これらのデータが当プロジェクトへ送信されることはありません。データの確認・バックアップ・消去は、アプリ内のバックアップメニューおよび <a href="reset.html">データ管理ページ(reset.html)</a> からいつでも行えます。</p>
+
+        <h2>2. Googleアカウント連携(任意)</h2>
+        <p>本アプリは、利用者が希望する場合にのみ、Googleアカウントでログインして、端末内のデータを利用者自身のGoogleドライブに保存・同期できます。</p>
+        <ul>
+            <li>要求する権限は「このアプリで使用するファイルのみへのアクセス(drive.fileスコープ)」だけです。Googleドライブ内の他のファイルにはアクセスできません。</li>
+            <li>保存先は利用者自身のGoogleドライブであり、当プロジェクトが利用者のデータを受け取ること・閲覧することはありません。</li>
+            <li>ログインで取得するアクセストークンは端末のメモリ内でのみ扱い、保存しません。</li>
+            <li>連携はいつでも解除できます(アプリ内のログアウト、または<a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Googleアカウントの設定</a>からアクセス権を削除)。</li>
+        </ul>
+        <p>本アプリによるGoogle APIから受領した情報の利用は、<a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google APIサービスのユーザーデータに関するポリシー</a>(限定的な使用の要件を含む)に準拠します。</p>
+
+        <h2>3. アクセス数の集計</h2>
+        <p>本アプリは、ページ閲覧時にアクセス数の集計のための匿名のカウント通信を行います。送信されるのはカウントの要求のみで、氏名・メールアドレス等の個人を特定する情報は送信しません。</p>
+
+        <h2>4. 外部サービスへの通信</h2>
+        <p>本アプリは、機能の提供のために次の外部サービスと通信します。各サービスの利用には、それぞれの提供者のプライバシーポリシーが適用されます。</p>
+        <ul>
+            <li>地図タイル・標高データ(国土地理院、OpenStreetMap等): 地図の表示範囲に応じたタイル画像・標高の取得</li>
+            <li>Googleのサービス(ログイン・ドライブ・スプレッドシート): 上記2.の連携を利用する場合のみ</li>
+            <li>ライブラリ配信(CDN): アプリの動作に必要なプログラムの取得</li>
+        </ul>
+        <p>これらの通信には、技術的な仕組み上、IPアドレス等が各サービス提供者へ伝わります。</p>
+
+        <h2>5. Cookie・トラッキング</h2>
+        <p>本アプリ自体は、Cookieを使った利用者の追跡や、広告・アクセス解析サービスを使用していません。</p>
+
+        <h2>6. ポリシーの変更</h2>
+        <p>本ポリシーの内容は、必要に応じて変更されることがあります。変更後の内容は本ページに掲載した時点で効力を生じます。</p>
+
+        <h2>7. お問い合わせ</h2>
+        <p>本ポリシーに関するお問い合わせは、<a href="https://github.com/takeyosui15/soranotsuji" target="_blank" rel="noopener">GitHubリポジトリ</a>までお願いします。</p>
+
+        <p class="date">制定日: 2026年7月15日<br>Sora no Tsuji Project</p>
+    </div>
+
+    <a href="index.html" class="back-link">トップページへ戻る</a>
+
+</body>
+</html>

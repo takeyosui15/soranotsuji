@@ -1,3 +1,18 @@
+/*
+宙の辻 - Sora no Tsuji
+Copyright (C) 2026 Takeyoshi Watanabe (Sora no Tsuji Project)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
 // 辻ライン (DP線) 計算 Web Worker
 // メインスレッドから 1天体・1時間分のチャンクを受け取り、
 // サンプリング間隔ごとに可視点 (altitude > limit) を計算する。
@@ -168,8 +183,10 @@ self.onmessage = (e) => {
         startOfDayMs, hourStart, hourEnd,
         valElev, targetElev, limit, distLimit,
         taskId,
-        stepSeconds  // optional: サンプリング間隔(秒) デフォルト 1
+        stepSeconds,  // optional: サンプリング間隔(秒) デフォルト 1
+        altOffset     // optional: 辻オフセット視高度(°) — 天体が「目的点の見かけ高度+この角度」に来る位置を求める(第85ラウンド・項目12)
     } = e.data;
+    const altOff = Number(altOffset) || 0;
 
     const refr = refractionEnabled ? 'normal' : null;
     const points = [];
@@ -206,7 +223,7 @@ self.onmessage = (e) => {
             if (hor.altitude <= limit) { limitReached = true; break; }
 
             const tgtLatForCalc = hasTarget ? targetData.lat : undefined;
-            const dist = calculateDistanceForAltitudes(hor.altitude, valElev, targetElev, k, curLat, tgtLatForCalc);
+            const dist = calculateDistanceForAltitudes(hor.altitude - altOff, valElev, targetElev, k, curLat, tgtLatForCalc);
             if (dist <= 0 || dist >= distLimit) { limitReached = true; break; }
 
             if (!hasTarget) {

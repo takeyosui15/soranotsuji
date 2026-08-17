@@ -1,0 +1,61 @@
+{
+  "name": "koushi-preview",
+  "displayName": "Koushi: Markdown Spanning Table",
+  "description": "Write tables with merged cells (colspan/rowspan) as Markdown-style bullet lists. Renders ```koushi fences in the Markdown preview, with editor highlighting. 結合セル対応の表をMarkdownの箇条書きで書けるKoushi(格子)記法のプレビュー+ハイライト",
+  "version": "0.3.2",
+  "publisher": "takeyosui15",
+  "license": "MIT",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "table",
+    "colspan",
+    "rowspan",
+    "preview"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./koushi-preview.css"
+    ],
+    "languages": [
+      {
+        "id": "koushi",
+        "aliases": [
+          "Koushi"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "koushi",
+        "scopeName": "source.koushi",
+        "path": "./syntaxes/koushi.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.koushi.codeblock",
+        "path": "./syntaxes/koushi-markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.koushi": "koushi"
+        }
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takeyosui15/koushi"
+  }
+}
