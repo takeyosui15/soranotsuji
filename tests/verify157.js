@@ -20,7 +20,8 @@ check('V0 Version Historyに1.74.0の行がある', src.includes('Version 1.74.0
 (async()=>{
   const b=await chromium.launch({executablePath:EXE,headless:true,args:ARGS});
 
-  // C1+C2: 発行(既定は0キー・変えた天体だけ発行)と短縮URLの作成
+  // C1+C2: 発行と短縮URLの作成(第108ラウンドで常時発行へ意図更新: 既定値でも44キー全部を発行し、
+  // 開いた側の変更色が残らないようにする。既定値は辞書v19のペアが1コードに畳む)
   let shortUrl=null, expColor=null;
   {
     const ctx=await b.newContext({viewport:{width:900,height:900},timezoneId:'Asia/Tokyo'});
@@ -32,7 +33,9 @@ check('V0 Version Historyに1.74.0の行がある', src.includes('Version 1.74.0
     await p.waitForTimeout(400);
     const r=await p.evaluate(()=>{
       const bodyKeys=(params)=>[...params.keys()].filter(k=>k.startsWith('bodyColor')||k.startsWith('bodyDash'));
-      const before=bodyKeys(buildCommonUrlParams('fixed'));   // 全て既定→0キー
+      const pBefore=buildCommonUrlParams('fixed');
+      const before=bodyKeys(pBefore);   // 常時発行→全既定でも44キー
+      const defVals={ sun: pBefore.get('bodyColorSun'), moon: pBefore.get('bodyDashMoon') };
       const sun=appState.bodies.find(x=>x.id==='Sun');
       const moon=appState.bodies.find(x=>x.id==='Moon');
       const venus=appState.bodies.find(x=>x.id==='Venus');   // 既定で非表示の天体
@@ -40,14 +43,15 @@ check('V0 Version Historyに1.74.0の行がある', src.includes('Version 1.74.0
       const params=buildCommonUrlParams('fixed');
       params.set('mode','preview');
       const after=bodyKeys(params);
-      return { before, after,
+      return { before, after, defVals,
+               defMatch: defVals.sun===DEFAULT_BODIES.find(x=>x.id==='Sun').color && defVals.moon==='0',
                vals: { sun: params.get('bodyColorSun'), moon: params.get('bodyDashMoon'), venus: params.get('bodyColorVenus') },
                short: '?query='+encodeQueryParam(params.toString()),
                ver: encodeQueryParam('a=1').slice(0,4) };
     });
-    check('C1 全て既定なら44キーが1つも付かない(URL長不変)', r.before.length===0, JSON.stringify(r.before));
-    check('C1 変えた天体だけ発行(太陽の色・月の線種・非表示の金星の色)',
-      r.after.length===3&&r.vals.sun==='#123456'&&r.vals.moon==='1'&&r.vals.venus==='#ABCDEF', JSON.stringify(r));
+    check('C1 全て既定でも44キー全部が付く(常時発行=第108)+値は既定値', r.before.length===44&&r.defMatch, JSON.stringify({n:r.before.length,defVals:r.defVals}));
+    check('C1 変えた天体は変更値で発行(太陽の色・月の線種・非表示の金星の色)+44キーのまま',
+      r.after.length===44&&r.vals.sun==='#123456'&&r.vals.moon==='1'&&r.vals.venus==='#ABCDEF', JSON.stringify(r.vals));
     // 版数は17以上(v17=天体色/線種の辞書が入った版)。最新版の等値ピンはverify125のM0が持つ
     // (第96ラウンドでv18が積まれた際に版数非依存へ緩和=verify140 T1と同じ運用)
     check('C2 短縮URLはv17以降の辞書でエンコードされる', /^~(1[7-9]|[2-9]\d)~$/.test(r.ver), r.ver);

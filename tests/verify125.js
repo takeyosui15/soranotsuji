@@ -25,7 +25,7 @@ new Function('exports', src.slice(begin, end) +
 // ---- M0: 版数ピン(最新のverifyに集約)----
 check('M0 APP_VERSIONが存在(版数ピンは最新のverifyに集約)', /APP_VERSION = '\d+\.\d+\.\d+'/.test(src) || !!process.argv[2]);
 check('M0 Version Historyに最新版の行がある', /Version \d+\.\d+\.\d+ - /.test(src) || !!process.argv[2]);
-check('M0 辞書は18版(v18が最新。第62=曜日・第80=月間・第88=大気差/気象/基本オプション・第91=天体色/線種・第96=花火頻度追加)', qp.VERSIONS.length === 18, `versions=${qp.VERSIONS.length}`);
+check('M0 辞書は19版(v19が最新。第62=曜日・第80=月間・第88=大気差/気象/基本オプション・第91=天体色/線種・第96=花火頻度・第108=天体色既定値ペア+発行漏れ4キー追加)', qp.VERSIONS.length === 19, `versions=${qp.VERSIONS.length}`);
 
 // ---- M1: 第3規則の形状(「&キー名=既定値」: 先頭&+キー名+1つの=+区切りなしの値) ----
 const lintKeydefShape = (keydefs) =>
@@ -57,8 +57,8 @@ const lintKeydefKeys = (keydefs, knownKeys) =>
 
 // ---- M4: ゴールデン標本(v13辞書の凍結+エンコーダの決定性) ----
 {
-  const g = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'qp-v18-golden.json'), 'utf8'));
-  // v13〜v17発行URLの凍結保証(復号のみ): 旧ゴールデンが今も元文字列へ戻ること
+  const g = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'qp-v19-golden.json'), 'utf8'));
+  // v13〜v18発行URLの凍結保証(復号のみ): 旧ゴールデンが今も元文字列へ戻ること
   const g13 = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'qp-v13-golden.json'), 'utf8'));
   check('M4 v13発行の旧ゴールデンの復号が今も元文字列へ戻る(発行済みURLの保証)', qp.dec(g13.golden) === g13.long);
   const g14 = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'qp-v14-golden.json'), 'utf8'));
@@ -69,8 +69,10 @@ const lintKeydefKeys = (keydefs, knownKeys) =>
   check('M4 v16発行の旧ゴールデンの復号が今も元文字列へ戻る(発行済みURLの保証)', qp.dec(g16.golden) === g16.long);
   const g17 = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'qp-v17-golden.json'), 'utf8'));
   check('M4 v17発行の旧ゴールデンの復号が今も元文字列へ戻る(発行済みURLの保証)', qp.dec(g17.golden) === g17.long);
+  const g18 = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'qp-v18-golden.json'), 'utf8'));
+  check('M4 v18発行の旧ゴールデンの復号が今も元文字列へ戻る(発行済みURLの保証)', qp.dec(g18.golden) === g18.long);
   const e = qp.enc(g.long);
-  check('M4 エンコード出力がゴールデンとバイト一致(v18辞書の決定性)', e === g.golden,
+  check('M4 エンコード出力がゴールデンとバイト一致(v19辞書の決定性)', e === g.golden,
     `len=${e.length}(golden=${g.golden.length})`);
   check('M4 ゴールデンの復号が元文字列へ戻る', qp.dec(g.golden) === g.long);
   // 第3規則の効果の下限保証: 旧v12発行の同一内容より十分短い(効果が消えたら検知する)

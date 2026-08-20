@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.85.1 - 2026-08-20: fix: 第108→110ラウンド — 共有URLの不具合修正(第106〜107の調査・議論を受けた案A改・依頼者GO。第110ラウンド: 依頼者指摘「同じURLが意図どおりに開かれないのは不具合」により、機能追加の1.86.0ではなく不具合修正のパッチ版1.85.1として版数を付け直し):①位置情報URL(全部盛り)に辻検索条件51キー+辻メッシュ条件50キーを発行(発行部は辻検索/辻メッシュURLと共用の_emitTsujiSearchCondParams等へ抽出)。検索結果を出した画面の共有は「条件+パネル開閉由来の自動実行」で開くたび同じ結果を再計算して再現 ②復元のmode毎の適用ゲートを廃止(URLに有るキーは常に適用=「発行は絞る、復元は絞らない」。基準方位角/視高度の上書き保護もmode問わずへ) ③天体色/線種を常時発行に(既定値でも省略しない。開いた側の変更色が残らない。既定値のままのURLが変更したURLより短くなるよう短縮辞書v19に既定値ペア44個を追加=依頼者の採用条件・実測536字<592字) ④発行漏れ4キー(soraGrayscale・soraLabelScale・smBldg・smBldgTex)の発行+復元を追加 ⑤短縮URL辞書v19(天体色44ペア+新4キーの8シード。v18以前は復号のみ保証で凍結)
 Version 1.85.0 - 2026-08-17: fix: 第103ラウンド — 移動量の読みの「-0.0」表示を解消: 前/右の分解は三角関数の丸め残差で数学上0の成分が±1e-16m規模の負値になることがあり(基準方位角60°などで「前-0.0m」)、表示精度0.1mで0になる負値は「+0.0」と出すよう整形を修正(実移動・位置反映への影響はもとから皆無=残差は原子1個より小さい)
 Version 1.84.0 - 2026-08-17: fix: 第102ラウンド — 観測点の回転を最終確定(依頼者のデッサン整合の修正): 体の向きとカメラの向きは同じ(どちらも基準方位角+カメラオフセット方位角)。回転ボタン=体を回す=カメラオフセット方位角が±1°変わる(値も入力欄も動く。カメラ向きボタンの方位側と同じ動き)。実装は_smMoveHeadingを全廃し、回転ボタンを_smCamNudgeMoveへ接続(第98までの形+接続1点に収束)。移動と読みの分解は体の向き=基準+オフセット基準。カメラ向きボタン押下時に読みも再分解するよう改善。ツールチップ・デッサン06・リリースノートを更新
 Version 1.83.0 - 2026-08-17: fix: 第101ラウンド — 観測点の回転を依頼者仕様に確定(第3の明確化への対応): 回転=体の向きを回す。体に載っているカメラも一緒に回るので画面(見え方)は回る。ただしカメラオフセット方位角は「体基準」の角度なので値は変わらない(0°のまま)。第100との差分=プレビューのカメラ角(2描画経路のaz)に体の回転を追加した1点(観測点の位置・前後左右の歩く向き・読み・リセット/位置反映の扱いは第100のまま)。ツールチップ・デッサン06を体の向きの表現へ更新
@@ -149,7 +150,7 @@ Version 1.0.0 - 2026-01-29: Initial release
 // 1. 定数定義
 // ============================================================
 
-const APP_VERSION = '1.85.0';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
+const APP_VERSION = '1.85.1';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
 
 /** アプリのバージョン文字列を返す (index.htmlのフッター表示などから利用) */
 function getAppVersion() {
@@ -13841,7 +13842,28 @@ const _QP_SEEDS_V17 = _QP_SEEDS_V16.concat(_QP_BODY_IDS_V17.flatMap(id => ['&bod
 // v18: 第96ラウンド。花火モードの頻度スライダー(fwFreq)のシード。
 // 第3規則「&キー名=既定値」(v1.78.0時点の既定値50で凍結)+既定値以外用の「&キー名=」
 const _QP_SEEDS_V18 = _QP_SEEDS_V17.concat(['&fwFreq=50', '&fwFreq=']);
-const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18];   // 添字+1=版数。最新版でエンコードする
+// v19: 第108ラウンド。①天体色/線種の常時発行化に伴う「&キー名=既定値」44ペア(既定のままのURLが
+// 1キー=1コードに畳まれ、変更したURLより短くなる=依頼者の採用条件)。値はv1.85.0時点の
+// DEFAULT_BODIESから凍結したリテラル(既定値が将来変わってもこの配列は変更しない=発行済みURL保護)。
+// ②今回から発行する4キー(白黒・注記文字・都市モード・テクスチャ)の名前シード+既定値ペア。
+// ※辻検索/辻メッシュの検索条件キーはv12〜v15のシードに収録済みのため追加不要(基準方位角
+//   tsujiAz等の値は位置依存なのでシードに不適=そのまま学習に任せる)
+const _QP_SEEDS_V19 = _QP_SEEDS_V18.concat([
+    '&bodyColorMilkyWay=%23DDA0DD', '&bodyDashMilkyWay=0', '&bodyColorSun=%23FF0000', '&bodyDashSun=0',
+    '&bodyColorMoon=%23FFFF00', '&bodyDashMoon=0', '&bodyColorMercury=%2300BFFF', '&bodyDashMercury=0',
+    '&bodyColorVenus=%23FFC0CB', '&bodyDashVenus=0', '&bodyColorMars=%23FFA500', '&bodyDashMars=0',
+    '&bodyColorJupiter=%23A52A2A', '&bodyDashJupiter=0', '&bodyColorSaturn=%23008000', '&bodyDashSaturn=0',
+    '&bodyColorUranus=%23ADFF2F', '&bodyDashUranus=0', '&bodyColorNeptune=%234B0082', '&bodyDashNeptune=0',
+    '&bodyColorPluto=%23808080', '&bodyDashPluto=0', '&bodyColorPolaris=%23000000', '&bodyDashPolaris=0',
+    '&bodyColorMerak=%23654321', '&bodyDashMerak=0', '&bodyColorMintaka=%23FFFFFF', '&bodyDashMintaka=0',
+    '&bodyColorSubaru=%230000FF', '&bodyDashSubaru=0', '&bodyColorM42=%23800080', '&bodyDashM42=0',
+    '&bodyColorVega=%23FFA500', '&bodyDashVega=1', '&bodyColorAltair=%23008000', '&bodyDashAltair=1',
+    '&bodyColorDeneb=%23FFD700', '&bodyDashDeneb=1', '&bodyColorBetelgeuse=%23FF0000', '&bodyDashBetelgeuse=1',
+    '&bodyColorSirius=%2300BFFF', '&bodyDashSirius=1', '&bodyColorProcyon=%23ADFF2F', '&bodyDashProcyon=1',
+    '&soraGrayscale=', '&soraGrayscale=true', '&soraLabelScale=', '&soraLabelScale=100', '&smBldg=',
+    '&smBldg=true', '&smBldgTex=', '&smBldgTex=true',
+]);
+const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19];   // 添字+1=版数。最新版でエンコードする
 const _QP_PRIME_FROM = 12;   // この版以降は「仮想の先頭&」を足して圧縮する(先頭キーも「&キー名=」の辞書に乗せるため)
 
 function encodeQueryParam(str) {
@@ -13990,7 +14012,9 @@ function parseTimezoneOffsetMinutes(tzString) {
 
 // 共通のURLパラメータを構築するヘルパー。
 // profile(第95ラウンド・依頼者指示「URL取得ボタンには、それぞれ、意味があります」):
-//   'full'    = 位置情報メニューのURL(宙の辻の画面再現。再現に必要なものを全て詰め込む)
+//   'full'    = 位置情報メニューのURL(宙の辻の画面再現。再現に必要なものを全て詰め込む。
+//               第108ラウンドから辻検索/辻メッシュの検索条件も乗せる=検索結果を出した画面も
+//               条件ごと再現できる。「発行は絞る、復元は絞らない」の発行側が全部盛り)
 //   'tsuji'   = 辻検索/辻メッシュ検索のURL(検索の再現に必要なもの: 地点・表示天体・
 //               大気差/気象・天の川の基準点・:除外範囲・:辻オフセット。宙の窓/花火/宙検索/
 //               パネル状態/天体色/全天儀表示は発行しない)
@@ -13999,7 +14023,7 @@ function parseTimezoneOffsetMinutes(tzString) {
 //               宙検索/パネル状態/:除外範囲/:辻オフセットは発行しない)
 // キーが無い項目は開いた側の既定値のままになる(restoreFromUrlは有るキーだけを適用する)
 const _URL_PROFILE_GROUPS = {
-    full:     { panels: 1, sora: 1, fw: 1, ss: 1, bodyStyle: 1, atmo: 1, mwBase: 1, mwShow: 1, elevEx: 1, tsujiLine: 1 },
+    full:     { panels: 1, sora: 1, fw: 1, ss: 1, bodyStyle: 1, atmo: 1, mwBase: 1, mwShow: 1, elevEx: 1, tsujiLine: 1, tsujiCond: 1, tsujiMeshCond: 1 },
     tsuji:    { atmo: 1, mwBase: 1, elevEx: 1, tsujiLine: 1 },
     soramado: { sora: 1, fw: 1, bodyStyle: 1, atmo: 1, mwBase: 1, mwShow: 1 },
 };
@@ -14062,7 +14086,8 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
      'soraPeaking', 'soraTraj', 'soraCenterCross', 'soraTargetCross', 'soraSearchCenter',
      'soraBaseAz', 'soraBaseAlt', 'soraOffsetAz', 'soraOffsetAlt', 'soraViewRange',
      'soraMovInterval', 'soraMovShots', 'soraMovFps', 'soraMovDispStep', 'soraMovImgMb', 'soraMovPlayMode',
-     'soraMwBrightness', 'soraElevShade', 'soraSunShade', 'soraExpFormat', 'soraExpW', 'soraExpH'].forEach(k => {
+     'soraMwBrightness', 'soraElevShade', 'soraSunShade', 'soraExpFormat', 'soraExpW', 'soraExpH',
+     'soraGrayscale', 'soraLabelScale', 'smBldg', 'smBldgTex'].forEach(k => {   // 末尾4キーは第108ラウンドで発行漏れを解消(白黒・注記文字・都市モード・テクスチャ)
         const v = appState[k];
         params.set(k, typeof v === 'boolean' ? (v ? 'true' : 'false') : String(v));
     });
@@ -14092,10 +14117,11 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
     if (appState.ssRange !== null) params.set('ssRange', String(appState.ssRange));
     }
 
-    // 組込天体の色/線種(第91ラウンド・v16第2弾=依頼者承認済みの叩き台どおり): 天体毎キー・
-    // 既定値(DEFAULT_BODIES)のままの天体はキー自体を発行しない(全既定なら44キーが0個=URL長不変)。
-    // 非表示でも既定から変えた天体は発行する。キー名はリンター(verify124のemitKeys)が静的に
-    // 読めるよう配列リテラルで持つ(DEFAULT_BODIESの並び順で色→線種の順に固定)。full/宙の窓URL
+    // 組込天体の色/線種(第91ラウンド・v16第2弾): 天体毎キーbodyColor<ID>/bodyDash<ID>。
+    // 第108ラウンドから常時発行(既定値でも省略しない): 「作者が既定色に戻した」も毎回URLで伝わり、
+    // 開いた側の変更色が残らない。既定値のペアは短縮辞書v19が1コードに畳むので、既定のままのURLは
+    // 変更したURLより短い(依頼者の採用条件・実測536字<592字)。キー名はリンター(verify124のemitKeys)が
+    // 静的に読めるよう配列リテラルで持つ(DEFAULT_BODIESの並び順で色→線種の順に固定)。full/宙の窓URL
     if (inc.bodyStyle)
     ['bodyColorMilkyWay', 'bodyDashMilkyWay', 'bodyColorSun', 'bodyDashSun', 'bodyColorMoon', 'bodyDashMoon',
      'bodyColorMercury', 'bodyDashMercury', 'bodyColorVenus', 'bodyDashVenus', 'bodyColorMars', 'bodyDashMars',
@@ -14108,10 +14134,9 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
         const isColor = k.startsWith('bodyColor');
         const id = k.slice(isColor ? 9 : 8);
         const b = appState.bodies.find(x => x.id === id);
-        const d = DEFAULT_BODIES.find(x => x.id === id);
-        if (!b || !d) return;
-        if (isColor) { if (b.color !== d.color) params.set(k, b.color); }
-        else if (!!b.isDashed !== !!d.isDashed) params.set(k, b.isDashed ? '1' : '0');
+        if (!b) return;
+        if (isColor) params.set(k, b.color);
+        else params.set(k, b.isDashed ? '1' : '0');
     });
 
     // 大気差・気象・基本オプション(第88ラウンド・v16 URL第1弾=第81ラウンドで依頼者承認。
@@ -14144,6 +14169,11 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
         const v = appState[k];
         params.set(k, typeof v === 'boolean' ? (v ? 'true' : 'false') : String(v));
     });
+
+    // 辻検索/辻メッシュの検索条件(第108ラウンド: fullにも乗せる。検索結果を出した画面の共有は
+    // 「条件+パネル開閉由来の自動実行」で毎回同じ結果を再計算して再現する)
+    if (inc.tsujiCond) _emitTsujiSearchCondParams(params);
+    if (inc.tsujiMeshCond) _emitTsujiMeshCondParams(params);
 
     return params;
 }
@@ -14247,10 +14277,9 @@ function copySoramadoUrl(includeDateTime) {
     deliverShareUrl(buildShareUrl(params), '現在の宙の窓を開く');
 }
 
-function copyTsujiSearchUrl(includeDateTime) {
-    const params = buildCommonUrlParams(includeDateTime, 'tsuji');   // 辻検索の再現に絞る(第95ラウンド)
-    params.set('mode', 'tsujisearch');
-
+/** 辻検索の検索条件キー一式(51キー)を発行する。辻検索URLとfull=位置情報URLの共用(第108ラウンド)。
+ *  発行順は従来の辻検索URLのまま(短縮辞書の学習列を変えない) */
+function _emitTsujiSearchCondParams(params) {
     params.set('tsujiSearchDays', String(appState.tsujiSearchDays));
     params.set('tsujiAz', String(appState.tsujiSearchBaseAz));
     params.set('tsujiAlt', String(appState.tsujiSearchBaseAlt));
@@ -14290,14 +14319,18 @@ function copyTsujiSearchUrl(includeDateTime) {
     params.set('tsujiDowSat', appState.tsujiDowSat ? 'true' : 'false');
     params.set('tsujiDowSun', appState.tsujiDowSun ? 'true' : 'false');
     ['tsujiMonthFilter', 'tsujiMonth1', 'tsujiMonth2', 'tsujiMonth3', 'tsujiMonth4', 'tsujiMonth5', 'tsujiMonth6', 'tsujiMonth7', 'tsujiMonth8', 'tsujiMonth9', 'tsujiMonth10', 'tsujiMonth11', 'tsujiMonth12'].forEach(k => params.set(k, appState[k] ? 'true' : 'false'));
+}
+
+function copyTsujiSearchUrl(includeDateTime) {
+    const params = buildCommonUrlParams(includeDateTime, 'tsuji');   // 辻検索の再現に絞る(第95ラウンド)
+    params.set('mode', 'tsujisearch');
+    _emitTsujiSearchCondParams(params);
 
     deliverShareUrl(buildShareUrl(params), '現在の辻検索を開く');
 }
 
-function copyTsujiMeshUrl(includeDateTime) {
-    const params = buildCommonUrlParams(includeDateTime, 'tsuji');   // 辻メッシュ検索の再現に絞る(第95ラウンド)
-    params.set('mode', 'tsujimesh');
-
+/** 辻メッシュ検索の検索条件キー一式(50キー)を発行する。辻メッシュURLとfull=位置情報URLの共用(第108ラウンド) */
+function _emitTsujiMeshCondParams(params) {
     params.set('tsujiMeshDays', String(appState.tsujiMeshDays));
     params.set('tsujiMeshAz', String(appState.tsujiMeshBaseAz));
     params.set('tsujiMeshAlt', String(appState.tsujiMeshBaseAlt));
@@ -14336,6 +14369,12 @@ function copyTsujiMeshUrl(includeDateTime) {
     params.set('tsujiMeshDowSat', appState.tsujiMeshDowSat ? 'true' : 'false');
     params.set('tsujiMeshDowSun', appState.tsujiMeshDowSun ? 'true' : 'false');
     ['tsujiMeshMonthFilter', 'tsujiMeshMonth1', 'tsujiMeshMonth2', 'tsujiMeshMonth3', 'tsujiMeshMonth4', 'tsujiMeshMonth5', 'tsujiMeshMonth6', 'tsujiMeshMonth7', 'tsujiMeshMonth8', 'tsujiMeshMonth9', 'tsujiMeshMonth10', 'tsujiMeshMonth11', 'tsujiMeshMonth12'].forEach(k => params.set(k, appState[k] ? 'true' : 'false'));
+}
+
+function copyTsujiMeshUrl(includeDateTime) {
+    const params = buildCommonUrlParams(includeDateTime, 'tsuji');   // 辻メッシュ検索の再現に絞る(第95ラウンド)
+    params.set('mode', 'tsujimesh');
+    _emitTsujiMeshCondParams(params);
 
     deliverShareUrl(buildShareUrl(params), '現在の辻メッシュ検索を開く');
 }
@@ -14448,8 +14487,9 @@ function restoreFromUrl() {
         syncMyStarsToBodies();
     }
 
-    // 辻検索パラメータ (mode=tsujisearchの時のみ)
-    if (mode === 'tsujisearch') {
+    // 辻検索パラメータ (第108ラウンド: mode問わずURLに有るキーだけ適用=「発行は絞る、復元は絞らない」。
+    // 位置情報URL=fullにも検索条件が乗るようになったため。{}はコードの章立て用)
+    {
         if (params.has('tsujiSearchDays')) { const v = parseInt(params.get('tsujiSearchDays')); if (!isNaN(v)) appState.tsujiSearchDays = v; }
         if (params.has('tsujiAz')) { const v = parseFloat(params.get('tsujiAz')); if (!isNaN(v)) appState.tsujiSearchBaseAz = v; }
         if (params.has('tsujiAlt')) { const v = parseFloat(params.get('tsujiAlt')); if (!isNaN(v)) appState.tsujiSearchBaseAlt = v; }
@@ -14490,11 +14530,15 @@ function restoreFromUrl() {
         if (params.has('tsujiDowSun')) { appState.tsujiDowSun = params.get('tsujiDowSun') === 'true'; }
         if (params.has('tsujiMonthFilter')) { appState.tsujiMonthFilter = params.get('tsujiMonthFilter') === 'true'; }
         _MONTH_DEFS.forEach(([suf]) => { if (params.has('tsujiMonth' + suf)) appState['tsujiMonth' + suf] = params.get('tsujiMonth' + suf) === 'true'; });
+        // URLの基準方位角/視高度を自動再計算で上書きしない(第36ラウンドの保護。第108でmode問わずへ)
+        if (params.has('tsujiAz') || params.has('tsujiAlt')) {
+            appState._lastTsujiPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+        }
     }
 
-    // 辻メッシュ検索パラメータ (mode=tsujimeshの時のみ)
-    if (mode === 'tsujimesh') {
-        _tsujiLinkInitFrom = 'mesh';   // 起動時の連動はURLが復元したメッシュ側を正とする(第81ラウンド)
+    // 辻メッシュ検索パラメータ (第108ラウンド: mode問わずURLに有るキーだけ適用)
+    {
+        if (mode === 'tsujimesh') _tsujiLinkInitFrom = 'mesh';   // 起動時の連動はメッシュ意図のURLの時だけメッシュ側を正とする(第81ラウンド)
         const meshNum = (pk, sk) => { if (params.has(pk)) { const v = parseFloat(params.get(pk)); if (!isNaN(v)) appState[sk] = v; } };
         const meshBool = (pk, sk) => { if (params.has(pk)) appState[sk] = params.get(pk) === 'true'; };
         const meshStr = (pk, sk) => { if (params.has(pk)) appState[sk] = params.get(pk); };
@@ -14519,6 +14563,10 @@ function restoreFromUrl() {
             meshStr('tsujiMesh' + G + 'PrePostDir', 'tsujiMesh' + G + 'PrePostDir');
             meshStr('tsujiMesh' + G + 'Offset', 'tsujiMesh' + G + 'Offset');
         });
+        // URLの基準方位角/視高度を自動再計算で上書きしない(第108でmode問わずへ)
+        if (params.has('tsujiMeshAz') || params.has('tsujiMeshAlt')) {
+            appState._lastTsujiMeshPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+        }
     }
 
     // 宙の窓メニュー＋コントロールメニューの全項目を復元(preview/tsujisearch の両モード共通)。
@@ -14530,8 +14578,9 @@ function restoreFromUrl() {
     ['soraAspectW', 'soraAspectH', 'soraFocal', 'soraFNumberIdx', 'soraFocusDist', 'soraFisheyeStrength', 'soraPanoAov',
      'soraBaseAz', 'soraBaseAlt', 'soraOffsetAz', 'soraOffsetAlt', 'soraViewRange',
      'soraMovInterval', 'soraMovShots', 'soraMovFps', 'soraMovDispStep', 'soraMovImgMb',
-     'soraMwBrightness', 'soraElevShade', 'soraSunShade', 'soraExpW', 'soraExpH'].forEach(soraNum);
-    ['soraFisheye', 'soraPanorama', 'soraPeaking', 'soraTraj', 'soraCenterCross', 'soraTargetCross', 'soraSearchCenter'].forEach(soraBool);
+     'soraMwBrightness', 'soraElevShade', 'soraSunShade', 'soraExpW', 'soraExpH', 'soraLabelScale'].forEach(soraNum);
+    ['soraFisheye', 'soraPanorama', 'soraPeaking', 'soraTraj', 'soraCenterCross', 'soraTargetCross', 'soraSearchCenter',
+     'soraGrayscale', 'smBldg', 'smBldgTex'].forEach(soraBool);   // 末尾4キー(soraLabelScale含む)は第108ラウンドで発行漏れ解消とセットで復元対応
     // 花火モード(宙の窓メニュー55〜70段目)
     soraBool('fwEnabled'); soraBool('fwShowPoint'); soraStr('fwSize'); soraStr('fwMode');
     ['fwLat', 'fwLng', 'fwElev', 'fwHeight', 'fwRadius', 'fwFreq', 'fwSpread'].forEach(soraNum);
@@ -14583,23 +14632,15 @@ function restoreFromUrl() {
         appState._soraLastPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
     }
 
-    // mode=tsujisearchの場合は辻検索を自動実行（UIが準備できた後に）
+    // mode=tsujisearchの場合は辻検索を自動実行（UIが準備できた後に。パネルキーを乗せない絞りURL用+
+    // 既発行URLの互換。基準方位角/視高度の保護は適用ブロック側へ移動=第108ラウンド）
     if (mode === 'tsujisearch') {
         appState._pendingTsujiSearch = true;
-        // URLの基準方位角/視高度を自動再計算で上書きしない(辻メッシュ/宙の窓と同じ保護。
-        // 第36ラウンドの整合性調査: 作成者が手動編集した基準値が閲覧側で再現されなかった)
-        if (params.has('tsujiAz') || params.has('tsujiAlt')) {
-            appState._lastTsujiPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
-        }
     }
     // mode=tsujimeshの場合は辻メッシュ検索を自動実行（UIが準備できた後に）
     if (mode === 'tsujimesh') {
         appState._pendingTsujiMesh = true;
         delete appState._pendingTsujiSearch;
-        // URLの基準方位角/視高度を自動再計算で上書きしない
-        if (params.has('tsujiMeshAz') || params.has('tsujiMeshAlt')) {
-            appState._lastTsujiMeshPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
-        }
     }
 
     // URLで実際に値が変わったキーだけを凍結する(変わらなかった項目は普段どおり保存され続ける)。

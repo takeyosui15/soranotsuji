@@ -18,9 +18,9 @@ const check=(n,ok,d)=>{ console.log(`${ok?'PASS':'FAIL'} ${n}${d?'  '+d:''}`); o
 const target = process.argv[2] || path.join(__dirname, '..', 'script.js');
 const src = fs.readFileSync(target, 'utf8');
 
-// ---- V0: 版数ピン(最新の検証が持つ) ----
-check('V0 版数ピン 1.85.0', /APP_VERSION = '1\.85\.0'/.test(src));
-check('V0 Version Historyに1.85.0の行がある', src.includes('Version 1.85.0 - ') || !!process.argv[2]);
+// ---- V0: 版数の存在(等値ピンは最新のverify165へ移譲=第108ラウンド) ----
+check('V0 APP_VERSIONが存在(版数ピンはverify165が持つ)', /APP_VERSION = '\d+\.\d+\.\d+'/.test(src));
+check('V0 Version Historyに版の行がある', /Version \d+\.\d+\.\d+ - /.test(src) || !!process.argv[2]);
 
 (async()=>{
   const b=await chromium.launch({executablePath:EXE,headless:true,args:ARGS});
