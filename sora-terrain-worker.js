@@ -116,8 +116,20 @@ async function loadTileData(url) {
 }
 
 self.onmessage = async (e) => {
-    const { reqId, url, urls, fbUrl, fb2Url, pts } = e.data;
+    const { reqId, url, urls, fbUrl, fb2Url, photoUrl, pts } = e.data;
     const out = new Array(pts.length);
+    // 写真テクスチャ(第116): 同じタイル座標の空中写真(seamlessphoto)から頂点色を最近傍画素で拾う。
+    // 取得失敗・URL無しの場合は rgb=null(メイン側で従来の標高グレーにフォールバック)
+    let photoImg;
+    const samplePhoto = async (p) => {
+        if (!photoUrl) return null;
+        if (photoImg === undefined) photoImg = await loadTileData(photoUrl);
+        if (!photoImg) return null;
+        const px = Math.min(255, (p.fX !== undefined ? p.fX : p.pX) | 0);
+        const py = Math.min(255, (p.fY !== undefined ? p.fY : p.pY) | 0);
+        const o = (py * 256 + px) * 4;
+        return [photoImg[o], photoImg[o + 1], photoImg[o + 2]];
+    };
     if (urls) {
         // z15チェーン(DEM5A→5B→5C)+z14親タイル+全球DEM(fb2Url。海外のみ実質有効)。
         // タイルは必要になるまで取得しない
@@ -139,7 +151,7 @@ self.onmessage = async (e) => {
                 if (fb2Img === undefined) fb2Img = await loadTileData(fb2Url);
                 if (fb2Img) v = sampleElev(fb2Img, p.fX, p.fY, p.nearest);
             }
-            out[i] = { idx: p.idx, elev: (v === null) ? 0 : v };
+            out[i] = { idx: p.idx, elev: (v === null) ? 0 : v, rgb: await samplePhoto(p) };
         }
         self.postMessage({ reqId, elevs: out });
         return;
@@ -162,7 +174,7 @@ self.onmessage = async (e) => {
                     : elevFromRGB(fb2ImgS[(p.pY * 256 + p.pX) * 4], fb2ImgS[(p.pY * 256 + p.pX) * 4 + 1], fb2ImgS[(p.pY * 256 + p.pX) * 4 + 2]);
             }
         }
-        out[i] = { idx: p.idx, elev: (v === null) ? 0 : v };
+        out[i] = { idx: p.idx, elev: (v === null) ? 0 : v, rgb: await samplePhoto(p) };
     }
     self.postMessage({ reqId, elevs: out });
 };

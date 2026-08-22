@@ -25,6 +25,7 @@ self.onmessage = (ev) => {
     if (!m || m.type !== 'judge') return;
     const { jobId, chunk0, chunk1, lat, lng, startTotal, endLat, endLng, endTotal, exclM } = m;
     const obsExclM = m.obsExclM || 0;   // 除外範囲(観測点側)。旧メッセージ形式では0(=無効)
+    const inv2R = m.inv2R || 0;         // 地球の丸み+気差 1/(2·Reff) (第116ラウンド。0=補正なし=旧動作)
 
     // タイル索引: key = tx*32768+ty → Int32Array(256*256, dm)
     const tiles15 = new Map();
@@ -66,6 +67,7 @@ self.onmessage = (ev) => {
         const sx15 = 128 * (sLng / 180 + 1) * scale15;
         const dx = (128 * (endLng / 180 + 1) * scale15 - sx15) / steps;
         const dLat = endLat - sLat;
+        const endDrop = distM * distM * inv2R;   // 目的点の沈み込み(_visJudgeCoreと同一の式・演算順)
         // 担当チャンクのみ判定(チャンク境界=逐次版のSEG=64境界と一致させ、緯度の線形補間もビット一致させる)
         outer:
         for (let c = chunk0; c < chunk1; c++) {
@@ -78,10 +80,11 @@ self.onmessage = (ev) => {
                 const e = elevAtPix15((sx15 + dx * j) | 0, (gyA + dgy * (j - j0)) | 0);
                 if (e === null || e === undefined) continue;
                 const r = j / steps;
-                const lineElev = sTotal + (endTotal - sTotal) * r;
-                if (e > lineElev) {
+                const d = distM * r;
+                const lineElev = sTotal + (endTotal - endDrop - sTotal) * r;
+                if (e - d * d * inv2R > lineElev) {
                     if (distM * (1 - r) <= exclM) continue;   // 除外範囲(目的点側)のNGは無視
-                    if (distM * r <= obsExclM) continue;      // 除外範囲(観測点側)のNGは無視
+                    if (d <= obsExclM) continue;              // 除外範囲(観測点側)のNGは無視
                     blocked[i] = 1;
                     break outer;   // この画素はNG確定(帯域内の早期打ち切り)
                 }

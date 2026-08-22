@@ -17,8 +17,8 @@ const target = process.argv[2] || path.join(__dirname, '..', 'script.js');
 const src = fs.readFileSync(target, 'utf8');
 
 // ---- V0: 版数ピン(最新の検証が持つ) ----
-check('V0 版数ピン 1.85.1', /APP_VERSION = '1\.85\.1'/.test(src));
-check('V0 Version Historyに1.85.1の行がある', src.includes('Version 1.85.1 - ') || !!process.argv[2]);
+check('V0 APP_VERSIONが存在(版数ピンはverify166へ移譲=第116ラウンド)', /APP_VERSION = '\d+\.\d+\.\d+'/.test(src));
+check('V0 Version Historyに版の行がある', /Version \d+\.\d+\.\d+ - /.test(src) || !!process.argv[2]);
 
 // ---- S1: 発行部の共用(静的検査: 検索条件の発行はヘルパー1箇所で、辻検索URLとfullの両方から呼ばれる) ----
 check('S1 検索条件の発行ヘルパーを辻検索URLとfullが共用',
@@ -68,8 +68,8 @@ check('S1 検索条件の発行ヘルパーを辻検索URLとfullが共用',
     check('U1 発行漏れだった4キー(soraGrayscale/soraLabelScale/smBldg/smBldgTex)も乗る(非既定値も反映)', urls.has4);
     check('U1 天体色/線種は常時44キー・宙の窓URL(soramado)には検索条件は乗らない(持ち場は発行側だけ)',
       urls.body44===44&&urls.soramadoNoCond, JSON.stringify({body44:urls.body44,soramadoNoCond:urls.soramadoNoCond}));
-    check('U2 短縮URLはv19で、既定色は変更色より短い(依頼者の採用条件の常設化)',
-      urls.ver==='~19~'&&urls.defLen<urls.chgLen, JSON.stringify({ver:urls.ver,def:urls.defLen,chg:urls.chgLen}));
+    check('U2 短縮URLはv19以降で、既定色は変更色より短い(依頼者の採用条件の常設化。最新版の等値ピンはverify125 M0)',
+      /^~(19|[2-9]\d)~$/.test(urls.ver)&&urls.defLen<urls.chgLen, JSON.stringify({ver:urls.ver,def:urls.defLen,chg:urls.chgLen}));
     check('E1 発行側ページエラーなし', errs.length===0, errs.join(' | ').slice(0,200));
     await ctx.close();
   }

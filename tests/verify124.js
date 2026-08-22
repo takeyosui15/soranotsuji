@@ -15,7 +15,7 @@ const begin = src.indexOf('const _QP_B64');
 const end = src.indexOf('function buildBaseUrl');
 const qp = {};
 new Function('exports', src.slice(begin, end) +
-  '\nexports.KEYS=_QP_KEYS_V12; exports.VALUES=_QP_VALUES_V12; exports.SEEDS12=_QP_SEEDS_V12; exports.SEEDS13=_QP_SEEDS_V13; exports.SEEDS14=_QP_SEEDS_V14; exports.SEEDS15=_QP_SEEDS_V15; exports.SEEDS16=_QP_SEEDS_V16; exports.SEEDS17=_QP_SEEDS_V17; exports.SEEDS18=_QP_SEEDS_V18; exports.SEEDS19=_QP_SEEDS_V19;' +
+  '\nexports.KEYS=_QP_KEYS_V12; exports.VALUES=_QP_VALUES_V12; exports.SEEDS12=_QP_SEEDS_V12; exports.SEEDS13=_QP_SEEDS_V13; exports.SEEDS14=_QP_SEEDS_V14; exports.SEEDS15=_QP_SEEDS_V15; exports.SEEDS16=_QP_SEEDS_V16; exports.SEEDS17=_QP_SEEDS_V17; exports.SEEDS18=_QP_SEEDS_V18; exports.SEEDS19=_QP_SEEDS_V19; exports.SEEDS20=_QP_SEEDS_V20;' +
   'exports.VERSIONS=_QP_SEED_VERSIONS; exports.PRIME_FROM=_QP_PRIME_FROM;' +
   'exports.enc=encodeQueryParam; exports.dec=decodeQueryParam;')(qp);
 
@@ -68,10 +68,11 @@ const lintCoverage = (dictKeys) => [...EMIT].filter(k => !dictKeys.includes(k));
   const v17Keys = qp.SEEDS17.filter(x => !qp.SEEDS16.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
   const v18Keys = qp.SEEDS18.filter(x => !qp.SEEDS17.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
   const v19Keys = qp.SEEDS19.filter(x => !qp.SEEDS18.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
-  const DICT_KEYS = qp.KEYS.concat(v14Keys, v15Keys, v16Keys, v17Keys, v18Keys, v19Keys);
+  const v20Keys = qp.SEEDS20.filter(x => !qp.SEEDS19.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
+  const DICT_KEYS = qp.KEYS.concat(v14Keys, v15Keys, v16Keys, v17Keys, v18Keys, v19Keys, v20Keys);
   const missing = lintCoverage(DICT_KEYS);
-  check('L2 URLビルダーが出力する全キーが辞書(v12キー+v14〜v19追加)にある(キー追加の入れ忘れ検知)',
-    missing.length === 0, missing.length ? '辞書漏れ: ' + missing.join(', ') : `emit=${EMIT.size}keys v14=${v14Keys.length} v15=${v15Keys.length} v16=${v16Keys.length} v17=${v17Keys.length} v18=${v18Keys.length} v19=${v19Keys.length}`);
+  check('L2 URLビルダーが出力する全キーが辞書(v12キー+v14〜v20追加)にある(キー追加の入れ忘れ検知)',
+    missing.length === 0, missing.length ? '辞書漏れ: ' + missing.join(', ') : `emit=${EMIT.size}keys v14=${v14Keys.length} v15=${v15Keys.length} v16=${v16Keys.length} v17=${v17Keys.length} v18=${v18Keys.length} v19=${v19Keys.length} v20=${v20Keys.length}`);
   const dead = DICT_KEYS.filter(k => !EMIT.has(k));
   check('L2 辞書に死にキー(どのビルダーも出力しないキー)がない', dead.length === 0, dead.join(', '));
   // 自己テスト: 辞書からキーを1つ削った版で漏れを検出できるか

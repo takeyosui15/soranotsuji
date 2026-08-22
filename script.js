@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.86.0 - 2026-08-22: fix/feat: 第116ラウンド — 可視判定へ地球の丸み+大気差を導入(茶臼山→ダイヤ槍の実戦報告=第115調査の帰結・依頼者GO)+宙の窓の写真テクスチャ: ①統一可視判定コア(_visJudgeCore)を「沈み込み補正付き比較」へ(drop=d²/2Reff を各標高から引いてから従来の直線補間と比較=見かけ高度比較と等価。Reffは視高度計算と同じWGS84局所半径+気差kの実効半径。放物線近似の誤差は300kmで数m)。標高グラフ・辻検索/My辻/辻メッシュの標高フィルタが一度に正確化(判定は保守側へ変わる=遠距離でOK→NGになり得る)。辻メッシュのワーカー並列判定(tm-vis-worker)も同一式・同一値でビット一致を維持 ②標高グラフの赤い見通し線を同じ実効地球でたわむ曲線描画へ+可視判定ポップアップの注記を「地球の丸みと大気差を考慮」へ更新 ③宙の窓「:写真テクスチャ」新設(soraPhotoTex・初期値オフ): 地理院の全国最新写真(シームレス)をDEMと同じタイル座標から頂点色として拾い山肌に貼る(頂点単位ドレープ。取得はDEMワーカー相乗り・域外/失敗は標高グレーのまま・太陽光ヒルシェードは写真にも掛かる) ④天体の軌跡線にマーカーと同じ大気差を適用(従来は無しで地平線際に最大0.5°のずれ) ⑤短縮URL辞書v20(soraPhotoTexの2シード。v19以前は復号のみ保証で凍結) ⑥第117ラウンド(リリース前の追補): 可視判定ポップアップ注記の「(v1.86.0から)」を削除(リリースノートが持ち場)・全天儀の天体軌跡線を方位線(中心→天体)と同じ太さのチューブ+背面破線3本重ねへ(_mwFrontBackLine→_mwTrajCircle。等赤緯円はトーラスで厳密描画)・ヘルプの可視判定2箇所を丸み+大気差込みの記述へ更新+「:写真テクスチャ」のヘルプ項目と出典(全国最新写真の構成・GRUS/Landsat-8の個別出所)を追加・地図ⓘの出典を「国土地理院(標高・写真)」へ ⑦第118ラウンド(リリース前の追補2): 全天儀の軌跡線をさらに2倍の太さ(0.005R=方位線の2倍)へ(スマホでの見やすさ=依頼者指定)
 Version 1.85.1 - 2026-08-20: fix: 第108→110ラウンド — 共有URLの不具合修正(第106〜107の調査・議論を受けた案A改・依頼者GO。第110ラウンド: 依頼者指摘「同じURLが意図どおりに開かれないのは不具合」により、機能追加の1.86.0ではなく不具合修正のパッチ版1.85.1として版数を付け直し):①位置情報URL(全部盛り)に辻検索条件51キー+辻メッシュ条件50キーを発行(発行部は辻検索/辻メッシュURLと共用の_emitTsujiSearchCondParams等へ抽出)。検索結果を出した画面の共有は「条件+パネル開閉由来の自動実行」で開くたび同じ結果を再計算して再現 ②復元のmode毎の適用ゲートを廃止(URLに有るキーは常に適用=「発行は絞る、復元は絞らない」。基準方位角/視高度の上書き保護もmode問わずへ) ③天体色/線種を常時発行に(既定値でも省略しない。開いた側の変更色が残らない。既定値のままのURLが変更したURLより短くなるよう短縮辞書v19に既定値ペア44個を追加=依頼者の採用条件・実測536字<592字) ④発行漏れ4キー(soraGrayscale・soraLabelScale・smBldg・smBldgTex)の発行+復元を追加 ⑤短縮URL辞書v19(天体色44ペア+新4キーの8シード。v18以前は復号のみ保証で凍結)
 Version 1.85.0 - 2026-08-17: fix: 第103ラウンド — 移動量の読みの「-0.0」表示を解消: 前/右の分解は三角関数の丸め残差で数学上0の成分が±1e-16m規模の負値になることがあり(基準方位角60°などで「前-0.0m」)、表示精度0.1mで0になる負値は「+0.0」と出すよう整形を修正(実移動・位置反映への影響はもとから皆無=残差は原子1個より小さい)
 Version 1.84.0 - 2026-08-17: fix: 第102ラウンド — 観測点の回転を最終確定(依頼者のデッサン整合の修正): 体の向きとカメラの向きは同じ(どちらも基準方位角+カメラオフセット方位角)。回転ボタン=体を回す=カメラオフセット方位角が±1°変わる(値も入力欄も動く。カメラ向きボタンの方位側と同じ動き)。実装は_smMoveHeadingを全廃し、回転ボタンを_smCamNudgeMoveへ接続(第98までの形+接続1点に収束)。移動と読みの分解は体の向き=基準+オフセット基準。カメラ向きボタン押下時に読みも再分解するよう改善。ツールチップ・デッサン06・リリースノートを更新
@@ -150,7 +151,7 @@ Version 1.0.0 - 2026-01-29: Initial release
 // 1. 定数定義
 // ============================================================
 
-const APP_VERSION = '1.85.1';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
+const APP_VERSION = '1.86.0';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
 
 /** アプリのバージョン文字列を返す (index.htmlのフッター表示などから利用) */
 function getAppVersion() {
@@ -366,6 +367,7 @@ const APP_DEFAULTS = {
     soraFisheye: { def: false, bool: 'coerce' },
     soraPeaking: { def: false, bool: 'coerce' },          // フォーカスピーキング(デッサン38段目: 初期値オフ)
     soraGrayscale: { def: true, force: true },            // 標高グレースケールは常時オン(適用度はスライダー; チェックは廃止)
+    soraPhotoTex: { def: false },                         // 山肌の写真テクスチャ(地理院シームレス写真の頂点ドレープ。第116ラウンド)
     soraBaseAz: { def: 0 },
     soraBaseAlt: { def: 0 },
     soraOffsetAz: { def: 0 },
@@ -960,8 +962,8 @@ function initMapGL(mapEl) {
     glMap.addControl(new maplibregl.AttributionControl({
         compact: true,   // ⓘアイコンで折りたたみ(タップ/クリックで展開。常時1行表示より省スペース)
         // ベース地図の出典は各ソースのattribution(表示中のものだけ出る)に任せ、ここには
-        // 地図ソースでないデータの出典のみ載せる(標高タイル=国土地理院・気象=Open-Meteo。重複表示の防止)
-        customAttribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院(標高)</a>,<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles (Mapzen/AWS)</a>,<a href="https://open-meteo.com/" target="_blank">Open-Meteo</a>'
+        // 地図ソースでないデータの出典のみ載せる(標高タイル+宙の窓の写真テクスチャ=国土地理院・気象=Open-Meteo。重複表示の防止)
+        customAttribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院(標高・写真)</a>,<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles (Mapzen/AWS)</a>,<a href="https://open-meteo.com/" target="_blank">Open-Meteo</a>'
     }), 'bottom-right');
     // タイル取得失敗は警告のみ(オフラインでも他機能を止めない)。
     // ※辻メッシュ画像は第36ラウンドでcanvasソース化し非同期ロード自体が無くなったため、
@@ -2531,6 +2533,7 @@ function buildStateToSave() {
         soraMovDispStep: appState.soraMovDispStep, soraMovImgMb: appState.soraMovImgMb, soraMovPlayMode: appState.soraMovPlayMode,
         soraMwBrightness: appState.soraMwBrightness, soraElevShade: appState.soraElevShade, soraSunShade: appState.soraSunShade,
         soraExpFormat: appState.soraExpFormat, soraExpW: appState.soraExpW, soraExpH: appState.soraExpH, soraLabelScale: appState.soraLabelScale,
+        soraPhotoTex: appState.soraPhotoTex,
         // 花火モード
         fwEnabled: appState.fwEnabled, fwLat: appState.fwLat, fwLng: appState.fwLng,
         fwElev: appState.fwElev, fwHeight: appState.fwHeight, fwRadius: appState.fwRadius,
@@ -2653,7 +2656,7 @@ function loadAppState() {
             // 宙の窓パラメータ復元
             ['soraSensorKey','soraAspectW','soraAspectH','soraFNumberIdx','soraFisheye','soraPeaking','soraGrayscale','soraBaseAz','soraBaseAlt','soraTraj','soraCenterCross','soraTargetCross','soraSearchCenter','soraOrient','soraFisheyeShape','soraPanorama',
              'soraMovInterval','soraMovShots','soraMovFps','soraMovDispStep','soraMovImgMb','soraMovPlayMode',
-             'soraMwBrightness','soraElevShade','soraSunShade','soraExpFormat','soraExpW','soraExpH','soraLabelScale',
+             'soraMwBrightness','soraElevShade','soraSunShade','soraExpFormat','soraExpW','soraExpH','soraLabelScale','soraPhotoTex',
              'baseOptMwBase','mwOffsetAngle','tsujiLineIncludeOffset','mySetFilterText','mySetFilterName','mySetFilterMemo','mySetFilterEnabled','mwShowBodies','mwShowBodyNames','mwShowConstFig','mwShowConstBounds','mwShowConstNames','mwConstNameSort','elevExcludeEnabled','elevExcludeRadius','elevExcludeObsRadius'].forEach(k => { if (saved[k] !== undefined) appState[k] = saved[k]; });
             // 標高関連（API標高とユーザー入力高）
             if(saved.startApiElev !== undefined) appState.startApiElev = saved.startApiElev;
@@ -10217,6 +10220,9 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
     }
 
     const exclM = exclKm * 1000;
+    // 実効地球(丸み+気差)は全画素で共通の1値(目的点緯度で代表。画素間の局所半径差は判定に無視できる。
+    // 逐次判定とワーカー並列判定へ同じ値を渡してビット一致を保つ)
+    const visInv2R = _visInv2Reff(end.lat, end.lat);
     const flags = new Uint8Array(kept);
     if (kept === 0) { window._tmLastVisFlags = flags; return flags; }
 
@@ -10228,7 +10234,7 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
             const sx15 = 128 * (sLng / 180 + 1) * scale15;
             const s0 = elevAtPix15(sx15 | 0, gpy15At(sLat) | 0);
             const startTotal = (s0 !== null && s0 !== undefined ? s0 : elevA[i]) + pixHeight;
-            flags[i] = _visJudgeCore(sLat, sLng, startTotal, end.lat, end.lng, endElev, exclM, obsExclM, elevAtPix15).visible ? 1 : 0;
+            flags[i] = _visJudgeCore(sLat, sLng, startTotal, end.lat, end.lng, endElev, exclM, obsExclM, elevAtPix15, visInv2R).visible ? 1 : 0;
             if ((i & 255) === 0 || i === kept - 1) {
                 setStatus(`(標高フィルタ可視判定中… ${(i + 1).toLocaleString()}/${kept.toLocaleString()}画素)`);
                 setTsujiMeshProgress(i + 1, kept);
@@ -10331,6 +10337,7 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
                 type: 'judge', jobId: jobIdx, chunk0: c0, chunk1: c1,
                 lat: latArr, lng: lngArr, startTotal: startTotals,
                 endLat: end.lat, endLng: end.lng, endTotal: endElev, exclM, obsExclM,
+                inv2R: visInv2R,   // 地球の丸み+気差(第116ラウンド。逐次判定と同じ値でビット一致)
                 tiles15: t15, tiles14: t14,
             }, transfer, (p) => { doneCounts[jobIdx] = p.done; }));
             await new Promise(r2 => setTimeout(r2, 0));   // 符号化中もUIへ制御を返す
@@ -11748,12 +11755,26 @@ function drawProfileGraph() {
         ctx.fillStyle='rgba(0,255,0,0.1)';
         ctx.fill();
 
-        // 見通し線（赤）: スタート地点(API標高+観測点高) → ゴール地点(API標高+目的点高)
+        // 見通し線（赤）: スタート地点(API標高+観測点高) → ゴール地点(API標高+目的点高)。
+        // 第116ラウンド: 可視判定と同じ実効地球(丸み+気差)で描く。海抜標高の軸上では光線は
+        // 両端を結ぶ直線より下へたわむ曲線になる(中間の最大たわみ D²/(8·Reff) ≒ 150kmで約370m)
         const startElev = appState.startApiElev + appState.startHeight;
         const endElev = appState.endApiElev + appState.endHeight;
+        const inv2R = _visInv2Reff(appState.start.lat, appState.end.lat);
+        const maxDm = maxD * 1000;
+        const endDrop = maxDm * maxDm * inv2R;
+        const rayElevAtKm = (dKm) => {
+            const dM = dKm * 1000;
+            return startElev + (endElev - endDrop - startElev) * (dKm / maxD) + dM * dM * inv2R;
+        };
+        const d0 = pts[0].dist, d1 = pts[pts.length - 1].dist;
         ctx.beginPath();
-        ctx.moveTo(toX(pts[0].dist), toY(startElev));
-        ctx.lineTo(toX(pts[pts.length - 1].dist), toY(endElev));
+        ctx.moveTo(toX(d0), toY(rayElevAtKm(d0)));
+        const RAY_N = 100;
+        for (let ri = 1; ri <= RAY_N; ri++) {
+            const dKm = d0 + (d1 - d0) * (ri / RAY_N);
+            ctx.lineTo(toX(dKm), toY(rayElevAtKm(dKm)));
+        }
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -11766,16 +11787,29 @@ function elevExcludeRadii() {
     return { tgt: Number(appState.elevExcludeRadius) || 0, obs: Number(appState.elevExcludeObsRadius) || 0 };
 }
 
+/** 可視判定の実効地球の逆数 1/(2·Reff) (第116ラウンド)。視高度計算(calculateApparentAltitude)と
+ *  同じ基盤: WGS84の局所半径(両端の緯度の平均)を、大気差の係数kで1/(1-k)倍した実効半径。
+ *  大気差オフの時はk=0(幾何学的な地球の丸みのみ) */
+function _visInv2Reff(latA, latB) {
+    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const Reff = ((getLocalEarthRadius(latA) + getLocalEarthRadius(latB)) / 2) / (1 - k);
+    return 1 / (2 * Reff);
+}
+
 /** 統一可視判定のコア(標高グラフ・辻検索/My辻検索・辻メッシュ検索の標高フィルタ共通)。
- *  観測点(sLat,sLng, 標高+高さ=startTotal)→目的点(endLat,endLng, endTotal)の直線(緯度経度線形)を、
- *  点数固定(2000等分)ではなく「DEM分解能固定」の刻み(z15の半画素≒約2m)で歩き、
- *  内部のサンプルが可視直線を上回ったらNG(地球曲率・屈折なし)。
+ *  観測点(sLat,sLng, 標高+高さ=startTotal)→目的点(endLat,endLng, endTotal)への見通しを、
+ *  点数固定(2000等分)ではなく「DEM分解能固定」の刻み(z15の半画素≒約2m)で歩いて判定する。
+ *  地球の丸み+大気差(第116ラウンド): 各標高から沈み込み drop(d)=d²/(2·Reff) を引いた上で
+ *  従来の直線補間と比較する。これは「見かけ高度角の比較」と数学的に等価な形
+ *  (放物線近似。厳密三角形解との差は300kmで数m=DEM誤差未満)。Reffは_visInv2Reff(気差k込み)。
  *  経路長に関わらず全てのDEM画素を取りこぼさない(グラフ描画の2000点とは独立)。
  *  標高は elevAtPix15(z15グローバル画素→DEM5A→5B→5C→z14チェーン。呼び出し側で構成)で参照する。
  *  除外範囲(目的点側: 目的点の半径exclM m以内 / 観測点側: 観測点の半径obsExclM m以内)のNGは無視。
  *  端点そのものは判定しない。
- *  メルカトルYは64サンプル毎に厳密再計算して区間内は線形補間する(誤差はサブピクセル)。 */
-function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, obsExclM, elevAtPix15) {
+ *  メルカトルYは64サンプル毎に厳密再計算して区間内は線形補間する(誤差はサブピクセル)。
+ *  inv2ReffOptは辞メッシュのワーカー並列判定とのビット一致用(省略時は_visInv2Reffで算出)。
+ *  返り値のlineElevAtBlockingは遮蔽点での「見通し光線の海抜高さ」(沈み込みを戻した値) */
+function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, obsExclM, elevAtPix15, inv2ReffOpt) {
     const scale15 = Math.pow(2, 15);
     const R128 = 128 / Math.PI;
     const gpy15At = (lat) => (128 - R128 * Math.atanh(Math.sin(lat * Math.PI / 180))) * scale15;
@@ -11785,6 +11819,8 @@ function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, 
     const sx15 = 128 * (sLng / 180 + 1) * scale15;
     const dx = (128 * (endLng / 180 + 1) * scale15 - sx15) / steps;
     const dLat = endLat - sLat;
+    const inv2R = (inv2ReffOpt !== undefined) ? inv2ReffOpt : _visInv2Reff(sLat, endLat);
+    const endDrop = distM * distM * inv2R;
     const SEG = 64;
     for (let j0 = 1; j0 < steps; j0 += SEG) {
         const j1 = Math.min(j0 + SEG - 1, steps - 1);
@@ -11794,11 +11830,12 @@ function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, 
             const e = elevAtPix15((sx15 + dx * j) | 0, (gyA + dgy * (j - j0)) | 0);
             if (e === null || e === undefined) continue;   // データ無し点は判定対象外
             const r = j / steps;
-            const lineElev = startTotal + (endTotal - startTotal) * r;
-            if (e > lineElev) {
+            const d = distM * r;
+            const lineElev = startTotal + (endTotal - endDrop - startTotal) * r;
+            if (e - d * d * inv2R > lineElev) {
                 if (distM * (1 - r) <= exclM) continue;   // 除外範囲(目的点側)のNGは無視
-                if (distM * r <= obsExclM) continue;      // 除外範囲(観測点側)のNGは無視
-                return { visible: false, blockingDist: distM * r / 1000, blockingElev: e, lineElevAtBlocking: lineElev };
+                if (d <= obsExclM) continue;              // 除外範囲(観測点側)のNGは無視
+                return { visible: false, blockingDist: d / 1000, blockingElev: e, lineElevAtBlocking: lineElev + d * d * inv2R };
             }
         }
     }
@@ -11973,14 +12010,14 @@ async function showVisibilityResult(generation) {
         appState.start.lat, appState.start.lng, appState.startApiElev + appState.startHeight,
         appState.end.lat, appState.end.lng, appState.endApiElev + appState.endHeight);
     if (generation !== undefined && generation !== _elevFetchGeneration) return;
-    const note = '\n\n※ 屈折・地球曲率は考慮していない単純な直線判定です(遠距離見通しでは精度に注意)';
+    const note = '\n\n※ 地球の丸みと大気差(:大気差設定・気象値に連動)を考慮した判定です';
     if (r.visible) {
         alert('可視判定: OK\n観測点から目的点が見通せます' + note);
     } else {
         const dist = r.blockingDist.toFixed(2);
         const elev = r.blockingElev.toFixed(1);
         const lineE = r.lineElevAtBlocking.toFixed(1);
-        alert(`可視判定: NG\n観測点から ${dist}km 地点 (標高 ${elev}m) が可視直線(${lineE}m)を遮っています` + note);
+        alert(`可視判定: NG\n観測点から ${dist}km 地点 (標高 ${elev}m) が見通し線(海抜 ${lineE}m)を遮っています` + note);
     }
 }
 
@@ -13863,7 +13900,10 @@ const _QP_SEEDS_V19 = _QP_SEEDS_V18.concat([
     '&soraGrayscale=', '&soraGrayscale=true', '&soraLabelScale=', '&soraLabelScale=100', '&smBldg=',
     '&smBldg=true', '&smBldgTex=', '&smBldgTex=true',
 ]);
-const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19];   // 添字+1=版数。最新版でエンコードする
+// v20: 第116ラウンド。宙の窓「:写真テクスチャ」(soraPhotoTex)のシード。
+// 第3規則「&キー名=既定値」(v1.85.1時点の既定値falseで凍結)+既定値以外用の「&キー名=」
+const _QP_SEEDS_V20 = _QP_SEEDS_V19.concat(['&soraPhotoTex=false', '&soraPhotoTex=']);
+const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19, _QP_SEEDS_V20];   // 添字+1=版数。最新版でエンコードする
 const _QP_PRIME_FROM = 12;   // この版以降は「仮想の先頭&」を足して圧縮する(先頭キーも「&キー名=」の辞書に乗せるため)
 
 function encodeQueryParam(str) {
@@ -14087,7 +14127,7 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
      'soraBaseAz', 'soraBaseAlt', 'soraOffsetAz', 'soraOffsetAlt', 'soraViewRange',
      'soraMovInterval', 'soraMovShots', 'soraMovFps', 'soraMovDispStep', 'soraMovImgMb', 'soraMovPlayMode',
      'soraMwBrightness', 'soraElevShade', 'soraSunShade', 'soraExpFormat', 'soraExpW', 'soraExpH',
-     'soraGrayscale', 'soraLabelScale', 'smBldg', 'smBldgTex'].forEach(k => {   // 末尾4キーは第108ラウンドで発行漏れを解消(白黒・注記文字・都市モード・テクスチャ)
+     'soraGrayscale', 'soraLabelScale', 'smBldg', 'smBldgTex', 'soraPhotoTex'].forEach(k => {   // 末尾4キーは第108ラウンドで発行漏れを解消・soraPhotoTexは第116ラウンド追加
         const v = appState[k];
         params.set(k, typeof v === 'boolean' ? (v ? 'true' : 'false') : String(v));
     });
@@ -14580,7 +14620,7 @@ function restoreFromUrl() {
      'soraMovInterval', 'soraMovShots', 'soraMovFps', 'soraMovDispStep', 'soraMovImgMb',
      'soraMwBrightness', 'soraElevShade', 'soraSunShade', 'soraExpW', 'soraExpH', 'soraLabelScale'].forEach(soraNum);
     ['soraFisheye', 'soraPanorama', 'soraPeaking', 'soraTraj', 'soraCenterCross', 'soraTargetCross', 'soraSearchCenter',
-     'soraGrayscale', 'smBldg', 'smBldgTex'].forEach(soraBool);   // 末尾4キー(soraLabelScale含む)は第108ラウンドで発行漏れ解消とセットで復元対応
+     'soraGrayscale', 'smBldg', 'smBldgTex', 'soraPhotoTex'].forEach(soraBool);   // 末尾4キー(soraLabelScale含む)は第108ラウンドで発行漏れ解消とセットで復元対応・soraPhotoTexは第116ラウンド
     // 花火モード(宙の窓メニュー55〜70段目)
     soraBool('fwEnabled'); soraBool('fwShowPoint'); soraStr('fwSize'); soraStr('fwMode');
     ['fwLat', 'fwLng', 'fwElev', 'fwHeight', 'fwRadius', 'fwFreq', 'fwSpread'].forEach(soraNum);
@@ -15073,12 +15113,7 @@ function _mwUpdateBodies() {
         const pos = new THREE.Vector3(v[0] * R, v[1] * R, v[2] * R);
         const col = new THREE.Color(body.color || '#DDA0DD');
         // 軌跡: 日周運動=EQJ系の等赤緯円(中心座標を0°として±180°=全周を常に描画)
-        const circPts = [];
-        for (let a = 0; a <= 360; a += 4) {
-            const cv = _mwEquVec(ra + a / 15, dec);
-            circPts.push(new THREE.Vector3(cv[0] * R, cv[1] * R, cv[2] * R));
-        }
-        _mwBodiesObjGrp.add(_mwFrontBackLine(circPts, col, 0.55, false));   // 前面=実線/背面=破線(回転に追従)
+        _mwBodiesObjGrp.add(_mwTrajCircle(ra, dec, R, col, 0.55));   // 前面=方位線と同じ太さのチューブ実線/背面=破線(回転に追従)
         _mwLabelItems.push({ name: body.name, color: body.color || '#DDA0DD', pos });
         if (body.id === 'MilkyWay') return;   // 天の川のマーカー/方位線は _mwBuildMilkyWayRing 側で表現(基準点の軌跡とラベルのみここで)
         const mat = new THREE.MeshBasicMaterial({ color: col });
@@ -15270,15 +15305,28 @@ function _mwPatchFrontBack(mat, frontOnly) {
     return mat;
 }
 
-/** 球面上のポリラインを「前面=実線/背面=破線」の2本組(Group)で作る。globe/world中心が原点にあるオブジェクト用 */
-function _mwFrontBackLine(points, color, opacity, loop) {
-    const geo = new THREE.BufferGeometry().setFromPoints(points);
-    const Ctor = loop ? THREE.LineLoop : THREE.Line;
-    const solid = new Ctor(geo, _mwPatchFrontBack(new THREE.LineBasicMaterial({ color, transparent: true, opacity }), true));
-    const dashed = new Ctor(geo, _mwPatchFrontBack(new THREE.LineDashedMaterial({ color, transparent: true, opacity: opacity * 0.75, dashSize: 0.035 * _MW_R, gapSize: 0.025 * _MW_R }), false));
-    dashed.computeLineDistances();
+/** 天体軌跡の等赤緯円を「前面=チューブ実線/背面=破線」の組(Group)で作る(第117ラウンド: 旧_mwFrontBackLineの置き換え)。
+ *  前面の実線は方位線(中心→天体)の2倍の太さ(0.005R)のチューブ(第118ラウンド: スマホでの見やすさ=依頼者指定)。
+ *  等赤緯円はZ軸(EQJ極)まわりの真円なのでトーラスで厳密に描ける(ジオメトリ側をtranslateして
+ *  原点=天球中心を保ち、_mwPatchFrontBackの前面判定を守る)。
+ *  背面の破線は地平線円と同じ「少しずらした3本重ね」で実線の太さに揃える。 */
+function _mwTrajCircle(raHours, decDeg, R, color, opacity) {
+    const decR = decDeg * _MW_D2R;
     const grp = new THREE.Group();
-    grp.add(solid); grp.add(dashed);
+    const torGeo = new THREE.TorusGeometry(R * Math.cos(decR), 0.005 * _MW_R, 6, 128);
+    torGeo.translate(0, 0, R * Math.sin(decR));
+    grp.add(new THREE.Mesh(torGeo, _mwPatchFrontBack(new THREE.MeshBasicMaterial({ color, transparent: true, opacity }), true)));
+    for (const rr of [0.995, 1.0, 1.005]) {
+        const pts = [];
+        for (let a = 0; a < 360; a += 4) {
+            const cv = _mwEquVec(raHours + a / 15, decDeg);
+            pts.push(new THREE.Vector3(cv[0] * R * rr, cv[1] * R * rr, cv[2] * R * rr));
+        }
+        const dashed = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+            _mwPatchFrontBack(new THREE.LineDashedMaterial({ color, transparent: true, opacity: opacity * 0.75, dashSize: 0.035 * _MW_R, gapSize: 0.025 * _MW_R }), false));
+        dashed.computeLineDistances();
+        grp.add(dashed);
+    }
     return grp;
 }
 
@@ -15825,6 +15873,7 @@ function soraSyncUI() {
     if (shapeR) shapeR.checked = true;
     chk('chk-sora-peaking', appState.soraPeaking);
     chk('chk-sora-traj', appState.soraTraj);
+    chk('chk-sora-phototex', appState.soraPhotoTex);
     chk('chk-sora-center', appState.soraCenterCross);
     chk('chk-sora-target', appState.soraTargetCross);
     chk('chk-sora-search-center', appState.soraSearchCenter);
@@ -16983,6 +17032,7 @@ function setupSoramadoControls() {
     });
     btnH('btn-sora-export', soraExportRun);
     chkH('chk-sora-peaking', 'soraPeaking');
+    chkH('chk-sora-phototex', 'soraPhotoTex');   // 写真テクスチャ(第116。geomKey経由で地形を取得し直す)
     chkH('chk-sora-traj', 'soraTraj');
     chkH('chk-sora-center', 'soraCenterCross');
     chkH('chk-sora-target', 'soraTargetCross');
@@ -19752,7 +19802,7 @@ function _smBuildTraj(dateOverride) {
     const centerMs = Math.round((dateOverride || appState.currentDate).getTime() / 3600000) * 3600000;
     const posKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}`;
     const visibleIds = appState.bodies.filter(b => b.visible).map(b => b.id).join(',');
-    const key = `${centerMs}|${posKey}|${visibleIds}|${appState.soraTraj}|${appState.baseOptMwBase}:${appState.mwOffsetAngle}`;
+    const key = `${centerMs}|${posKey}|${visibleIds}|${appState.soraTraj}|${appState.baseOptMwBase}:${appState.mwOffsetAngle}|${appState.refractionEnabled}`;
     if (key === _smTrajKey) return;
     _smTrajKey = key;
     while (_smTrajGrp.children.length) { const c = _smTrajGrp.children.pop(); if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); }
@@ -19760,6 +19810,7 @@ function _smBuildTraj(dateOverride) {
     let observer;
     try { observer = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev); } catch (e) { return; }
     const spanMs = 36 * 3600000, N = 288;   // ±36時間を15分刻み(=旧実装の1日96点と同密度)
+    const refr = appState.refractionEnabled ? 'normal' : null;   // 軌跡にも天体マーカーと同じ大気差(第116。従来は無しで地平線際にずれがあった)
     appState.bodies.forEach(body => {
         if (!body.visible) return;
         // 天の川は「基準点(中心座標/オフセット点=基本オプション)」を固定点として軌跡を描く。それ以外は通常天体。
@@ -19776,7 +19827,7 @@ function _smBuildTraj(dateOverride) {
             let ra, dec;
             if (isFixed) { ra = rd.ra; dec = rd.dec; }
             else { try { const eq = Astronomy.Equator(body.id, t, observer, true, true); ra = eq.ra; dec = eq.dec; } catch (e) { continue; } }
-            const hor = Astronomy.Horizon(t, observer, ra, dec, null);
+            const hor = Astronomy.Horizon(t, observer, ra, dec, refr);
             pts.push(_smDir(hor.azimuth, hor.altitude).multiplyScalar(_SM_BODY_R * 0.98));
         }
         if (pts.length < 2) return;
@@ -19892,7 +19943,7 @@ function _smUpdateTerrain() {
     const range = Math.max(1, Number(appState.soraViewRange) || 1);
     const zoom = _smTerrainZoom(range, appState.start.lat, aovH);
     const endKey = (appState.end && isFinite(appState.end.lat)) ? `${appState.end.lat.toFixed(6)},${appState.end.lng.toFixed(6)}` : '-';   // 目的点スナップの追従用
-    const geomKey = `${appState.start.lat.toFixed(5)},${appState.start.lng.toFixed(5)},${(+appState.start.elev).toFixed(1)}|${centerAz.toFixed(2)}|${aovH.toFixed(1)}|${range}|${zoom}|${endKey}`;
+    const geomKey = `${appState.start.lat.toFixed(5)},${appState.start.lng.toFixed(5)},${(+appState.start.elev).toFixed(1)}|${centerAz.toFixed(2)}|${aovH.toFixed(1)}|${range}|${zoom}|${endKey}|${appState.soraPhotoTex ? 'P' : ''}`;
     if (geomKey !== _smGeomKey) {
         _smGeomKey = geomKey;
         _smFetchTerrain(centerAz, aovH, range, zoom);
@@ -20025,6 +20076,7 @@ async function _smFetchTerrain(centerAz, aovH, rangeKm, zoom) {
     // 実DEM: 適応ズームのタイル単位でグループ化(ズームは距離環ごと=samples[].z)。
     // z15はDEM5A→5B→5C(5mメッシュ)のチェーン+欠損画素はz14(dem_png)の親タイルへフォールバック
     const groups = {};
+    const photoTex = !!appState.soraPhotoTex;   // 写真テクスチャ(第116): DEMと同じタイル座標の空中写真から頂点色を拾う
     for (let idx = 0; idx < samples.length; idx++) {
         const zi = samples[idx].z || zoom;
         const ti = _getTileInfo(samples[idx].lat, samples[idx].lng, zi);
@@ -20042,6 +20094,8 @@ async function _smFetchTerrain(centerAz, aovH, rangeKm, zoom) {
                 g.url = `https://cyberjapandata.gsi.go.jp/xyz/dem_png/${zi}/${ti.x}/${ti.y}.png`;
                 if (demT) g.fb2Url = demT.url.replace('{z}', zi).replace('{x}', ti.x).replace('{y}', ti.y);
             }
+            // 全国最新写真(シームレス)は日本域のみ。域外・取得失敗の頂点は従来の標高グレーのまま
+            if (photoTex && !_tileOutsideJapan(zi, ti.x, ti.y)) g.photoUrl = `https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/${zi}/${ti.x}/${ti.y}.jpg`;
         }
         const pt = { idx, pX: ti.pX, pY: ti.pY, fX: ti.fX, fY: ti.fY };
         if (zi === 15) {
@@ -20065,9 +20119,9 @@ async function _smFetchTerrain(centerAz, aovH, rangeKm, zoom) {
         await Promise.all(keys.map(async (k) => {
             if (gen !== _smTerrainGen) return;
             const g = groups[k];
-            const res = await _smTerrainPoolRun({ reqId: `${seq0}_${k}`, url: g.url, urls: g.urls, fbUrl: g.fbUrl, fb2Url: g.fb2Url, pts: g.pts });
+            const res = await _smTerrainPoolRun({ reqId: `${seq0}_${k}`, url: g.url, urls: g.urls, fbUrl: g.fbUrl, fb2Url: g.fb2Url, photoUrl: g.photoUrl, pts: g.pts });
             if (gen !== _smTerrainGen) return;
-            for (const e of res.elevs) samples[e.idx].elev = e.elev;
+            for (const e of res.elevs) { samples[e.idx].elev = e.elev; if (e.rgb) samples[e.idx].rgb = e.rgb; }
             tileDone();
         }));
     } else {
@@ -20102,6 +20156,14 @@ async function _smFetchTerrain(centerAz, aovH, rangeKm, zoom) {
                     samples[pt.idx].elev = (v === null) ? 0 : v;
                 }
             }
+            if (g.photoUrl) {   // 写真テクスチャ(第116): 同じタイル座標の空中写真から頂点色(最近傍画素)
+                const ph = await _getTileImageData(g.photoUrl);
+                if (ph) for (const pt of g.pts) {
+                    const px = Math.min(255, pt.fX | 0), py = Math.min(255, pt.fY | 0);
+                    const o2 = (py * 256 + px) * 4;
+                    samples[pt.idx].rgb = [ph.data[o2], ph.data[o2 + 1], ph.data[o2 + 2]];
+                }
+            }
             tileDone();
         }
     }
@@ -20127,7 +20189,7 @@ function _smApplyShading() {
     const sun = _smSunDir();
     // 太陽方位/高度を量子化して鍵に含める→日時変化で陰影を再計算
     const sunKey = `${Math.round(sun.az)}_${Math.round(sun.alt)}`;
-    const shadeKey = `${_smGeomKey}|${appState.soraGrayscale}|${appState.soraPeaking}|${focusNear.toFixed(0)}|${focusFar === Infinity ? 'inf' : focusFar.toFixed(0)}|${sunKey}|${appState.soraElevShade}|${appState.soraSunShade}`;
+    const shadeKey = `${_smGeomKey}|${appState.soraGrayscale}|${appState.soraPeaking}|${focusNear.toFixed(0)}|${focusFar === Infinity ? 'inf' : focusFar.toFixed(0)}|${sunKey}|${appState.soraElevShade}|${appState.soraSunShade}|${appState.soraPhotoTex ? 'P' : ''}`;
     if (shadeKey === _smShadeKey && _smTerrainMesh) return;
     _smShadeKey = shadeKey;
     _smBuildTerrainMesh(_smHeightfield, focusNear, focusFar, sun.vec);
@@ -20184,6 +20246,11 @@ function _smBuildTerrainMesh(hf, focusNear, focusFar, sunVec) {
             const d = s.dkm * 1000, slant = Math.hypot(positions[idx * 3], positions[idx * 3 + 1], positions[idx * 3 + 2]);
             let r, g, b;
             if (peak && slant >= focusNear && slant <= focusFar) { r = 0.95; g = 0.12; b = 0.12; }   // フォーカスピーキング(赤)
+            else if (appState.soraPhotoTex && s.rgb) {
+                // 写真テクスチャ(第116): 空中写真の頂点色に太陽光ヒルシェードだけ掛ける(標高グレーは置き換え)
+                const lam = Math.max(0, 1 + sS * (lambert - 1));
+                r = Math.min(1, s.rgb[0] / 255 * lam); g = Math.min(1, s.rgb[1] / 255 * lam); b = Math.min(1, s.rgb[2] / 255 * lam);
+            }
             else {
                 // 標高グレー(最高標高=白)。grayscale OFF時は一様グレーで純レリーフ。
                 // 適用度スライダー(50%=従来): 標高ヒルシェードは0.6を中心に、太陽光ヒルシェードは1.0(陰影なし)を中心に強弱
