@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.86.1 - 2026-08-22: fix: 第122ラウンド — ①天体儀の天の川オフセット点の逆回り修正(依頼者報告: オフセット中心角を変えると中心→オフセット点の方位線が軌跡とズレる)。原因は_mwBuildMilkyWayRingのオフセット点だけ収録角を生のまま銀経へ渡していた反転漏れ(第93の符号統一「夏の天の川を上から見て時計回りが正」の取り残し=v1.75.0以来)。依頼者の基準(2026-06-21夏至の日の入・天頂から中心を見て時計回りが正)で数値検証: 正典のgetMilkyWayBaseRaDec系(天体儀の軌跡・辻ライン・辻検索・辻メッシュ・My辻検索)は角度+30/+60でaz126°→156°→186°と時計回り=正しく、天体儀のオフセット点マーカー+方位線だけ逆回り(+30が-30の位置)だった。修正はgetMilkyWayBaseRaDecへの一本化(以後この点は構造的に軌跡・検索と一致) ②名称修正「全天儀」→「天体儀」(依頼者指摘: 全天儀は造語だった。UI・ツールチップ・ヘルプ・デッサン等の全文置換。DOM idとVersion History過去行はそのまま)
 Version 1.86.0 - 2026-08-22: fix/feat: 第116ラウンド — 可視判定へ地球の丸み+大気差を導入(茶臼山→ダイヤ槍の実戦報告=第115調査の帰結・依頼者GO)+宙の窓の写真テクスチャ: ①統一可視判定コア(_visJudgeCore)を「沈み込み補正付き比較」へ(drop=d²/2Reff を各標高から引いてから従来の直線補間と比較=見かけ高度比較と等価。Reffは視高度計算と同じWGS84局所半径+気差kの実効半径。放物線近似の誤差は300kmで数m)。標高グラフ・辻検索/My辻/辻メッシュの標高フィルタが一度に正確化(判定は保守側へ変わる=遠距離でOK→NGになり得る)。辻メッシュのワーカー並列判定(tm-vis-worker)も同一式・同一値でビット一致を維持 ②標高グラフの赤い見通し線を同じ実効地球でたわむ曲線描画へ+可視判定ポップアップの注記を「地球の丸みと大気差を考慮」へ更新 ③宙の窓「:写真テクスチャ」新設(soraPhotoTex・初期値オフ): 地理院の全国最新写真(シームレス)をDEMと同じタイル座標から頂点色として拾い山肌に貼る(頂点単位ドレープ。取得はDEMワーカー相乗り・域外/失敗は標高グレーのまま・太陽光ヒルシェードは写真にも掛かる) ④天体の軌跡線にマーカーと同じ大気差を適用(従来は無しで地平線際に最大0.5°のずれ) ⑤短縮URL辞書v20(soraPhotoTexの2シード。v19以前は復号のみ保証で凍結) ⑥第117ラウンド(リリース前の追補): 可視判定ポップアップ注記の「(v1.86.0から)」を削除(リリースノートが持ち場)・全天儀の天体軌跡線を方位線(中心→天体)と同じ太さのチューブ+背面破線3本重ねへ(_mwFrontBackLine→_mwTrajCircle。等赤緯円はトーラスで厳密描画)・ヘルプの可視判定2箇所を丸み+大気差込みの記述へ更新+「:写真テクスチャ」のヘルプ項目と出典(全国最新写真の構成・GRUS/Landsat-8の個別出所)を追加・地図ⓘの出典を「国土地理院(標高・写真)」へ ⑦第118ラウンド(リリース前の追補2): 全天儀の軌跡線をさらに2倍の太さ(0.005R=方位線の2倍)へ(スマホでの見やすさ=依頼者指定)
 Version 1.85.1 - 2026-08-20: fix: 第108→110ラウンド — 共有URLの不具合修正(第106〜107の調査・議論を受けた案A改・依頼者GO。第110ラウンド: 依頼者指摘「同じURLが意図どおりに開かれないのは不具合」により、機能追加の1.86.0ではなく不具合修正のパッチ版1.85.1として版数を付け直し):①位置情報URL(全部盛り)に辻検索条件51キー+辻メッシュ条件50キーを発行(発行部は辻検索/辻メッシュURLと共用の_emitTsujiSearchCondParams等へ抽出)。検索結果を出した画面の共有は「条件+パネル開閉由来の自動実行」で開くたび同じ結果を再計算して再現 ②復元のmode毎の適用ゲートを廃止(URLに有るキーは常に適用=「発行は絞る、復元は絞らない」。基準方位角/視高度の上書き保護もmode問わずへ) ③天体色/線種を常時発行に(既定値でも省略しない。開いた側の変更色が残らない。既定値のままのURLが変更したURLより短くなるよう短縮辞書v19に既定値ペア44個を追加=依頼者の採用条件・実測536字<592字) ④発行漏れ4キー(soraGrayscale・soraLabelScale・smBldg・smBldgTex)の発行+復元を追加 ⑤短縮URL辞書v19(天体色44ペア+新4キーの8シード。v18以前は復号のみ保証で凍結)
 Version 1.85.0 - 2026-08-17: fix: 第103ラウンド — 移動量の読みの「-0.0」表示を解消: 前/右の分解は三角関数の丸め残差で数学上0の成分が±1e-16m規模の負値になることがあり(基準方位角60°などで「前-0.0m」)、表示精度0.1mで0になる負値は「+0.0」と出すよう整形を修正(実移動・位置反映への影響はもとから皆無=残差は原子1個より小さい)
@@ -151,7 +152,7 @@ Version 1.0.0 - 2026-01-29: Initial release
 // 1. 定数定義
 // ============================================================
 
-const APP_VERSION = '1.86.0';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
+const APP_VERSION = '1.86.1';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
 
 /** アプリのバージョン文字列を返す (index.htmlのフッター表示などから利用) */
 function getAppVersion() {
@@ -1736,7 +1737,7 @@ function setupUI() {
         const hhmm = `${String(Math.floor(a / 60)).padStart(2, '0')}:${String(a % 60).padStart(2, '0')}`;
         const tzTxt = `タイムゾーン: ${tz || '不明'} (UTC${sign}${hhmm})` +
             (tz && tz !== 'Asia/Tokyo' ? ' / 地名検索はOSMのみ' : '');
-        for (const id of ['tz-info-label', 'tz-info-label-ctrl', 'tz-info-label-mwctrl']) {   // 宙の窓ctrl/全天儀ctrlの複製にも同じ表示(第84・94ラウンド)
+        for (const id of ['tz-info-label', 'tz-info-label-ctrl', 'tz-info-label-mwctrl']) {   // 宙の窓ctrl/天体儀ctrlの複製にも同じ表示(第84・94ラウンド)
             const el = document.getElementById(id);
             if (el) el.textContent = tzTxt;
         }
@@ -1807,7 +1808,7 @@ function setupUI() {
         radio.addEventListener('change', (e) => {
             if(e.target.checked) {
                 jumpToEvent(e.target.value);
-                _mirrorTimeJump(e.target.value, 'time-jump');   // 宙の窓ctrl/全天儀ctrlの選択状態も連動
+                _mirrorTimeJump(e.target.value, 'time-jump');   // 宙の窓ctrl/天体儀ctrlの選択状態も連動
             }
         });
     });
@@ -2934,12 +2935,12 @@ function syncUIFromState() {
     if (scd) scd.value = `${yyyy}-${mm}-${dd}`;
     const sct = document.getElementById('sora-ctrl-time');
     if (sct) sct.value = `${h}:${m}:${s}`;
-    // 全天儀ctrlメニューの日付/時刻ピッカーにも連動反映
+    // 天体儀ctrlメニューの日付/時刻ピッカーにも連動反映
     const mcd = document.getElementById('mw-ctrl-date');
     if (mcd) mcd.value = `${yyyy}-${mm}-${dd}`;
     const mct = document.getElementById('mw-ctrl-time');
     if (mct) mct.value = `${h}:${m}:${s}`;
-    // 全天儀ctrl/宙の窓ctrlの時刻スライダー(第83・84ラウンド。ドラッグ中は触らない)
+    // 天体儀ctrl/宙の窓ctrlの時刻スライダー(第83・84ラウンド。ドラッグ中は触らない)
     for (const sid of ['input-mwctrl-time-slider', 'input-sora-ctrl-time-slider']) {
         const sEl = document.getElementById(sid);
         if (sEl && document.activeElement !== sEl) sEl.value = d.getHours() * 60 + d.getMinutes();
@@ -2970,7 +2971,7 @@ function updateAll() {
 
     updateTsujiMeshSearchInputs();
 
-    // 全天儀: 観測者の位置・日時が変わったら向きを更新
+    // 天体儀: 観測者の位置・日時が変わったら向きを更新
     if (appState.isMilkyWayActive) {
         updateMilkyWayGlobe();
     }
@@ -3678,7 +3679,7 @@ function uncheckTimeShortcuts() {
     document.querySelectorAll('input[name="time-jump"], input[name="time-jump-ctrl"], input[name="time-jump-mwctrl"]').forEach(r => r.checked = false);
 }
 
-/** ショートカット/薄明ジャンプの選択を3面(日時情報・宙の窓ctrl・全天儀ctrl)で揃える(第94ラウンド) */
+/** ショートカット/薄明ジャンプの選択を3面(日時情報・宙の窓ctrl・天体儀ctrl)で揃える(第94ラウンド) */
 function _mirrorTimeJump(value, fromName) {
     for (const n of ['time-jump', 'time-jump-ctrl', 'time-jump-mwctrl']) {
         if (n === fromName) continue;
@@ -3687,7 +3688,7 @@ function _mirrorTimeJump(value, fromName) {
     }
 }
 
-/** 日時情報メニューの月/秒〜分/秒のアクティブ状態を、全天儀ctrl/宙の窓ctrlの複製ボタンへ映す(第84ラウンド) */
+/** 日時情報メニューの月/秒〜分/秒のアクティブ状態を、天体儀ctrl/宙の窓ctrlの複製ボタンへ映す(第84ラウンド) */
 function _syncSpeedBtnMirrors() {
     [['btn-speed-month', 'btn-mw-ctrl-speed-month', 'btn-sora-ctrl-speed-month'],
      ['btn-speed-day', 'btn-mw-ctrl-speed-day', 'btn-sora-ctrl-speed-day'],
@@ -4999,7 +5000,7 @@ function updateShortcutsData(startOfDay, observer) {
         const mr = Astronomy.SearchRiseSet('Moon', observer, +1, startOfDay, 2);
         const ms = Astronomy.SearchRiseSet('Moon', observer, -1, startOfDay, 2);
         
-        // 日時情報メニューと宙の窓ctrl/全天儀ctrlメニューの複製(id末尾-ctrl/-mwctrl)を一括更新(第84・94ラウンド)
+        // 日時情報メニューと宙の窓ctrl/天体儀ctrlメニューの複製(id末尾-ctrl/-mwctrl)を一括更新(第84・94ラウンド)
         const setT = (id, txt) => {
             const el = document.getElementById(id); if (el) el.innerText = txt;
             const c = document.getElementById(id + '-ctrl'); if (c) c.innerText = txt;
@@ -5046,7 +5047,7 @@ function updateTwilightData(startOfDay, observer) {
         const nautDusk  = Astronomy.SearchAltitude('Sun', observer, -1, startOfDay, 1, -12);
         const astroDusk = Astronomy.SearchAltitude('Sun', observer, -1, startOfDay, 1, -18);
 
-        // 時刻DOM更新 (薄明メニューと宙の窓ctrl/全天儀ctrlメニューのミラー(id末尾-ctrl/-mwctrl)を一括更新)
+        // 時刻DOM更新 (薄明メニューと宙の窓ctrl/天体儀ctrlメニューのミラー(id末尾-ctrl/-mwctrl)を一括更新)
         const setT = (id, txt) => {
             const el = document.getElementById(id); if (el) el.innerText = txt;
             const c = document.getElementById(id + '-ctrl'); if (c) c.innerText = txt;
@@ -5282,7 +5283,7 @@ function updateMoonInfo(date) {
     document.getElementById('moon-age-input').value = appState.moonAge;
     const icons = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
     document.getElementById('moon-icon').innerText = icons[Math.round(phase / 45) % 8];
-    // 宙の窓ctrl/全天儀ctrlの複製(第84・94ラウンド。入力中は書き戻さない)
+    // 宙の窓ctrl/天体儀ctrlの複製(第84・94ラウンド。入力中は書き戻さない)
     for (const sfx of ['-ctrl', '-mwctrl']) {
         const cIn = document.getElementById('moon-age-input' + sfx);
         if (cIn && document.activeElement !== cIn) cIn.value = appState.moonAge;
@@ -8352,7 +8353,7 @@ function toggleElevation() {
     appState.isElevationActive = !appState.isElevationActive;
 
     if (appState.isElevationActive) {
-        // 全天儀・宙の窓・宙断面とは画面下部を排他利用するため、開いていれば閉じる
+        // 天体儀・宙の窓・宙断面とは画面下部を排他利用するため、開いていれば閉じる
         if (appState.isMilkyWayActive) closeMilkyWayInstrument();
         if (appState.isSoramadoActive) closeSoramado();
         if (appState.isSoradanmenActive) closeSoradanmen();
@@ -8368,7 +8369,7 @@ function toggleElevation() {
     syncBottomPanels();
 }
 
-/** 全天儀の表示/非表示トグル (標高グラフと排他、辻検索とは共存) */
+/** 天体儀の表示/非表示トグル (標高グラフと排他、辻検索とは共存) */
 function toggleMilkyWayInstrument() {
     if (appState.isMilkyWayActive) {
         closeMilkyWayInstrument();
@@ -8386,7 +8387,7 @@ function toggleMilkyWayInstrument() {
     syncBottomPanels();
 }
 
-/** 全天儀を閉じる (内部用: syncBottomPanels は呼び出し側で行う) */
+/** 天体儀を閉じる (内部用: syncBottomPanels は呼び出し側で行う) */
 function closeMilkyWayInstrument() {
     appState.isMilkyWayActive = false;
     document.getElementById('btn-milkyway').classList.remove('active');
@@ -9109,7 +9110,7 @@ function _makeWorkerPool(workerFile, numWorkers) {
     };
 }
 
-/** 日付/時刻ピッカーの組を日時情報メニューへ連動させる(リファクタリングB第2弾②: 全天儀ctrl/宙の窓ctrlの
+/** 日付/時刻ピッカーの組を日時情報メニューへ連動させる(リファクタリングB第2弾②: 天体儀ctrl/宙の窓ctrlの
  *  同一ハンドラ[470文字×2]を統合。挙動不変)。状態更新→syncUIFromState→updateAllの順で反映する */
 function _bindDateTimePair(dateId, timeId) {
     const dEl = document.getElementById(dateId), tEl = document.getElementById(timeId);
@@ -11112,7 +11113,7 @@ function _tmSyncAreaRadios() {
 
 function syncBottomPanels() {
     const tdPnl = document.getElementById('tsujisearch-panel');
-    // 辻検索パネルは、標高グラフ/全天儀が下にあるとき1段上へ押し上げる
+    // 辻検索パネルは、標高グラフ/天体儀が下にあるとき1段上へ押し上げる
     tdPnl.classList.toggle('with-elevation', appState.isTsujiSearchActive && appState.isElevationActive);
     tdPnl.classList.toggle('with-milkyway', appState.isTsujiSearchActive && appState.isMilkyWayActive);
     tdPnl.classList.toggle('with-soramado', appState.isTsujiSearchActive && appState.isSoramadoActive);
@@ -11132,7 +11133,7 @@ function syncBottomPanels() {
         ssPnl.classList.toggle('with-milkyway', appState.isSoraSearchActive && appState.isMilkyWayActive);
         ssPnl.classList.toggle('with-soramado', appState.isSoraSearchActive && appState.isSoramadoActive);
     }
-    // 宙断面パネル(全天儀と同じ規則: 結果パネル併用時は1/3、最大化100%⇄併用66.67%)
+    // 宙断面パネル(天体儀と同じ規則: 結果パネル併用時は1/3、最大化100%⇄併用66.67%)
     const sdPnl = document.getElementById('soradanmen-panel');
     if (sdPnl) {
         const anyResult = appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive;
@@ -11156,7 +11157,7 @@ function syncBottomPanels() {
             appState.isSoraSearchActive && appState.isSoramadoActive && smPnl.classList.contains('maximized'));
         resizeSoramado();   // 高さ変更に合わせてプレビューを再描画
     }
-    // 全天儀領域(宙の窓と同じ規則: 通常2/3⇄辻検索と併用1/3、最大化100%⇄辻検索と併用66.67%)
+    // 天体儀領域(宙の窓と同じ規則: 通常2/3⇄辻検索と併用1/3、最大化100%⇄辻検索と併用66.67%)
     const mwPnl = document.getElementById('milkyway-panel');
     if (mwPnl) {
         mwPnl.classList.toggle('with-tsuji', appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive);
@@ -11166,13 +11167,13 @@ function syncBottomPanels() {
             appState.isTsujiMeshActive && appState.isMilkyWayActive && mwPnl.classList.contains('maximized'));
         if (ssPnl) ssPnl.classList.toggle('with-milkyway-max',
             appState.isSoraSearchActive && appState.isMilkyWayActive && mwPnl.classList.contains('maximized'));
-        resizeMilkyWayGlobe();   // 高さ変更に合わせて全天儀を再描画
+        resizeMilkyWayGlobe();   // 高さ変更に合わせて天体儀を再描画
     }
     // 下部パネルのトグルで隠れる領域が変わるので、観測点を可視領域の中央へ移動
     recenterObserverInView();
 }
 
-/** 下部パネル(全天儀/標高グラフ/宙の窓/辻検索)で隠れていない可視領域の中央へ、
+/** 下部パネル(天体儀/標高グラフ/宙の窓/辻検索)で隠れていない可視領域の中央へ、
  * 観測点(appState.start)が来るよう地図をパンする。requestAnimationFrameで多重呼出をコアレス。 */
 let _recenterRAF = null;
 /** 指定地点を可視領域(下部パネルを除く)の中央に表示する(ズームは変えずパンのみ) */
@@ -14057,9 +14058,9 @@ function parseTimezoneOffsetMinutes(tzString) {
 //               条件ごと再現できる。「発行は絞る、復元は絞らない」の発行側が全部盛り)
 //   'tsuji'   = 辻検索/辻メッシュ検索のURL(検索の再現に必要なもの: 地点・表示天体・
 //               大気差/気象・天の川の基準点・:除外範囲・:辻オフセット。宙の窓/花火/宙検索/
-//               パネル状態/天体色/全天儀表示は発行しない)
+//               パネル状態/天体色/天体儀表示は発行しない)
 //   'soramado'= 宙の窓のURL(窓の再現に必要なもの: 地点・表示天体・宙の窓全項目・花火・
-//               天体色/線種・全天儀の表示チェック(窓にも映る)・大気差/気象・天の川の基準点。
+//               天体色/線種・天体儀の表示チェック(窓にも映る)・大気差/気象・天の川の基準点。
 //               宙検索/パネル状態/:除外範囲/:辻オフセットは発行しない)
 // キーが無い項目は開いた側の既定値のままになる(restoreFromUrlは有るキーだけを適用する)
 const _URL_PROFILE_GROUPS = {
@@ -14109,7 +14110,7 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
         }
     });
 
-    // 下部パネル等の表示/非表示状態(画面再現=fullのみ): 辻ライン・標高グラフ・全天儀・宙の窓・辻検索
+    // 下部パネル等の表示/非表示状態(画面再現=fullのみ): 辻ライン・標高グラフ・天体儀・宙の窓・辻検索
     if (inc.panels) {
     params.set('dp', appState.isDPActive ? 'true' : 'false');
     params.set('elevation', appState.isElevationActive ? 'true' : 'false');
@@ -14181,7 +14182,7 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
 
     // 大気差・気象・基本オプション(第88ラウンド・v16 URL第1弾=第81ラウンドで依頼者承認。
     // 第95ラウンドでグループ毎の発行に: 大気差/気象と天の川の基準点=計算に効くので全プロファイル・
-    // 全天儀の表示チェック=full/宙の窓(星座線等は窓にも映る)・:除外範囲と:辻オフセット=full/辻検索系)
+    // 天体儀の表示チェック=full/宙の窓(星座線等は窓にも映る)・:除外範囲と:辻オフセット=full/辻検索系)
     if (inc.atmo) {
     params.set('refractionEnabled', appState.refractionEnabled ? 'true' : 'false');
     params.set('meteoP', String(appState.meteo.p));
@@ -14654,7 +14655,7 @@ function restoreFromUrl() {
     // 下部パネル等の表示/非表示状態を復元(preview/tsujisearch の両モード共通)
     // 辻ライン(地図オーバーレイ): フラグ復元→ init の active反映＋updateAll で描画
     if (params.has('dp')) appState.isDPActive = params.get('dp') === 'true';
-    // 標高グラフ/全天儀/宙の窓は排他のため、ONは1つだけ遅延オープン(elevation→milkyway→soramado優先)
+    // 標高グラフ/天体儀/宙の窓は排他のため、ONは1つだけ遅延オープン(elevation→milkyway→soramado優先)
     if (params.get('elevation') === 'true') appState._pendingPanel = 'elevation';
     else if (params.get('milkyway') === 'true') appState._pendingPanel = 'milkyway';
     else if (params.get('soramado') === 'true') appState._pendingPanel = 'soramado';
@@ -14695,7 +14696,7 @@ function restoreFromUrl() {
 }
 
 // ============================================================
-// 全天儀 (Milky Way orrery) — 3D天体儀パネル
+// 天体儀 (Milky Way orrery) — 3D天体儀パネル
 //  - 赤道座標(EQJ)のスカイテクスチャを貼った球を、観測者の地平座標へ
 //    合わせて回転し、外側から俯瞰する。地平線・東西南北・赤道格子を重畳。
 //  - テクスチャは既定でプロシージャル生成。milkyway-skymap.webp があれば差替。
@@ -14960,11 +14961,14 @@ function _mwBuildMilkyWayRing() {
     grp.add(marker);
     // オフセット点(基本オプション): 中心座標からのオフセット中心角の点を天体色マーカー＋天体色方位線で表示。
     // 中心と重なる場合(角度が360の倍数)は中心の赤マーカーを優先して表示しない。
+    // 位置は正典のgetMilkyWayBaseRaDec(収録符号「夏の天の川を上から見て時計回りが正」→銀経へは反転)に一本化する。
+    // 第122ラウンドの不具合修正: ここだけ生の角度を銀経へ渡していて(反転漏れ=第93の符号統一の取り残し)、
+    // 軌跡・辻ライン・辻検索・辻メッシュ・My辻検索と逆回りにズレていた
     const ang = Number(appState.mwOffsetAngle) || 0;
     if (appState.baseOptMwBase === 'offset' && ang % 360 !== 0) {
         const mwBody = appState.bodies.find(b => b.id === 'MilkyWay');
         const col = new THREE.Color((mwBody && mwBody.color) || '#800080');
-        const op = galacticToEquatorial(ang, 0);
+        const op = getMilkyWayBaseRaDec();
         const ov = _mwEquVec(op.ra, op.dec);
         const opPos = new THREE.Vector3(ov[0] * RR, ov[1] * RR, ov[2] * RR);
         const matBody = new THREE.MeshBasicMaterial({ color: col });
@@ -14979,7 +14983,7 @@ function _mwBuildMilkyWayRing() {
 /** 星座線/星座領域のオーバーレイ球を(必要時に)生成する。kind='fig'|'bounds' */
 // 星座線/星座領域: IAU境界ベクトルデータ(d3-celestial, BSD-3ライセンス)を線で描画。
 // 星座別レジストリ(略符→Line配列)でハイライト(黄⇄赤点滅)に対応
-// データ取得は全天儀と宙の窓プレビューで共通(1回だけfetchしてキャッシュ)
+// データ取得は天体儀と宙の窓プレビューで共通(1回だけfetchしてキャッシュ)
 const _constDataCache = {};
 function _constFetch(kind) {
     if (!_constDataCache[kind]) {
@@ -15054,7 +15058,7 @@ function _mwEnsureConstLayer(kind) {
     }).catch(() => { /* 取得不可: 何も重ねない(次回ONで再試行) */ _mwConstLoading[kind] = false; });
 }
 
-/** 基本オプション(天の川の基準点/オフセット中心角・表示天体・星座線/領域)を全天儀へ反映 */
+/** 基本オプション(天の川の基準点/オフセット中心角・表示天体・星座線/領域)を天体儀へ反映 */
 function _mwUpdateBaseOptions() {
     if (!_mwInited || _mwFailed || !_mwGlobe) return;
     // 天の川オブジェクト群を再構築(オフセット点マーカー/方位線の反映)
@@ -15142,7 +15146,7 @@ function _mwUpdateBodies() {
     });
 }
 
-/** 表示天体・星座の名称を全天儀の左右に並べ、引き出し線で位置を指し示す(SVGオーバーレイ)。
+/** 表示天体・星座の名称を天体儀の左右に並べ、引き出し線で位置を指し示す(SVGオーバーレイ)。
  *  ドラッグ回転にも追従するよう _mwRender の度に呼ばれる。星座名称はホバー/タップで黄赤点滅ハイライト。 */
 function _mwUpdateLabels() {
     const svg = document.getElementById('milkyway-labels');
@@ -15544,7 +15548,7 @@ function _mwInit() {
     _mwUpdateBaseOptions();   // 基本オプション(表示天体・星座線/領域・オフセット点)を初期反映
 }
 
-/** 全天儀のコントロールメニュー(デッサン01)。開閉・日付/時刻・移動速度・表示チェック群・オフセット中心角。
+/** 天体儀のコントロールメニュー(デッサン01)。開閉・日付/時刻・移動速度・表示チェック群・オフセット中心角。
  *  日付/時刻・チェック群・オフセット中心角は日時情報メニュー/基本オプションと双方向連動する */
 function setupMilkyWayCtrl() {
     const header = document.getElementById('milkyway-ctrl-header');
@@ -15554,8 +15558,8 @@ function setupMilkyWayCtrl() {
         const body = document.getElementById('milkyway-ctrl-body');
         const open = !body.classList.toggle('hidden');
         document.getElementById('milkyway-ctrl-arrow').textContent = open ? '▲' : '▼';
-        document.getElementById('milkyway-ctrl').classList.toggle('open', open);   // 開=全天儀画面と縦1/2分割
-        resizeMilkyWayGlobe();   // 全天儀画面のサイズが変わるので再描画
+        document.getElementById('milkyway-ctrl').classList.toggle('open', open);   // 開=天体儀画面と縦1/2分割
+        resizeMilkyWayGlobe();   // 天体儀画面のサイズが変わるので再描画
     });
     // 前景/後景/透過(2段目)
     const viewChk = (id, setter) => {
@@ -15580,14 +15584,14 @@ function setupMilkyWayCtrl() {
     };
     resetChk('chk-mwctrl-north-back', 'north');
     resetChk('chk-mwctrl-target-front', 'target');
-    // 最大化ボタン(全天儀画面0段目): 全面(辻検索ONなら下2/3)⇄通常。状態は保存しない(初期値オフ)
+    // 最大化ボタン(天体儀画面0段目): 全面(辻検索ONなら下2/3)⇄通常。状態は保存しない(初期値オフ)
     const mwMaxBtn = document.getElementById('btn-milkyway-max');
     if (mwMaxBtn) mwMaxBtn.addEventListener('click', () => {
         const panel = document.getElementById('milkyway-panel');
         const on = panel.classList.toggle('maximized');
         mwMaxBtn.classList.toggle('active', on);
-        mwMaxBtn.title = on ? '全天儀を元のサイズに戻す' : '全天儀を画面いっぱいに最大化';
-        syncBottomPanels();   // 辻検索結果の位置替え(最大化中は上1/3)・全天儀再描画・地図センタリング
+        mwMaxBtn.title = on ? '天体儀を元のサイズに戻す' : '天体儀を画面いっぱいに最大化';
+        syncBottomPanels();   // 辻検索結果の位置替え(最大化中は上1/3)・天体儀再描画・地図センタリング
     });
     const btnH = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     btnH('btn-mw-ctrl-month-prev', () => addMonth(-1));
@@ -15795,7 +15799,7 @@ function setupSoraCtrlTwilight() {
     _setupCtrlTwilight('sora-ctrl-twilight', '-ctrl', 'jump-ctrl', 'time-jump-ctrl');
 }
 
-/** ctrlメニュー内の薄明ジャンプのグリッドを生成(宙の窓ctrl/全天儀ctrl共通。第84・94ラウンド)
+/** ctrlメニュー内の薄明ジャンプのグリッドを生成(宙の窓ctrl/天体儀ctrl共通。第84・94ラウンド)
  *  sfx=表示span idの複製サフィックス / idPfx=ラジオidの接頭辞 / radioName=ラジオグループ名 */
 function _setupCtrlTwilight(hostId, sfx, idPfx, radioName) {
     const host = document.getElementById(hostId);
@@ -16625,7 +16629,7 @@ function syncBaseOptionUI() {
     chk('chk-sora-const-fig', appState.mwShowConstFig);
     chk('chk-sora-const-bounds', appState.mwShowConstBounds);
     chk('chk-sora-const-names', appState.mwShowConstNames);
-    // 全天儀ctrlメニュー側(基本オプションと連動・同じ状態を共有)
+    // 天体儀ctrlメニュー側(基本オプションと連動・同じ状態を共有)
     chk('chk-mwctrl-bodies', appState.mwShowBodies);
     chk('chk-mwctrl-body-names', appState.mwShowBodyNames);
     chk('chk-mwctrl-const-fig', appState.mwShowConstFig);
@@ -16652,7 +16656,7 @@ function syncBaseOptionUI() {
     // My辻検索行のオフセット中心角は行ごとに独立(基本オプションとは連動しないため、ここでは上書きしない)
 }
 
-/** 天の川の基準点/オフセット中心角の変更を全機能へ反映(天体詳細・辻ライン・辻検索・全天儀・宙の窓) */
+/** 天の川の基準点/オフセット中心角の変更を全機能へ反映(天体詳細・辻ライン・辻検索・天体儀・宙の窓) */
 function applyMilkyWayBaseChange() {
     saveAppState();
     syncBaseOptionUI();
@@ -16719,7 +16723,7 @@ function setupBaseOptionControls() {
     offsetHandler(document.getElementById('input-baseopt-mw-offset'));
     offsetHandler(document.getElementById('input-tsuji-mw-offset'));
     offsetHandler(document.getElementById('input-tsujimesh-mw-offset'));
-    offsetHandler(document.getElementById('input-mwctrl-mw-offset'));   // 全天儀ctrlメニュー(連動)
+    offsetHandler(document.getElementById('input-mwctrl-mw-offset'));   // 天体儀ctrlメニュー(連動)
     const mwOffSlider = document.getElementById('input-mwctrl-mw-offset-slider');
     if (mwOffSlider) mwOffSlider.addEventListener('input', () => {
         let v = parseFloat(mwOffSlider.value);
@@ -16749,7 +16753,7 @@ function setupBaseOptionControls() {
     chkHandler('chk-sora-const-fig', 'mwShowConstFig');
     chkHandler('chk-sora-const-bounds', 'mwShowConstBounds');
     chkHandler('chk-sora-const-names', 'mwShowConstNames');
-    // 全天儀ctrlメニュー側のチェックボックス(基本オプションと同じキーを共有=双方向連動)
+    // 天体儀ctrlメニュー側のチェックボックス(基本オプションと同じキーを共有=双方向連動)
     chkHandler('chk-mwctrl-bodies', 'mwShowBodies');
     chkHandler('chk-mwctrl-body-names', 'mwShowBodyNames');
     chkHandler('chk-mwctrl-const-fig', 'mwShowConstFig');
@@ -16915,7 +16919,7 @@ function setupSoramadoControls() {
         syncUIFromState();
         updateAll();
     });
-    // 日の出/日の入/月の出/月の入ショートカット(選択状態は日時情報/全天儀ctrlメニューと相互連動)
+    // 日の出/日の入/月の出/月の入ショートカット(選択状態は日時情報/天体儀ctrlメニューと相互連動)
     ['sunrise', 'sunset', 'moonrise', 'moonset'].forEach(v => {
         const r = document.getElementById(`jump-ctrl-${v}`);
         if (r) r.addEventListener('change', (e) => {
@@ -17045,7 +17049,7 @@ function toggleSoramado() {
     if (appState.isSoramadoActive) {
         closeSoramado();
     } else {
-        // 標高グラフ・全天儀・宙断面とは画面下部を排他利用
+        // 標高グラフ・天体儀・宙断面とは画面下部を排他利用
         if (appState.isElevationActive) toggleElevation();
         if (appState.isMilkyWayActive) closeMilkyWayInstrument();
         if (appState.isSoradanmenActive) closeSoradanmen();
@@ -17452,7 +17456,7 @@ function _smTryLoadRealImage() {
         if (appState.isSoramadoActive) drawSoramado();
     };
     img.onerror = () => { /* 取得不可: 模式図のまま */ };
-    img.src = 'milkyway-skymap_4k.webp';   // 宙の窓は広角背景のため高解像度版を使用(全天儀は小サイズ版)
+    img.src = 'milkyway-skymap_4k.webp';   // 宙の窓は広角背景のため高解像度版を使用(天体儀は小サイズ版)
 }
 
 /** EQJ→地平(ENU) 回転を Astronomy.Horizon の基準点から構成し、背景球へ適用＋可視更新 */
@@ -18911,7 +18915,7 @@ function toggleSoradanmen() {
     else openSoradanmen();
 }
 
-/** 宙断面ビューを開く(標高グラフ/全天儀/宙の窓とは下部領域を排他利用) */
+/** 宙断面ビューを開く(標高グラフ/天体儀/宙の窓とは下部領域を排他利用) */
 function openSoradanmen() {
     if (typeof maplibregl === 'undefined') {
         alert('MapLibre GL JSを読み込めませんでした(ネットワーク接続をご確認の上、再読み込みしてください)');
@@ -19176,7 +19180,7 @@ function setupSoradanmenControls() {
     if (btn) btn.onclick = toggleSoradanmen;
     const closeBtn = document.getElementById('btn-soradanmen-close');
     if (closeBtn) closeBtn.onclick = closeSoradanmen;
-    // 最大化(全天儀と同じ: 通常2/3⇄100%、辻検索併用時1/3⇄66.67%)
+    // 最大化(天体儀と同じ: 通常2/3⇄100%、辻検索併用時1/3⇄66.67%)
     const maxBtn = document.getElementById('btn-soradanmen-max');
     if (maxBtn) maxBtn.onclick = () => {
         const pnl = document.getElementById('soradanmen-panel');

@@ -22,13 +22,13 @@ GNU General Public License for more details.
     <meta property="og:description" content="天の川/太陽/月/天体の位置を検索して、狙った構図の日時・場所まで逆算して確認できる。天の川富士/ダイヤモンド富士/パール富士のみならず、天の川槍ヶ岳/ダイヤモンド槍ヶ岳/パール槍ヶ岳から天の川百名山/ダイヤモンド百名山/パール百名山も可能かも。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://soranotsuji.net/">
-    <meta property="og:image" content="https://soranotsuji.net/ogp.png?v=4">
+    <meta property="og:image" content="https://soranotsuji.net/ogp.png?v=5">
     <meta property="og:site_name" content="宙の辻">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="宙の辻 - Sora no Tsuji">
     <meta name="twitter:description" content="天の川/太陽/月/天体の位置を検索して、狙った構図の日時・場所まで逆算して確認できる。天の川富士/ダイヤモンド富士/パール富士のみならず、天の川槍ヶ岳/ダイヤモンド槍ヶ岳/パール槍ヶ岳から天の川百名山/ダイヤモンド百名山/パール百名山も可能かも。">
-    <meta name="twitter:image" content="https://soranotsuji.net/ogp.png?v=4">
+    <meta name="twitter:image" content="https://soranotsuji.net/ogp.png?v=5">
     <meta name="google-site-verification" content="U7ZpT_pBinlYJOZLdc1AZtTrb5IXSjZYlBcFo38w8kM" />
     <title>宙の辻 - Sora no Tsuji</title>
     
@@ -50,7 +50,7 @@ GNU General Public License for more details.
 
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 
-    <!-- 全天儀(3D天体儀)用。グローバル THREE を公開する UMD 最終版(r161でUMD廃止のため0.160.0に固定) -->
+    <!-- 天体儀(3D)用。グローバル THREE を公開する UMD 最終版(r161でUMD廃止のため0.160.0に固定) -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
     <!-- 地図ライブラリ MapLibre GL JS(本体地図+宙断面ビュー。地図全面移行計画の手順4でLeafletを撤去し一本化) -->
@@ -328,21 +328,21 @@ GNU General Public License for more details.
             <canvas id="milkyway-canvas"></canvas>
             <svg id="milkyway-labels"></svg>
             <div id="milkyway-credit"></div>
-            <button id="btn-milkyway-max" title="全天儀を画面いっぱいに最大化">⛶</button>
-            <button id="btn-milkyway-close" class="panel-close-btn-abs" title="全天儀を閉じる">✕</button>
+            <button id="btn-milkyway-max" title="天体儀を画面いっぱいに最大化">⛶</button>
+            <button id="btn-milkyway-close" class="panel-close-btn-abs" title="天体儀を閉じる">✕</button>
         </div>
         <div id="milkyway-ctrl">
             <div id="milkyway-ctrl-header" title="コントロールメニューを開閉"><span>コントロール</span><span id="milkyway-ctrl-arrow">▼</span></div>
             <div id="milkyway-ctrl-body" class="hidden">
                 <div class="control-row left-row">
-                    <label class="baseopt-radio" title="全天儀の前景(手前側の半分)を表示"><input type="checkbox" id="chk-mwctrl-front" checked>:前景</label>
-                    <label class="baseopt-radio" title="全天儀の後景(奥側の半分)を表示"><input type="checkbox" id="chk-mwctrl-back" checked>:後景</label>
-                    <label class="baseopt-radio" title="オン:全天儀を内側も見えるように表示 / オフ:全天儀を外側から見た構図(天球儀のような表示)"><input type="checkbox" id="chk-mwctrl-through" checked>:透過</label>
+                    <label class="baseopt-radio" title="天体儀の前景(手前側の半分)を表示"><input type="checkbox" id="chk-mwctrl-front" checked>:前景</label>
+                    <label class="baseopt-radio" title="天体儀の後景(奥側の半分)を表示"><input type="checkbox" id="chk-mwctrl-back" checked>:後景</label>
+                    <label class="baseopt-radio" title="オン:天体儀を内側も見えるように表示 / オフ:天体儀を外側から見た構図(天球儀のような表示)"><input type="checkbox" id="chk-mwctrl-through" checked>:透過</label>
                 </div>
                 <div class="control-row left-row">
-                    <label class="baseopt-radio" title="全天儀の回転方向を水平方向に固定"><input type="radio" name="mwctrl-rot" value="horizontal" checked>:水平</label>
-                    <label class="baseopt-radio" title="全天儀の回転方向を地軸中心に固定"><input type="radio" name="mwctrl-rot" value="axis">:地軸</label>
-                    <label class="baseopt-radio" title="全天儀の回転方向を固定しない"><input type="radio" name="mwctrl-rot" value="free">:自由</label>
+                    <label class="baseopt-radio" title="天体儀の回転方向を水平方向に固定"><input type="radio" name="mwctrl-rot" value="horizontal" checked>:水平</label>
+                    <label class="baseopt-radio" title="天体儀の回転方向を地軸中心に固定"><input type="radio" name="mwctrl-rot" value="axis">:地軸</label>
+                    <label class="baseopt-radio" title="天体儀の回転方向を固定しない"><input type="radio" name="mwctrl-rot" value="free">:自由</label>
                 </div>
                 <div class="control-row left-row">
                     <label class="baseopt-radio" title="北が奥になるように位置をリセット(オンにするとすぐオフに戻ります)"><input type="checkbox" id="chk-mwctrl-north-back">:北奥</label>
@@ -884,7 +884,7 @@ GNU General Public License for more details.
 
                     <div class="control-row main-buttons-row">
                         <button id="btn-dp" class="nav-btn main-btn">辻ライン</button>
-                        <button id="btn-milkyway" class="nav-btn main-btn">全天儀</button>
+                        <button id="btn-milkyway" class="nav-btn main-btn">天体儀</button>
                         <button id="btn-elevation" class="nav-btn main-btn">標高グラフ</button>
                     </div>
                     <div class="control-row main-buttons-row">
@@ -914,10 +914,10 @@ GNU General Public License for more details.
                         <label class="baseopt-radio" title="検索中心を基準点から辻オフセット点までの「線」の範囲で検索します(辻検索・辻メッシュ検索と連動)。辻ラインは辻オフセット仰角を1°置きにずらした複数の線になります"><input type="radio" name="baseopt-center-mode" value="line">:基準点から辻オフセット点までの線</label>
                     </div>
                     <hr class="baseopt-hr">
-                    <div class="control-row left-row"><label class="baseopt-group-label">全天儀</label></div>
+                    <div class="control-row left-row"><label class="baseopt-group-label">天体儀</label></div>
                     <div class="control-row left-row">
                         <label class="baseopt-radio"><input type="checkbox" id="chk-baseopt-mw-bodies" checked>表示天体</label>
-                        <label class="baseopt-radio" title="全天儀の表示天体名と引き出し線、宙の窓のプレビューの表示天体名を表示/非表示"><input type="checkbox" id="chk-baseopt-mw-body-names">表示天体名</label>
+                        <label class="baseopt-radio" title="天体儀の表示天体名と引き出し線、宙の窓のプレビューの表示天体名を表示/非表示"><input type="checkbox" id="chk-baseopt-mw-body-names">表示天体名</label>
                         <label class="baseopt-radio"><input type="checkbox" id="chk-baseopt-const-fig">星座線</label>
                     </div>
                     <div class="control-row left-row">
@@ -1445,12 +1445,12 @@ GNU General Public License for more details.
                         <input type="checkbox" id="chk-sora-search-center" class="body-checkbox"><label for="chk-sora-search-center" title="検索中心のX字記号(×)マーカーを表示/非表示(検索中心オプションが線の場合は目的点からオフセット点までの線も表示)">:検索中心(×)</label>
                     </div>
                     <div class="control-row left-row">
-                        <input type="checkbox" id="chk-sora-mw-body-names" class="body-checkbox"><label for="chk-sora-mw-body-names" title="表示天体名をプレビューと全天儀に表示/非表示(基本オプションと連動)">:表示天体名</label>
-                        <input type="checkbox" id="chk-sora-const-fig" class="body-checkbox"><label for="chk-sora-const-fig" title="星座線をプレビューと全天儀に表示/非表示(基本オプションと連動)">:星座線</label>
+                        <input type="checkbox" id="chk-sora-mw-body-names" class="body-checkbox"><label for="chk-sora-mw-body-names" title="表示天体名をプレビューと天体儀に表示/非表示(基本オプションと連動)">:表示天体名</label>
+                        <input type="checkbox" id="chk-sora-const-fig" class="body-checkbox"><label for="chk-sora-const-fig" title="星座線をプレビューと天体儀に表示/非表示(基本オプションと連動)">:星座線</label>
                     </div>
                     <div class="control-row left-row">
-                        <input type="checkbox" id="chk-sora-const-bounds" class="body-checkbox"><label for="chk-sora-const-bounds" title="星座領域をプレビューと全天儀に表示/非表示(基本オプションと連動)">:星座領域</label>
-                        <input type="checkbox" id="chk-sora-const-names" class="body-checkbox"><label for="chk-sora-const-names" title="星座名称をプレビューと全天儀に表示/非表示(基本オプションと連動)">:星座名称</label>
+                        <input type="checkbox" id="chk-sora-const-bounds" class="body-checkbox"><label for="chk-sora-const-bounds" title="星座領域をプレビューと天体儀に表示/非表示(基本オプションと連動)">:星座領域</label>
+                        <input type="checkbox" id="chk-sora-const-names" class="body-checkbox"><label for="chk-sora-const-names" title="星座名称をプレビューと天体儀に表示/非表示(基本オプションと連動)">:星座名称</label>
                     </div>
                     <div class="control-row left-row">
                         <label class="input-label" for="input-sora-label-scale">文字サイズ:</label>
@@ -2262,8 +2262,8 @@ GNU General Public License for more details.
                 <section class="help-section">
                     <h3>基本オプションメニュー</h3>
                     <ul class="help-list">
-                        <li><strong>天の川の基準点</strong>: 辻ラインを引くための天の川の基準点を「中心座標 (いて座付近)」か「オフセット点」から選択。<strong>オフセット中心角 (°)</strong> で基準点を環の方向にずらせます (-360〜+360。全天儀・辻検索と連動)。</li>
-                        <li><strong>表示天体 / 表示天体名 / 星座線 / 星座領域 / 星座名称</strong>: 全天儀と宙の窓プレビューへの表示/非表示を切り替えます (宙の窓メニューのチェックと双方向連動)。<strong>星座名称の表示順</strong>は50音順/座標順から選べます。</li>
+                        <li><strong>天の川の基準点</strong>: 辻ラインを引くための天の川の基準点を「中心座標 (いて座付近)」か「オフセット点」から選択。<strong>オフセット中心角 (°)</strong> で基準点を環の方向にずらせます (-360〜+360。天体儀・辻検索と連動)。</li>
+                        <li><strong>表示天体 / 表示天体名 / 星座線 / 星座領域 / 星座名称</strong>: 天体儀と宙の窓プレビューへの表示/非表示を切り替えます (宙の窓メニューのチェックと双方向連動)。<strong>星座名称の表示順</strong>は50音順/座標順から選べます。</li>
                         <li><strong>除外範囲 (標高グラフ)</strong>: 可視判定で目的点側/観測点側それぞれの半径○m以内のNGを無視するオプション (初期値: オン・目的点側15m・観測点側10m)。マーカー地点自身のDEM画素による自己遮蔽を吸収します。</li>
                     </ul>
                 </section>
@@ -2400,8 +2400,8 @@ GNU General Public License for more details.
                 </section>
 
                 <section class="help-section">
-                    <h3>全天儀</h3>
-                    <p>「全天儀」ボタンON時に、天球を外から俯瞰する3Dの星図パネルを表示します。天の川・表示天体・星座線・星座領域・星座名称を重ねられます (基本オプションのチェックと連動)。</p>
+                    <h3>天体儀</h3>
+                    <p>「天体儀」ボタンON時に、天球を外から俯瞰する3Dの星図パネルを表示します。天の川・表示天体・星座線・星座領域・星座名称を重ねられます (基本オプションのチェックと連動)。</p>
                     <ul class="help-list">
                         <li><strong>回転 / ズーム</strong>: ドラッグ (スマホは2本指) で自由に回転、ホイールで拡大縮小。</li>
                         <li><strong>星座名称のハイライト</strong>: 左右の星座名称にカーソル/タップで、その星座の星座線・領域が黄⇄赤に点滅し、中心リングで位置を指し示します (タップは約4秒で自動解除)。</li>

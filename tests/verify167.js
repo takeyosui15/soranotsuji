@@ -16,8 +16,8 @@ const target = process.argv[2] || path.join(__dirname, '..', 'script.js');
 const src = fs.readFileSync(target, 'utf8');
 const html = fs.readFileSync(path.join(path.dirname(target), 'index.html'), 'utf8');
 
-// ---- V0: 版数ピン(最新の検証が持つ。第117〜118はリリース前の追補なので1.86.0のまま) ----
-check('V0 版数ピン 1.86.0+Version Historyに第117/118の追補', /APP_VERSION = '1\.86\.0'/.test(src) && ((src.includes('⑥第117ラウンド') && src.includes('⑦第118ラウンド')) || !!process.argv[2]));
+// ---- V0: 版数の形(第122でピンはverify168へ移譲=最新の検証が持つ) ----
+check('V0 版数の形+Version Historyに第117/118の追補', /APP_VERSION = '\d+\.\d+\.\d+'/.test(src) && ((src.includes('⑥第117ラウンド') && src.includes('⑦第118ラウンド')) || !!process.argv[2]));
 
 // ---- S1: ポップアップ注記に版数表記なし(リリースノートが持ち場=依頼者指摘)。
 // noteの代入行そのものを検査する(Version Historyの経緯文が旧文言を引用しても引っかからない形) ----

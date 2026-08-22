@@ -89,7 +89,7 @@
 | 組込天体の色/線種(bodyColor/bodyDash。第108から常時発行=既定値でも省略しない) | ○ | − | ○ | − | − |
 | 大気差・気象(4キー。計算に効く) | ○ | ○ | ○ | ○(取得時点の値) | − |
 | 天の川の基準点(baseOptMwBase/mwOffsetAngle。計算に効く) | ○ | ○ | ○ | ○(行の値) | − |
-| 全天儀の表示チェック(mwShow×5+mwConstNameSort。星座線等は宙の窓にも映る) | ○ | − | ○ | − | − |
+| 天体儀の表示チェック(mwShow×5+mwConstNameSort。星座線等は宙の窓にも映る) | ○ | − | ○ | − | − |
 | :除外範囲(elevExclude×3。見通し判定に効く) | ○ | ○ | − | − | − |
 | :辻オフセット方位角/視高度(tsujiLineIncludeOffset。辻ラインの描き方) | ○ | ○ | − | − | − |
 | 辻検索/辻メッシュの検索条件(tsuji*51キー/tsujiMesh*50キー。第108からfullにも発行=検索結果を出した画面を条件ごと再現) | ○ | ○ | − | ○(行の値) | − |
@@ -118,7 +118,7 @@
 | starColor | %23RRGGBB(例 %23FF0000) | My天体の線色(#+16進6桁をURLエンコード)。**複数指定可**。 |
 | starIsDashed | \[ 1 \| 0 \] | My天体の線種(1=破線、0=実線)。**複数指定可**。 |
 | dp | \[ true \| false \] | 辻ラインの表示/非表示。省略時は現状維持。 |
-| elevation / milkyway / soramado | \[ true \| false \] | 標高グラフ/全天儀/宙の窓の表示。3つは排他のためtrueは1つだけ有効(elevation→milkyway→soramado優先)。省略時は現状維持。 |
+| elevation / milkyway / soramado | \[ true \| false \] | 標高グラフ/天体儀/宙の窓の表示。3つは排他のためtrueは1つだけ有効(elevation→milkyway→soramado優先)。省略時は現状維持。 |
 | tsujisearch | \[ true \| false \] | 辻検索パネルを開いて実行(他パネルと共存可)。省略時は現状維持。 |
 | tsujimesh | \[ true \| false \] | 辻メッシュ検索パネルを開いて実行(辻検索と排他。両方trueなら辻メッシュ優先)。省略時は現状維持。 |
 
@@ -214,7 +214,7 @@
 | meteoP / meteoT / meteoL | 1013.25 / 15 / 0.0065 | 気圧(hPa)/気温(°C)/気温減率(K/m)。復元は型変換+NaNガードのみ(LS復元と同じ)。 |
 | baseOptMwBase | \[ center \| offset \] | 天の川の基準点(=「:天の川オプション」チェックの実体)。 |
 | mwOffsetAngle | 0 | オフセット中心角(収録符号=「夏の天の川を上から見て時計回りが正」。第93ラウンドで内部値ごと統一し表示だけの反転を廃止)。 |
-| mwShowBodies / mwShowBodyNames / mwShowConstFig / mwShowConstBounds / mwShowConstNames | true / false / false / false / false | 全天儀の表示天体/表示天体名/星座線/星座領域/星座名称。 |
+| mwShowBodies / mwShowBodyNames / mwShowConstFig / mwShowConstBounds / mwShowConstNames | true / false / false / false / false | 天体儀の表示天体/表示天体名/星座線/星座領域/星座名称。 |
 | mwConstNameSort | \[ aiueo \| pos \] | 星座名称の表示順。 |
 | elevExcludeEnabled / elevExcludeRadius / elevExcludeObsRadius | true / 15 / 10 | 標高グラフの:除外範囲/目的点側(m)/観測点側(m)。 |
 | tsujiLineIncludeOffset | true | 辻ラインに辻オフセット方位角/視高度を含めるか(第85ラウンド)。 |
