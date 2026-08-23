@@ -94,8 +94,8 @@ check('S3 天体軌跡にマーカーと同じ大気差(+キャッシュ鍵に�
       return { exists:!!el, def, on, emitted, off, ver:enc.slice(0,4),
                saved:JSON.parse(localStorage.getItem('soranotsuji_app')).soraPhotoTex===false };
     });
-    check('T1 「:写真テクスチャ」チェック(初期値オフ)→appState/保存/URL発行(soramadoにも)が連動+辞書はv20',
-      r.exists&&r.def&&r.on&&r.emitted&&r.off&&r.saved&&r.ver==='~20~', JSON.stringify(r));
+    check('T1 「:写真テクスチャ」チェック(初期値オフ)→appState/保存/URL発行(soramadoにも)が連動+辞書はv20以降',
+      r.exists&&r.def&&r.on&&r.emitted&&r.off&&r.saved&&/^~(2\d|[3-9]\d)~$/.test(r.ver), JSON.stringify(r));
   }
 
   // T2: URL復元(soraPhotoTex=trueのURLで開くと有効になる)

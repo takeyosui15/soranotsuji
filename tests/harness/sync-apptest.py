@@ -26,6 +26,7 @@ os.makedirs(APP, exist_ok=True)
 # アプリの配信面(テストが読み込むファイル)。docs/tests/reviews等の開発文書は含めない
 FILES = [
     'index.html', 'script.js', 'style.css', 'forecast-features.html', 'reset.html',
+    'privacy.html', 'terms.html',
     'dp-line-worker.js', 'sora-mov-worker.js', 'sora-terrain-worker.js',
     'tm-vis-worker.js', 'tsuji-search-worker.js', 'tsujimesh-search-worker.js',
     'celestial_db.json', 'constellations.borders.json', 'constellations.lines.json',

@@ -1402,14 +1402,14 @@
    "btrue": "point"
   },
   "tsujiMeshAccuracy": {
-   "neg": "x1",
-   "pos": "x1",
-   "frac": "x1",
-   "str": "x1",
-   "empty": "x1",
-   "nul": "x1",
-   "bfalse": "x1",
-   "btrue": "x1"
+   "neg": "o1",
+   "pos": "o1",
+   "frac": "o1",
+   "str": "o1",
+   "empty": "o1",
+   "nul": "o1",
+   "bfalse": "o1",
+   "btrue": "o1"
   },
   "tsujiMeshMoonFilterEnabled": {
    "neg": -1000000000,

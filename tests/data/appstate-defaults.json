@@ -140,7 +140,7 @@
   "tsujiMeshOffsetAlt": 0,
   "tsujiMeshToleranceAlt": 15,
   "tsujiMeshCenterMode": "point",
-  "tsujiMeshAccuracy": "x1",
+  "tsujiMeshAccuracy": "o1",
   "tsujiMeshMoonFilterEnabled": false,
   "tsujiMeshMoonBase": 14.8,
   "tsujiMeshMoonTolerance": 2,

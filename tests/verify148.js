@@ -92,7 +92,10 @@ check('V1 URLのメッシュ復元で_tsujiLinkInitFrom=mesh', src.includes("_ts
       const acc=document.getElementById('chk-tsuji-accuracy-filter');
       acc.checked=true; acc.dispatchEvent(new Event('change',{bubbles:true}));
       await new Promise(r=>setTimeout(r,50));
-      const meshFixed=document.getElementById('chk-tsujimesh-sym-maru').checked===false&&
+      // 第131の意図更新: メッシュの:○表示は常時オンの固定表示(依頼者の設計モデル=精度フィルタは
+      // 対象の下限○までを示す固定の枠)。K4の意図「辻検索の変更が波及しない」はそのまま:
+      // 辻検索の精度フィルタを切り替えても、○表示は常時オンのまま・状態キーもfalseのまま
+      const meshFixed=document.getElementById('chk-tsujimesh-sym-maru').checked===true&&
         appState.tsujiMeshSymO===false;
       acc.checked=false; acc.dispatchEvent(new Event('change',{bubbles:true}));
       return { meshFixed, tsujiAcc: appState.tsujiAccuracyFilterEnabled===false };

@@ -184,7 +184,8 @@ GNU General Public License for more details.
                 <div class="control-row center-row">
                     <label class="input-label tsujimesh-time-label2" for="select-tsujimesh-time-eps">精度フィルタオプション:</label>
                     <select id="select-tsujimesh-time-eps" title="再計算で辻マーカー表示する精度(角距離ε)">
-                        <option value="0.125" selected>◎(±0.125°)</option>
+                        <option value="0.25" selected>○(±0.25°)</option>
+                        <option value="0.125">◎(±0.125°)</option>
                         <option value="0.0625">◎×2(±0.0625°)</option>
                         <option value="0.03125">◎×4(±0.03125°)</option>
                         <option value="0.015625">◎×8(±0.015625°)</option>
@@ -283,13 +284,13 @@ GNU General Public License for more details.
             <hr class="tsujisearch-separator">
             <div class="control-row left-row">
                 <input type="checkbox" id="chk-tsujimeshres-acc-filter" class="body-checkbox" checked disabled>
-                <label for="chk-tsujimeshres-acc-filter" title="検索メニューと同じ読み取り専用です(メッシュの結果は常に◎精度以上のため)">精度フィルタ</label>
+                <label for="chk-tsujimeshres-acc-filter" title="検索メニューと同じ読み取り専用です(メッシュの結果は常に精度フィルタオプションの精度以上のため)">精度フィルタ</label>
             </div>
             <div class="control-row left-row">
                 <input type="checkbox" id="chk-tsujimeshres-acc-dbl-circle" class="body-checkbox" checked disabled> <label class="tsuji-acc-label" title="精度記号◎〜◎×128(±0.125°以内)の行を表示(常時オン)">:◎</label>
-                <input type="checkbox" id="chk-tsujimeshres-acc-circle" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは◎精度以上のヒットのみ保持するため、○精度のデータはありません">:○</label>
-                <input type="checkbox" id="chk-tsujimeshres-acc-triangle" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは◎精度以上のヒットのみ保持するため、△精度のデータはありません">:△</label>
-                <input type="checkbox" id="chk-tsujimeshres-acc-dash" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは◎精度以上のヒットのみ保持するため、-精度のデータはありません">:-</label>
+                <input type="checkbox" id="chk-tsujimeshres-acc-circle" class="body-checkbox" checked disabled> <label class="tsuji-acc-label" title="読み取り専用・常時オン。この機能が扱う精度の下限は○(保持する範囲は精度フィルタオプションで選択)">:○</label>
+                <input type="checkbox" id="chk-tsujimeshres-acc-triangle" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは精度フィルタオプション以内のヒットのみ保持するため、△精度のデータはありません">:△</label>
+                <input type="checkbox" id="chk-tsujimeshres-acc-dash" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは精度フィルタオプション以内のヒットのみ保持するため、-精度のデータはありません">:-</label>
             </div>
             <hr class="tsujisearch-separator">
             <div class="control-row left-row" title="標高フィルタをオンにして検索した場合のみ有効です">
@@ -1232,17 +1233,17 @@ GNU General Public License for more details.
                     </div>
                     <div class="control-row left-row">
                         <input type="checkbox" id="chk-tsujimesh-sym-maru2" class="body-checkbox" checked disabled> <label class="tsuji-acc-label" title="精度記号◎〜◎×128(±0.125°以内)の行を表示(常時オン)">:◎</label>
-                        <input type="checkbox" id="chk-tsujimesh-sym-maru" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは◎精度以上のヒットのみ保持するため、○精度のデータはありません">:○</label>
-                        <input type="checkbox" id="chk-tsujimesh-sym-tri" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは◎精度以上のヒットのみ保持するため、△精度のデータはありません">:△</label>
-                        <input type="checkbox" id="chk-tsujimesh-sym-dash" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは◎精度以上のヒットのみ保持するため、-精度のデータはありません">:-</label>
+                        <input type="checkbox" id="chk-tsujimesh-sym-maru" class="body-checkbox" checked disabled> <label class="tsuji-acc-label" title="読み取り専用・常時オン。この機能が扱う精度の下限は○(保持する範囲は精度フィルタオプションで選択)">:○</label>
+                        <input type="checkbox" id="chk-tsujimesh-sym-tri" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは精度フィルタオプション以内のヒットのみ保持するため、△精度のデータはありません">:△</label>
+                        <input type="checkbox" id="chk-tsujimesh-sym-dash" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは精度フィルタオプション以内のヒットのみ保持するため、-精度のデータはありません">:-</label>
                     </div>
                     <hr class="tsujisearch-separator">
-                    <div class="control-row left-row"><label class="baseopt-group-label" title="精度フィルタ◎の当たり判定の精度(検索の判定ε)を指定します">精度フィルタオプション</label></div>
+                    <div class="control-row left-row"><label class="baseopt-group-label" title="精度フィルタの当たり判定の精度(検索の判定ε)を指定します">精度フィルタオプション</label></div>
                     <div class="control-row left-row">
-                        <label class="baseopt-radio" title="±0.125°(誤差範囲0.25°)以内"><input type="radio" name="tsujimesh-accuracy" value="x1" checked>:◎</label>
+                        <label class="baseopt-radio" title="±0.25°(誤差範囲0.5°)以内"><input type="radio" name="tsujimesh-accuracy" value="o1" checked>:○</label>
+                        <label class="baseopt-radio" title="±0.125°(誤差範囲0.25°)以内"><input type="radio" name="tsujimesh-accuracy" value="x1">:◎</label>
                         <label class="baseopt-radio" title="±0.0625°(誤差範囲0.125°)以内"><input type="radio" name="tsujimesh-accuracy" value="x2">:◎×2</label>
                         <label class="baseopt-radio" title="±0.03125°(誤差範囲0.0625°)以内"><input type="radio" name="tsujimesh-accuracy" value="x4">:◎×4</label>
-                        <label class="baseopt-radio" title="±0.015625°(誤差範囲0.03125°)以内"><input type="radio" name="tsujimesh-accuracy" value="x8">:◎×8</label>
                     </div>
                     <hr class="tsujisearch-separator">
                     <div class="control-row left-row" title="検索前に全画素の可視(OK)/不可視(NG)を判定し、選んだ対象の画素だけを検索します">
@@ -1916,6 +1917,10 @@ GNU General Public License for more details.
                         <button id="btn-myobs-get" class="nav-btn main-btn">観測点取得</button>
                         <button id="btn-myobs-regall" class="nav-btn main-btn">全て登録</button>
                     </div>
+                    <div class="control-row">
+                        <button id="btn-myobs-photo" class="nav-btn main-btn" title="写真の位置情報(Exif)から観測点を追加します。写真は端末内で読み取るだけで、送信・保存されません">写真から追加</button>
+                        <input type="file" id="file-myobs-photo" accept="image/*" style="display:none">
+                    </div>
                     <div id="myobs-error" class="mypoint-error"></div>
                     <div id="myobs-list" class="mypoint-list"></div>
                     <div class="control-row">
@@ -1946,6 +1951,10 @@ GNU General Public License for more details.
                         <button id="btn-mytgt-apply" class="nav-btn main-btn">位置反映</button>
                         <button id="btn-mytgt-get" class="nav-btn main-btn">目的点取得</button>
                         <button id="btn-mytgt-regall" class="nav-btn main-btn">全て登録</button>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-mytgt-photo" class="nav-btn main-btn" title="写真の位置情報(Exif)から目的点を追加します。写真は端末内で読み取るだけで、送信・保存されません">写真から追加</button>
+                        <input type="file" id="file-mytgt-photo" accept="image/*" style="display:none">
                     </div>
                     <div id="mytgt-error" class="mypoint-error"></div>
                     <div id="mytgt-list" class="mypoint-list"></div>
@@ -2187,6 +2196,7 @@ GNU General Public License for more details.
                 <div class="gdrive-sync-title">③他の端末の方を優先したいのでキャンセル</div>
                 <div class="gdrive-sync-center"><button class="nav-btn main-btn">キャンセル</button></div>
             </div>
+            <div class="gdrive-sync-info"><label title="オンにすると、端末の内容に変更があった時に、少し待ってからGoogleドライブへ自動で保存します(最後の変更から約30秒後にまとめて1回。画面を閉じる/裏に回る時にも1回)。他の端末が先に保存していた時は自動では上書きせず、👎に戻してこのダイアログに委ねます。ログインが切れている時は🈚️になります(変更は端末に残ります)"><input type="checkbox" id="chk-gdrive-autosync">:自動更新</label></div>
         </div>
     </div>
 
@@ -2442,6 +2452,7 @@ GNU General Public License for more details.
                     <ul class="help-list">
                         <li><strong>My辻検索</strong>: 辻検索の条件を複数(最大1000件まで)登録・管理。「一括計算」で全件をWorkerプール並列実行、「File取得」でCSV出力。CSV出力の方が<strong>画面出力より詳細</strong>です。</li>
                         <li><strong>My観測点 / My目的点</strong>: 複数(最大1000件まで)の観測点・目的点を登録・管理。地図上に緑/橙のマーカー表示。「位置反映」で位置情報メニューに反映。各行のチェックボックスで選択。CSV入出力対応。</li>
+                        <li><strong>写真から追加</strong>: 撮った写真の位置情報 (Exif) から観測点・目的点を追加できます。緯度経度は写真から、標高は緯度経度から取得し直し、高さは0で行が追加されるので、そのまま「全て登録」できます。写真は<strong>端末内 (ブラウザ内) で読み取るだけ</strong>で、どこにも送信・保存されません。スクリーンショットやSNS経由の画像は位置情報が取り除かれていることが多く、その場合は追加できません。</li>
                         <li><strong>CSV出力</strong>は<strong>チェックボックスで選択した行のみ</strong>を出力します。<strong>全CSV入力 / 追加CSV入力</strong>では、1列目が <code>#</code> で始まる行を<strong>コメント行として読み飛ばし</strong>ます。</li>
                     </ul>
                 </section>
@@ -2467,6 +2478,7 @@ GNU General Public License for more details.
                     <h3>バックアップ / インポート / Googleドライブ同期</h3>
                     <p>Home/推し山、表示天体、My天体、My観測点、My目的点、My辻検索、Myセット、設定の全データを JSON で一括バックアップ・インポート。デバイス間の移行に便利です。</p>
                     <p><strong>Googleドライブ同期</strong>: ヘッダのアイコンからGoogleアカウントにログインすると、全データをGoogleドライブ (soranotsuji-app.json) と同期できます。アイコンの意味: 🈚️=未ログイン (押下でログイン) / 🕛=確認中 / 😢=ドライブにファイルが無い (押下で作成) / 👍=同期済み / 👎=端末とドライブに差がある (押下で保存/読み込みを選ぶダイアログ) / ❌=エラー (押下で再確認)。</p>
+                    <p><strong>宙の辻フォルダ</strong>: ドライブ上の保存先フォルダは、名前ではなくフォルダに付けた目印で追跡しています。このため、Googleドライブ側で宙の辻フォルダを<strong>名前変更したり、別の場所へ移動したりしても、連携はそのまま保たれます</strong>。ご自身のドライブの整理に合わせて自由に動かせます。アプリ側の「宙の辻フォルダ名」欄と「登録」ボタンは、ドライブ上のフォルダをその名前に変更 (リネーム) するためのものです。フォルダをゴミ箱に入れた場合は、次回の保存時に新しいフォルダが作られます。</p>
                 </section>
 
                 <section class="help-section">

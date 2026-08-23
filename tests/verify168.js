@@ -16,8 +16,8 @@ const target = process.argv[2] || path.join(__dirname, '..', 'script.js');
 const src = fs.readFileSync(target, 'utf8');
 const html = fs.readFileSync(path.join(path.dirname(target), 'index.html'), 'utf8');
 
-// ---- V0: 版数ピン(最新の検証が持つ) ----
-check('V0 版数ピン 1.86.1', /APP_VERSION = '1\.86\.1'/.test(src) && (src.includes('Version 1.86.1 - ') || !!process.argv[2]));
+// ---- V0: 版数の形(第125でピンはverify169へ移譲=最新の検証が持つ) ----
+check('V0 版数の形+Version Historyに1.86.1の行', /APP_VERSION = '\d+\.\d+\.\d+'/.test(src) && (src.includes('Version 1.86.1 - ') || !!process.argv[2]));
 
 // ---- S1: オフセット点の位置が正典関数へ一本化(静的) ----
 check('S1 天体儀のオフセット点がgetMilkyWayBaseRaDecへ一本化(生角度の銀経渡しが無い)',

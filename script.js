@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.87.0 - 2026-08-23: feat: 第127ラウンド — Googleドライブ同期の「:自動更新」(依頼者提案・GO): 同期ダイアログの一番下に「:自動更新」チェック(初期値オフ・appState.googleDrive.autoSyncに永続)。オンの間、端末の内容に変更があるとデバウンス(最後の変更から30秒後にまとめて1回=saveAppStateから_autoSyncArm→_autoSyncFlush。画面が裏に回るvisibilitychangeでも待たずに1回)でドライブへ自動保存(quiet=成功/失敗のalertなし)。設計条件3つ: ①デバウンスでAPI割り当てと通信量を守る ②競合ガード=書き込み直前にドライブのmodifiedTimeが前回同期と一致するか確認し、不一致(他端末が先に保存・この端末が未同期)なら自動では上書きせず👎に戻して人に委ねる ③トークン切れは🈚️でログインを促す・通信失敗は静かに諦めて次の機会に(変更は端末に残る)。内容の変更なし(簿記保存のみ=指紋一致)は書かない / 第128ラウンド(リリース前の追補): ①辻メッシュ精度フィルタに「:○」(±0.25°)を追加して初期値に(実用域=辻検索の◎○に相当。依頼者指定)・「:◎×8」は撤去(旧保存/URLのx8は最も近いx4へ読み替え=normalizeAppState)・辻時刻の精度フィルタオプションselectにも○を追加・短縮URL辞書v21(新既定の&tsujiMeshAccuracy=o1ペア) ②宙の窓ボタンで開き直す度にカメラオフセット方位角/視高度をリセット(前回のズレ残り対策。URL復元の自動オープンはリセットしない=共有構図を守る) ③更新系の結合レベルテスト(verify172: 一括更新の進捗%・checking多重押下・シート作成の実往復・ログイン/ログアウト) / 第130ラウンド(リリース前の追補2・依頼者指摘): 辻メッシュの読み取り専用の精度フィルタ表示(メニュー+結果パネルの「:○」)を精度フィルタオプションへ連動(○選択時=◎と○がオン・◎系選択時=◎のみ。_tmSyncSymODisplay。状態キーtsujiMeshSymOは常時false固定のまま=URL/保存互換不変) / 第131ラウンド(リリース前の追補3・依頼者の設計モデルで確定): 「:○」は常時オンの固定表示へ(第130の連動方式を取り下げ・_tmSyncSymODisplay撤去)。モデル=精度フィルタ(◎○)は対象の下限(この機能は○精度までを扱う)を示す固定の枠・精度フィルタオプションは保持する精度の範囲(選択精度以上を含む: ○なら○◎◎×2…・◎なら◎◎×2…)を決める。コントロールの精度フィルタオプション(表示切替で○を選べる)との整合のため表示条件の分岐を持たない / 第132ラウンド(リリース前の追補4・依頼者依頼3件): ①結果コントロールの精度フィルタオプション(select-tsujimesh-time-eps・非永続)の初期値も○へ(検索メニュー側と考え方のベースを揃える。求める場所には範囲があるため) ②My観測点/My目的点に「写真から追加」ボタン(1段目の下・横幅いっぱい): 写真のExif位置情報(JPEG/TIFF・端末内のバイト走査のみで送信/保存しない=プライバシーポリシーにも明記)から行を追加(名前=新規○○名・緯度経度=写真・標高=緯度経度から再取得・高さ=0・すぐ全て登録が押せる状態)。_exifGpsFromArrayBuffer+addMyPointFromPhoto ③宙の辻フォルダの「追加/解除」ボタンは設けない判断(ID+目印[appProperties]追跡で名前変更・移動に耐えるため関連づけ直し不要。ヘルプへ「名前変更・移動しても連携は保たれる」を明記) / 第133ラウンド(リリース前の追補5・依頼者指摘2件): ①不具合修正: 結果コントロールのスナップショット固定値(第64)が「:○」を検索完了時に強制オフ→◎○オンへ(_resCtlSet/_resCtlFromAppState。第128で○が既定になって以降、_tmBuildRowsの行絞り込みで最良精度が○の日の行が結果リストから落ちていた=リリース前に発見・修正) ②精度フィルタオプション「:○」ツールチップから「辻検索の◎○に相当する実用域」を削除(デッサンの考え方はUIに書かない) ③reset.htmlへ「消去は端末内のみ・ドライブの宙の辻フォルダは残りログインし直すと再同期」の注記(依頼者の疑問への回答を利用者向けに明文化)
+Version 1.86.2 - 2026-08-23: fix: 第125ラウンド — Googleドライブ同期ダイアログの[New]が両方に付くことがある不具合の修正(依頼者報告)。原因は日付比較ではなく[New]の意味: 旧実装は「前回同期からその側が変わったか」を両側独立に表示(第36設計)しており、①両側とも変わった競合時 ②同期簿記が無い時のフォールバック、の2経路で両方に点灯した。修正: [New]は常にどちらか一方だけ=片側だけ変わっていればその側(簿記保存でsavedAtが進んでも付かない第36の性質は維持)・両側変わった競合時は更新日時そのもの(ミリ秒までの日時比較)で新しい側だけに付ける。👍/👎の判定(指紋+modifiedTime)は不変
 Version 1.86.1 - 2026-08-22: fix: 第122ラウンド — ①天体儀の天の川オフセット点の逆回り修正(依頼者報告: オフセット中心角を変えると中心→オフセット点の方位線が軌跡とズレる)。原因は_mwBuildMilkyWayRingのオフセット点だけ収録角を生のまま銀経へ渡していた反転漏れ(第93の符号統一「夏の天の川を上から見て時計回りが正」の取り残し=v1.75.0以来)。依頼者の基準(2026-06-21夏至の日の入・天頂から中心を見て時計回りが正)で数値検証: 正典のgetMilkyWayBaseRaDec系(天体儀の軌跡・辻ライン・辻検索・辻メッシュ・My辻検索)は角度+30/+60でaz126°→156°→186°と時計回り=正しく、天体儀のオフセット点マーカー+方位線だけ逆回り(+30が-30の位置)だった。修正はgetMilkyWayBaseRaDecへの一本化(以後この点は構造的に軌跡・検索と一致) ②名称修正「全天儀」→「天体儀」(依頼者指摘: 全天儀は造語だった。UI・ツールチップ・ヘルプ・デッサン等の全文置換。DOM idとVersion History過去行はそのまま)
 Version 1.86.0 - 2026-08-22: fix/feat: 第116ラウンド — 可視判定へ地球の丸み+大気差を導入(茶臼山→ダイヤ槍の実戦報告=第115調査の帰結・依頼者GO)+宙の窓の写真テクスチャ: ①統一可視判定コア(_visJudgeCore)を「沈み込み補正付き比較」へ(drop=d²/2Reff を各標高から引いてから従来の直線補間と比較=見かけ高度比較と等価。Reffは視高度計算と同じWGS84局所半径+気差kの実効半径。放物線近似の誤差は300kmで数m)。標高グラフ・辻検索/My辻/辻メッシュの標高フィルタが一度に正確化(判定は保守側へ変わる=遠距離でOK→NGになり得る)。辻メッシュのワーカー並列判定(tm-vis-worker)も同一式・同一値でビット一致を維持 ②標高グラフの赤い見通し線を同じ実効地球でたわむ曲線描画へ+可視判定ポップアップの注記を「地球の丸みと大気差を考慮」へ更新 ③宙の窓「:写真テクスチャ」新設(soraPhotoTex・初期値オフ): 地理院の全国最新写真(シームレス)をDEMと同じタイル座標から頂点色として拾い山肌に貼る(頂点単位ドレープ。取得はDEMワーカー相乗り・域外/失敗は標高グレーのまま・太陽光ヒルシェードは写真にも掛かる) ④天体の軌跡線にマーカーと同じ大気差を適用(従来は無しで地平線際に最大0.5°のずれ) ⑤短縮URL辞書v20(soraPhotoTexの2シード。v19以前は復号のみ保証で凍結) ⑥第117ラウンド(リリース前の追補): 可視判定ポップアップ注記の「(v1.86.0から)」を削除(リリースノートが持ち場)・全天儀の天体軌跡線を方位線(中心→天体)と同じ太さのチューブ+背面破線3本重ねへ(_mwFrontBackLine→_mwTrajCircle。等赤緯円はトーラスで厳密描画)・ヘルプの可視判定2箇所を丸み+大気差込みの記述へ更新+「:写真テクスチャ」のヘルプ項目と出典(全国最新写真の構成・GRUS/Landsat-8の個別出所)を追加・地図ⓘの出典を「国土地理院(標高・写真)」へ ⑦第118ラウンド(リリース前の追補2): 全天儀の軌跡線をさらに2倍の太さ(0.005R=方位線の2倍)へ(スマホでの見やすさ=依頼者指定)
 Version 1.85.1 - 2026-08-20: fix: 第108→110ラウンド — 共有URLの不具合修正(第106〜107の調査・議論を受けた案A改・依頼者GO。第110ラウンド: 依頼者指摘「同じURLが意図どおりに開かれないのは不具合」により、機能追加の1.86.0ではなく不具合修正のパッチ版1.85.1として版数を付け直し):①位置情報URL(全部盛り)に辻検索条件51キー+辻メッシュ条件50キーを発行(発行部は辻検索/辻メッシュURLと共用の_emitTsujiSearchCondParams等へ抽出)。検索結果を出した画面の共有は「条件+パネル開閉由来の自動実行」で開くたび同じ結果を再計算して再現 ②復元のmode毎の適用ゲートを廃止(URLに有るキーは常に適用=「発行は絞る、復元は絞らない」。基準方位角/視高度の上書き保護もmode問わずへ) ③天体色/線種を常時発行に(既定値でも省略しない。開いた側の変更色が残らない。既定値のままのURLが変更したURLより短くなるよう短縮辞書v19に既定値ペア44個を追加=依頼者の採用条件・実測536字<592字) ④発行漏れ4キー(soraGrayscale・soraLabelScale・smBldg・smBldgTex)の発行+復元を追加 ⑤短縮URL辞書v19(天体色44ペア+新4キーの8シード。v18以前は復号のみ保証で凍結)
@@ -152,7 +154,7 @@ Version 1.0.0 - 2026-01-29: Initial release
 // 1. 定数定義
 // ============================================================
 
-const APP_VERSION = '1.86.1';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
+const APP_VERSION = '1.87.0';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
 
 /** アプリのバージョン文字列を返す (index.htmlのフッター表示などから利用) */
 function getAppVersion() {
@@ -494,7 +496,7 @@ const APP_DEFAULTS = {
     tsujiMeshBaseAz: { def: 0 }, tsujiMeshOffsetAz: { def: 0 }, tsujiMeshToleranceAz: { def: 15 },
     tsujiMeshBaseAlt: { def: 0 }, tsujiMeshOffsetAlt: { def: 0 }, tsujiMeshToleranceAlt: { def: 15 },
     tsujiMeshCenterMode: { def: 'point', enum: ['point', 'line'] },
-    tsujiMeshAccuracy: { def: 'x1', enum: ['x1', 'x2', 'x4', 'x8'] },   // ◎(±0.125)/±0.0625/±0.03125/±0.015625
+    tsujiMeshAccuracy: { def: 'o1', enum: ['o1', 'x1', 'x2', 'x4'] },   // ○(±0.25)/◎(±0.125)/±0.0625/±0.03125。第128: ○を追加して初期値に(実用域)・×8は撤去(旧保存/URLのx8はx4へ読み替え)
     tsujiMeshMoonFilterEnabled: { def: false },
     tsujiMeshMoonBase: { def: 14.8 },
     tsujiMeshMoonTolerance: { def: 2 },
@@ -568,7 +570,8 @@ let appState = {
         lastSyncDriveModifiedTime: null,   // 最後に同期した時のドライブ側modifiedTime
         lastSyncFingerprint: null,         // 最後に同期した時のローカル内容の指紋
         lastDriveModifiedTime: null,       // 最後に確認したドライブ側modifiedTime(表示用)
-        lastDriveSize: null                // 最後に確認したドライブ側サイズ(表示用)
+        lastDriveSize: null,               // 最後に確認したドライブ側サイズ(表示用)
+        autoSync: false                    // 「:自動更新」(第127ラウンド。変更をデバウンスして自動でドライブへ保存)
     },
 
     // My辻検索
@@ -731,7 +734,7 @@ window.onload = async function() {
     document.getElementById('input-tsujimesh-moon-base').value = appState.tsujiMeshMoonBase;
     document.getElementById('input-tsujimesh-moon-tolerance').value = appState.tsujiMeshMoonTolerance;
     document.getElementById('chk-tsujimesh-elev-option').checked = appState.tsujiMeshElevationOption;
-    document.getElementById('chk-tsujimesh-sym-maru').checked = appState.tsujiMeshSymO;
+    // :○は常時オンの固定表示(第131・依頼者仕様: 精度フィルタは対象の下限=◎と○を示す。HTMLのchecked属性のまま触らない。状態キーtsujiMeshSymOは互換のため常時falseのまま)
     document.getElementById('chk-tsujimesh-sym-tri').checked = appState.tsujiMeshSymTri;
     document.getElementById('chk-tsujimesh-sym-dash').checked = appState.tsujiMeshSymDash;
     document.getElementById('chk-tsujimesh-elev-ok').checked = appState.tsujiMeshElevOK;
@@ -1816,7 +1819,17 @@ function setupUI() {
     document.getElementById('btn-gps').onclick = useGPS;
     document.getElementById('btn-elevation').onclick = toggleElevation;
     document.getElementById('btn-milkyway').onclick = toggleMilkyWayInstrument;
-    document.getElementById('btn-soramado').onclick = toggleSoramado;
+    document.getElementById('btn-soramado').onclick = () => {
+        // 宙の窓ボタンで開き直す度にカメラオフセット方位角/視高度をリセットする(第128・依頼者依頼:
+        // 前回のズレた状態が残ると使いづらい)。URL復元の自動オープン(panel=soramado)はこの経路を
+        // 通らないのでリセットされない=共有された構図はそのまま開く
+        if (!appState.isSoramadoActive && (Number(appState.soraOffsetAz) !== 0 || Number(appState.soraOffsetAlt) !== 0)) {
+            appState.soraOffsetAz = 0;
+            appState.soraOffsetAlt = 0;
+            saveAppState();
+        }
+        toggleSoramado();
+    };
     setupSoramadoControls();
     setupBaseOptionControls();
     setupMilkyWayCtrl();
@@ -2229,6 +2242,12 @@ function setupUI() {
     // My観測点ボタン
     document.getElementById('btn-myobs-apply').onclick = () => applyMyPoint('obs');
     document.getElementById('btn-myobs-get').onclick = () => getMyPointFromLocation('obs');
+    document.getElementById('btn-myobs-photo').onclick = () => document.getElementById('file-myobs-photo').click();
+    document.getElementById('file-myobs-photo').addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';   // 同じ写真を選び直してもchangeが発火するように空へ戻す
+        addMyPointFromPhoto('obs', f);
+    });
     document.getElementById('btn-myobs-regall').onclick = () => registerAllMyPoints('obs');
     document.getElementById('btn-myobs-up').onclick = () => moveMyPointUp('obs');
     document.getElementById('btn-myobs-down').onclick = () => moveMyPointDown('obs');
@@ -2242,6 +2261,12 @@ function setupUI() {
     // My目的点ボタン
     document.getElementById('btn-mytgt-apply').onclick = () => applyMyPoint('tgt');
     document.getElementById('btn-mytgt-get').onclick = () => getMyPointFromLocation('tgt');
+    document.getElementById('btn-mytgt-photo').onclick = () => document.getElementById('file-mytgt-photo').click();
+    document.getElementById('file-mytgt-photo').addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';   // 同じ写真を選び直してもchangeが発火するように空へ戻す
+        addMyPointFromPhoto('tgt', f);
+    });
     document.getElementById('btn-mytgt-regall').onclick = () => registerAllMyPoints('tgt');
     document.getElementById('btn-mytgt-up').onclick = () => moveMyPointUp('tgt');
     document.getElementById('btn-mytgt-down').onclick = () => moveMyPointDown('tgt');
@@ -2266,6 +2291,11 @@ function setupUI() {
     document.getElementById('gdrive-sync-save').onclick = () => { closeGdriveSyncDialog(); saveAppToDrive(); };
     document.getElementById('gdrive-sync-load').onclick = () => { closeGdriveSyncDialog(); loadAppFromDrive(); };
     document.getElementById('gdrive-sync-cancel').onclick = closeGdriveSyncDialog;
+    document.getElementById('chk-gdrive-autosync').addEventListener('change', (e) => {
+        appState.googleDrive.autoSync = e.target.checked;
+        saveAppState();
+        if (e.target.checked) _autoSyncArm();   // オンにした直後の未保存変更も拾う
+    });
 
     // Myセット
     document.getElementById('btn-myset-toggle-all').onclick = toggleAllMySets;
@@ -2573,6 +2603,7 @@ function saveAppState() {
     }
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+        _autoSyncArm();   // 「:自動更新」(第127): 変更のたびにデバウンスタイマーを引き直す(オフ時・自動保存中は中で無視)
     } catch (e) {
         // 容量超過(QuotaExceeded)等。呼び出し元(全UIハンドラ約200箇所)を例外で
         // 巻き込まない+無音で保存されない状態を作らない(第36ラウンドの整合性調査)
@@ -2732,6 +2763,9 @@ function normalizeAppState() {
     // 旧H.265選択はH.264(MP4)へ移行。汎用パスの列挙検査より先に行う(後だとh265が一覧に無く一旦jpegへ
     // 落ちてしまい、移行にならない)
     if (appState.soraExpFormat === 'h265') appState.soraExpFormat = 'h264';
+    // 辻メッシュ精度フィルタの旧「◎×8」は最も近い「◎×4」へ移行(第128: ○追加+×8撤去。
+    // 列挙検査より先に行わないと既定の○へ落ちてしまい、精度が2桁粗くなる読み替えになってしまう)
+    if (appState.tsujiMeshAccuracy === 'x8') appState.tsujiMeshAccuracy = 'x4';
 
     // ---- 汎用パス: APP_DEFAULTS(単一情報源)の規則で数値の範囲丸め・列挙検査・真偽の整形を行う ----
     // (規則の種類は表の定義コメントを参照。special付きと{def}のみの項目はここでは触らない=従来挙動の維持)
@@ -6153,6 +6187,92 @@ function getMyPointFromLocation(type) {
     renderMyPointsList(type);
 }
 
+/** 写真(JPEG/TIFF)のExifから位置情報を読み取る。成功で{lat,lng}(度・符号付き)、無ければnull(第132ラウンド)。
+ *  端末内で完結: ArrayBufferのバイト走査だけで、画像のデコード・送信・保存はしない。
+ *  JPEGはAPP1(Exif)セグメント→TIFF構造、TIFFは先頭から。GPS IFDのタグ1〜4(緯度経度の参照と度分秒)を読む */
+function _exifGpsFromArrayBuffer(buf) {
+    const dv = new DataView(buf);
+    let tiffOff = -1;
+    if (dv.byteLength >= 4 && dv.getUint16(0) === 0xFFD8) {
+        let off = 2;
+        while (off + 4 <= dv.byteLength) {
+            if (dv.getUint8(off) !== 0xFF) break;
+            const marker = dv.getUint8(off + 1);
+            if (marker === 0xFF) { off += 1; continue; }   // 詰め物のFFは読み飛ばす
+            if (marker === 0xD8 || (marker >= 0xD0 && marker <= 0xD7) || marker === 0x01) { off += 2; continue; }
+            if (marker === 0xDA) break;                    // 画像データ(SOS)以降にExifは無い
+            const len = dv.getUint16(off + 2);
+            if (len < 2 || off + 2 + len > dv.byteLength) break;
+            if (marker === 0xE1 && len >= 10 && dv.getUint32(off + 4) === 0x45786966 && dv.getUint16(off + 8) === 0) {   // 'Exif\0\0'
+                tiffOff = off + 10;
+                break;
+            }
+            off += 2 + len;
+        }
+    } else if (dv.byteLength >= 8) {
+        const head = dv.getUint16(0);
+        if (head === 0x4949 || head === 0x4D4D) tiffOff = 0;   // TIFF(Exif構造そのもの)
+    }
+    if (tiffOff < 0 || tiffOff + 8 > dv.byteLength) return null;
+    const little = dv.getUint16(tiffOff) === 0x4949;
+    const u16 = (o) => dv.getUint16(o, little), u32 = (o) => dv.getUint32(o, little);
+    if (u16(tiffOff + 2) !== 42) return null;
+    const findTag = (ifdOff, tag) => {
+        if (ifdOff < 0 || ifdOff + 2 > dv.byteLength) return -1;
+        const n = u16(ifdOff);
+        for (let i = 0; i < n; i++) {
+            const e = ifdOff + 2 + i * 12;
+            if (e + 12 > dv.byteLength) return -1;
+            if (u16(e) === tag) return e;
+        }
+        return -1;
+    };
+    const gpsPtr = findTag(tiffOff + u32(tiffOff + 4), 0x8825);   // IFD0のGPS IFDポインタ
+    if (gpsPtr < 0) return null;
+    const gpsIfd = tiffOff + u32(gpsPtr + 8);
+    const refChar = (e) => {   // ASCIIタグの先頭1文字('N'/'S'/'E'/'W')。値4バイト以下はエントリ内に直置き
+        if (e < 0) return '';
+        const o = u32(e + 4) <= 4 ? e + 8 : tiffOff + u32(e + 8);
+        return o < dv.byteLength ? String.fromCharCode(dv.getUint8(o)) : '';
+    };
+    const dms = (e) => {       // RATIONAL×3(度・分・秒)→度。壊れた分母0は0扱い
+        if (e < 0) return null;
+        const type = u16(e + 2);
+        if ((type !== 5 && type !== 10) || u32(e + 4) < 3) return null;
+        const o = tiffOff + u32(e + 8);
+        if (o + 24 > dv.byteLength) return null;
+        const g = type === 5 ? u32 : (x) => dv.getInt32(x, little);
+        const r = (k) => { const den = g(o + k * 8 + 4); return den ? g(o + k * 8) / den : 0; };
+        return r(0) + r(1) / 60 + r(2) / 3600;
+    };
+    const lat = dms(findTag(gpsIfd, 2)), lng = dms(findTag(gpsIfd, 4));
+    if (lat === null || lng === null || (lat === 0 && lng === 0)) return null;
+    const sLat = (refChar(findTag(gpsIfd, 1)) === 'S' ? -1 : 1) * lat;
+    const sLng = (refChar(findTag(gpsIfd, 3)) === 'W' ? -1 : 1) * lng;
+    if (!(Math.abs(sLat) <= 90 && Math.abs(sLng) <= 180)) return null;
+    return { lat: sLat, lng: sLng };
+}
+
+/** 「写真から追加」: 選択した写真のExif位置情報からMy観測点/My目的点の行を1件追加する(第132ラウンド・依頼者依頼)。
+ *  行の初期値は依頼者指定: 名前=「新規○○名」・緯度経度=写真の位置情報・標高=緯度経度から再取得・高さ=0。
+ *  追加後は「観測点取得」と同じ未登録状態(dirty)になり、すぐ「全て登録」が押せる。写真は端末内で読むだけで送信・保存しない */
+async function addMyPointFromPhoto(type, file) {
+    if (!file) return;
+    const cfg = myPointConfig(type);
+    let gps = null;
+    try { gps = _exifGpsFromArrayBuffer(await file.arrayBuffer()); } catch (e) { console.error(e); }
+    if (!gps) return alert('写真から位置情報を読み取れませんでした。\n(位置情報(Exif)付きのJPEG写真に対応しています。スクリーンショットや、SNS・メッセージアプリを経由した画像は、位置情報が取り除かれていることが多いです)');
+    const lat = parseFloat(gps.lat.toFixed(6)), lng = parseFloat(gps.lng.toFixed(6));
+    if (!confirm(`写真の位置情報(緯度${lat}、経度${lng})を${cfg.labelFull}リストに追加しますか？\n(標高は緯度経度から取得し直します)`)) return;
+    const elev = await getElevation(lat, lng);   // 写真のExif標高は使わない(気圧高度等でずれるため。依頼者指定=再取得)
+    const id = getNextMyPointId(type);
+    if (id === null) return alert(`${cfg.labelFull}の登録上限(1000件)に達しています`);
+    cfg.list().push({ id, name: `新規${cfg.label}名`, lat, lng, elev, height: 0, memo: '' });
+    saveAppState();
+    setMyPointDirty(type, true);
+    renderMyPointsList(type);
+}
+
 /** 全て登録 */
 function registerAllMyPoints(type) {
     const cfg = myPointConfig(type);
@@ -8521,9 +8641,11 @@ function _resCtlSet(P, F, elevAvail) {
     setChk(`chk-${P}-month-filter`, F.monthFilter);
     _MONTH_DEFS.forEach(([suf]) => setChk(`chk-${P}-month-${suf}`, F['month' + suf]));
     if (P === 'tsujimeshres') {
-        // メッシュの精度フィルタは検索メニューと同じ読み取り専用固定(第64ラウンド)。Fに関わらず固定値を保つ
+        // メッシュの精度フィルタは検索メニューと同じ読み取り専用固定。Fに関わらず固定値を保つ
+        // (第133ラウンド・依頼者指摘: 第64の固定値が◎のみオンのままで、第128の○追加後も:○を
+        //  検索完了時に強制オフにしていた。固定の枠=◎○オン・△-オフ(第131の下限モデル)へ修正)
         setChk(`chk-${P}-acc-filter`, true);
-        setChk(`chk-${P}-acc-dbl-circle`, true); setChk(`chk-${P}-acc-circle`, false);
+        setChk(`chk-${P}-acc-dbl-circle`, true); setChk(`chk-${P}-acc-circle`, true);
         setChk(`chk-${P}-acc-triangle`, false); setChk(`chk-${P}-acc-dash`, false);
     } else {
         setChk(`chk-${P}-acc-filter`, F.accuracyFilter);
@@ -8557,10 +8679,12 @@ function _resCtlFromAppState(sp) {
         F.accTriangle = appState.tsujiAccTriangle; F.accDash = appState.tsujiAccDash;
         F.elevFilter = appState.tsujiElevationOption; F.elevOK = appState.tsujiElevOK; F.elevNG = appState.tsujiElevNG;
     } else {
-        // メッシュの精度フィルタ: 検索メニューと同じ読み取り専用固定(◎=常時オン・○△-=常時オフ。
-        // 第64ラウンド: コントロール側も固定表示になったため、appState参照をやめて値も固定にする)
+        // メッシュの精度フィルタ: 検索メニューと同じ読み取り専用固定(◎○=常時オン・△-=常時オフ。
+        // 第64ラウンドでappState参照をやめて固定値に。第133ラウンド・依頼者指摘: ○も常時オンへ修正 —
+        // 第128で精度フィルタオプションの既定が○になって以降、ここがfalseのままだと
+        // _tmBuildRowsの行絞り込みで最良精度が○の日の行が結果リストから落ちていた(リリース前に発見))
         F.accuracyFilter = true;
-        F.accDblCircle = true; F.accCircle = false;
+        F.accDblCircle = true; F.accCircle = true;
         F.accTriangle = false; F.accDash = false;
         F.elevFilter = appState.tsujiMeshElevationOption; F.elevOK = appState.tsujiMeshElevOK; F.elevNG = appState.tsujiMeshElevNG;
     }
@@ -9019,7 +9143,8 @@ function toggleTsujiSearch() {
 // --- 辻メッシュ検索 パネル ---
 let tsujiMeshGeneration = 0;   // キャンセル用世代カウンタ
 const TSUJIMESH_ZOOM = 14;     // DEM標高タイルのズーム (dem_png の最大)
-const TSUJIMESH_EPS = { x1: 0.125, x2: 0.0625, x4: 0.03125, x8: 0.015625 };   // 精度フィルタ→角距離ε(°)
+const TSUJIMESH_EPS = { o1: 0.25, x1: 0.125, x2: 0.0625, x4: 0.03125 };   // 精度フィルタ→角距離ε(°)。第128: ○(0.25)を追加・×8撤去
+
 let _tsujiMeshRows = [];       // 表示中の結果行(現在の表示順)
 let _tsujiMeshSelIdx = -1;     // 選択中の行index
 let _tsujiMeshPix = null;      // 対象画素 { lat:Float64Array, lng:Float64Array, elev:Float32Array(DEM標高) } (プレフィルタ後)
@@ -9029,7 +9154,7 @@ let _tsujiMeshCalc = null;     // 辻時刻コントロールの再計算用ス�
 let _tmCtrlDay0 = null;        // 選択行の日0:00(ms)。実効辻時刻 = day0 + スライダー(その日の通算秒) + サブ秒
 let _tmCtrlFracMs = 0;         // 実効辻時刻のサブ秒(ms)。行選択/ジャンプ時は精細化時刻の端数、スライダー手動操作で0にリセット
 let _tmCtrlWidth = 0;          // 辻時刻の幅(±秒) 0〜30 (0=指定した1秒のみ)
-let _tmCtrlEps = 0.125;        // 精度フィルタオプション(角距離ε°) ◎〜◎×128
+let _tmCtrlEps = 0.25;         // 精度フィルタオプション(角距離ε°) ○〜◎×128(第132: 初期値を検索メニュー側と同じ○へ=考え方のベースを揃える)
 let _tmPostMode = 'attime';    // 行選択後表示オプション: 'attime'=表示辻時刻での最高精度点(既定) / 'near'=近傍の最高精度点(≠辻時刻)
 let _tmSearchArea = 3;         // 検索エリア: DEM標高タイルの範囲 N×N (3/4/5/6)
 let _tmMeshGray = 0;           // メッシュマーカー色: グレースケール% (0=白〜100=黒)。グラデーションの基準色(1件の色)
@@ -11069,7 +11194,7 @@ function setupTsujiMeshPanelControls() {
     document.getElementById('btn-tsujimesh-time-prev').addEventListener('click', () => stepTimeSlider(-1));
     document.getElementById('btn-tsujimesh-time-next').addEventListener('click', () => stepTimeSlider(1));
     document.getElementById('select-tsujimesh-time-eps').addEventListener('change', (e) => {
-        _tmCtrlEps = parseFloat(e.target.value) || 0.125;
+        _tmCtrlEps = parseFloat(e.target.value) || 0.25;
         recalcTsujiMeshGoldAtTime();
     });
     // メッシュマーカー色: 白(0%)〜黒(100%)のグレースケール(グラデーションの基準色=1件の色)。追従して再描画。
@@ -12387,8 +12512,54 @@ async function resolveAppFile() {
     return null;
 }
 
-/** 端末の内容をGoogleドライブに保存 (作成/上書き+サイズ検証) */
-async function saveAppToDrive() {
+// ---- 「:自動更新」(第127ラウンド・依頼者GO。設計条件3つ込み) ----
+// 変更のたびに即アップロードはせず、最後の変更から一定時間後にまとめて1回書き込む(デバウンス)。
+// 画面が裏に回る時(visibilitychange)は待たずに1回。書き込み直前に競合ガード:
+// ドライブのmodifiedTimeが前回同期と一致しない(=他端末が先に保存した・またはこの端末が
+// まだ一度も同期していない)時は、自動では上書きせず👎に戻して同期ダイアログ(人の判断)に委ねる。
+// トークン切れは🈚️(ログインのお願い)・通信の失敗は静かに諦めて次の機会に(変更は端末に残る)。
+var _autoSyncTimer = null;
+var _autoSyncBusy = false;
+var _autoSyncDebounceMs = 30000;   // 最後の変更から30秒(検証から差し替えられるようvar)
+function _autoSyncArm() {
+    if (!appState.googleDrive.autoSync || _autoSyncBusy) return;
+    if (_autoSyncTimer) clearTimeout(_autoSyncTimer);
+    _autoSyncTimer = setTimeout(() => { _autoSyncTimer = null; _autoSyncFlush(); }, _autoSyncDebounceMs);
+}
+async function _autoSyncFlush() {
+    const gd = appState.googleDrive;
+    if (_autoSyncBusy || !gd.autoSync) return;
+    if (_autoSyncTimer) { clearTimeout(_autoSyncTimer); _autoSyncTimer = null; }
+    if (!isGoogleLoggedIn()) { googleSyncState = 'none'; updateGoogleLoginIcon(); return; }   // トークン切れ=🈚️でログインを促す
+    _autoSyncBusy = true;
+    try {
+        if (localContentFingerprint() === gd.lastSyncFingerprint) return;   // 内容の変更なし(簿記保存のみ)は書かない
+        const meta = await resolveAppFile();
+        if (meta && meta.modifiedTime !== gd.lastSyncDriveModifiedTime) {
+            // 競合ガード: 他端末が先に保存した(またはこの端末が未同期の)ドライブを自動では上書きしない
+            gd.lastDriveModifiedTime = meta.modifiedTime;
+            gd.lastDriveSize = Number(meta.size) || null;
+            googleSyncState = 'stale';
+            updateGoogleLoginIcon();
+            return;
+        }
+        await saveAppToDrive({ quiet: true });
+    } catch (e) {
+        console.error('_autoSyncFlush:', e);   // 通信の失敗等は静かに諦めて次の機会に
+        googleSyncState = 'stale';
+        updateGoogleLoginIcon();
+    } finally {
+        _autoSyncBusy = false;
+    }
+}
+// 画面を閉じる/裏に回る時: デバウンス待ちの変更があれば待たずに書き込む
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && appState.googleDrive.autoSync && _autoSyncTimer) _autoSyncFlush();
+});
+
+/** 端末の内容をGoogleドライブに保存 (作成/上書き+サイズ検証)。opts.quiet=trueで成功/失敗のalertを出さない(自動更新用) */
+async function saveAppToDrive(opts) {
+    const quiet = !!(opts && opts.quiet);
     const gd = appState.googleDrive;
     googleSyncState = 'checking';
     updateGoogleLoginIcon();
@@ -12416,13 +12587,13 @@ async function saveAppToDrive() {
         googleSyncState = 'ok';
         saveAppState();
         updateGoogleLoginIcon();
-        alert('端末の内容をGoogleドライブに保存しました。');
+        if (!quiet) alert('端末の内容をGoogleドライブに保存しました。');
         return true;
     } catch (e) {
         console.error('saveAppToDrive:', e);
         googleSyncState = 'broken';
         updateGoogleLoginIcon();
-        alert('Googleドライブへの保存に失敗しました。\n' + e.message);
+        if (!quiet) alert('Googleドライブへの保存に失敗しました。\n' + e.message);
         return false;
     }
 }
@@ -12510,21 +12681,31 @@ function openGdriveSyncDialog() {
     try { localSavedAt = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').savedAt || null; } catch (e) {}
     const gd = appState.googleDrive;
     const driveTime = gd.lastDriveModifiedTime ? new Date(gd.lastDriveModifiedTime).getTime() : null;
-    // [New]は「前回同期からの変更の有無」で判定する(第36ラウンドの整合性調査:
-    // 旧実装のsavedAt比較は、内容が変わらない簿記保存でもsavedAtが進むため常にローカル優位に偏り、
-    // 他端末で保存したDriveの内容に[New]が付かず誤って上書きする誘導になっていた)。
-    // ローカル側=同期時の指紋との差 / Drive側=同期時のmodifiedTimeとの差。両方に付くこともある。
+    // [New]は「どちらを残すか」の道しるべとして、常にどちらか一方だけに付ける(第125ラウンド・依頼者仕様。
+    // 旧実装は「前回同期からその側が変わったか」を両側独立に表示していたため、両側とも変わった競合時と
+    // 同期簿記が無い時に両方へ[New]が付いていた)。
+    // 手順: まず第36ラウンドの変更検出(ローカル=同期時の指紋との差 / Drive=同期時のmodifiedTimeとの差)で
+    // 片側だけが変わっていればその側に付ける(内容が変わらない簿記保存でsavedAtだけ進んでも付かない性質は維持)。
+    // 両側とも変わっている(競合)時は、更新日時そのもの(ミリ秒までの日時比較。日付ではない)で新しい側だけに付ける。
     const localChanged = gd.lastSyncFingerprint
         ? localContentFingerprint() !== gd.lastSyncFingerprint
         : localSavedAt !== null;   // 一度も同期していない時は従来どおり
     const driveChanged = (gd.lastDriveModifiedTime && gd.lastSyncDriveModifiedTime)
         ? gd.lastDriveModifiedTime !== gd.lastSyncDriveModifiedTime
         : driveTime !== null && !gd.lastSyncDriveModifiedTime;
+    let localNew = localChanged && !driveChanged;
+    let driveNew = driveChanged && !localChanged;
+    if (localChanged && driveChanged) {
+        localNew = localSavedAt !== null && (driveTime === null || localSavedAt > driveTime);
+        driveNew = driveTime !== null && (localSavedAt === null || driveTime > localSavedAt);
+    }
     const NEW_MARK = ' <span class="gdrive-sync-new">[New]</span>';
     document.getElementById('gdrive-sync-local').innerHTML =
-        `更新: ${formatMySetDateTime(localSavedAt)}${localChanged ? NEW_MARK : ''}`;
+        `更新: ${formatMySetDateTime(localSavedAt)}${localNew ? NEW_MARK : ''}`;
     document.getElementById('gdrive-sync-drive').innerHTML =
-        `更新: ${driveTime ? formatMySetDateTime(driveTime) : '-'}${driveChanged ? NEW_MARK : ''}`;
+        `更新: ${driveTime ? formatMySetDateTime(driveTime) : '-'}${driveNew ? NEW_MARK : ''}`;
+    const autoChk = document.getElementById('chk-gdrive-autosync');
+    if (autoChk) autoChk.checked = !!gd.autoSync;
     dlg.classList.remove('hidden');
 }
 
@@ -13904,7 +14085,10 @@ const _QP_SEEDS_V19 = _QP_SEEDS_V18.concat([
 // v20: 第116ラウンド。宙の窓「:写真テクスチャ」(soraPhotoTex)のシード。
 // 第3規則「&キー名=既定値」(v1.85.1時点の既定値falseで凍結)+既定値以外用の「&キー名=」
 const _QP_SEEDS_V20 = _QP_SEEDS_V19.concat(['&soraPhotoTex=false', '&soraPhotoTex=']);
-const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19, _QP_SEEDS_V20];   // 添字+1=版数。最新版でエンコードする
+// v21(第128): 辻メッシュ精度フィルタの新既定「○」の既定値ペア(初期値がx1→o1に変わり、
+// 既定のままのURLに&tsujiMeshAccuracy=o1が乗るため)
+const _QP_SEEDS_V21 = _QP_SEEDS_V20.concat(['&tsujiMeshAccuracy=o1']);
+const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19, _QP_SEEDS_V20, _QP_SEEDS_V21];   // 添字+1=版数。最新版でエンコードする
 const _QP_PRIME_FROM = 12;   // この版以降は「仮想の先頭&」を足して圧縮する(先頭キーも「&キー名=」の辞書に乗せるため)
 
 function encodeQueryParam(str) {
