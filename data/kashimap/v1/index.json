@@ -1,0 +1,39 @@
+{
+ "v": 1,
+ "mountains": {
+  "368": {
+   "name": "富士山",
+   "terrain": [
+    60
+   ],
+   "canopy": [],
+   "islands": {
+    "terrain:60": 10129
+   },
+   "sizes": {
+    "terrain:60": 8873174
+   },
+   "zooms": {
+    "terrain:60": 15
+   }
+  },
+  "370": {
+   "name": "毛無山",
+   "terrain": [
+    20
+   ],
+   "canopy": [],
+   "islands": {
+    "terrain:20": 919
+   },
+   "sizes": {
+    "terrain:20": 776232
+   },
+   "zooms": {
+    "terrain:20": 15
+   }
+  }
+ },
+ "generated": "2026-09-23T09:56:29.689Z",
+ "attribution": "国土地理院 標高タイル(DEM5A/5B/5C/10B)を加工して作成。日本の主な山岳標高(国土地理院)を加工して作成"
+}

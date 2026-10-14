@@ -19,7 +19,7 @@ GNU General Public License for more details.
 // 粗探索には「安全スキップ」を併用: 天体の移動速度上限から許容範囲外が確定する標本を
 // 飛ばして高速化する(飛ばすのは必ず範囲外の標本のみなので、結果は全標本評価と完全に同一)。
 
-importScripts('https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js');
+importScripts('vendor/astronomy.browser.min.js');   // 自前配信(vendor/。版は固定・指紋は vendor/MANIFEST.json)
 
 // astronomy.browser.min.js は UMD で window へ登録する場合がある。
 // Web Worker のグローバルは self なので、window 経由のフォールバックも見ておく。
@@ -89,7 +89,7 @@ function segmentMatch(az, alt, az0, alt0, az1, alt1, toleranceAz, toleranceAlt) 
 }
 
 // 1ステップ計算: 指定時刻での body の方位角・視高度を返す
-function calcAzAlt(body, time, observer, refractionEnabled) {
+function calcAzAlt(body, time, observer, astroRefraction) {
     let ra, dec;
     if (body.fixed) {
         // 固定座標 (固定恒星 / My天体): メインスレッドから ra/dec が渡される
@@ -100,7 +100,7 @@ function calcAzAlt(body, time, observer, refractionEnabled) {
         ra = eq.ra;
         dec = eq.dec;
     }
-    const hor = A.Horizon(time, observer, ra, dec, refractionEnabled ? 'normal' : null);
+    const hor = A.Horizon(time, observer, ra, dec, astroRefraction ? 'normal' : null);
     return { az: hor.azimuth, alt: hor.altitude };
 }
 
@@ -113,7 +113,7 @@ self.onmessage = (e) => {
     const {
         body,
         observerData,
-        refractionEnabled,
+        astroRefraction,
         targetAz, targetAlt,
         toleranceAz, toleranceAlt,
         centerMode,               // 検索中心オプション: 'point'(既定)=オフセット点 / 'line'=基準点からオフセット点までの線
@@ -165,7 +165,7 @@ self.onmessage = (e) => {
         // Pass 1: 当日 0:00〜23:59 を 1分単位スキャン (各日のスキャン範囲は重複させない)
         for (let s = 0; s < stepsPerDay; s++) {
             const time = new Date(dayBase + s * 60000);
-            const { az, alt } = calcAzAlt(body, time, observer, refractionEnabled);
+            const { az, alt } = calcAzAlt(body, time, observer, astroRefraction);
             const dist = matchDist(az, alt);
             if (dist !== null) {
                 if (dist < bestDist) {
@@ -186,7 +186,7 @@ self.onmessage = (e) => {
             for (let dsec = -60; dsec <= 60; dsec++) {
                 if (dsec === 0) continue;  // すでに計算済み
                 const time = new Date(refineCenter + dsec * 1000);
-                const { az, alt } = calcAzAlt(body, time, observer, refractionEnabled);
+                const { az, alt } = calcAzAlt(body, time, observer, astroRefraction);
                 const dist = matchDist(az, alt);
                 if (dist !== null && dist < bestDist) {
                     bestDist = dist;

@@ -1,24 +1,17 @@
 // 辻メッシュ検索 標高オプションの可視判定ワーカー
-// 統一可視判定コア(_visJudgeCore)と同一のサンプリング(z15半画素・SEG=64チャンク)・同一の丸め・
-// 同一の除外規則で、割り当てられたチャンク帯域 [chunk0, chunk1) のみを判定する。
+// 統一可視判定コア(_visJudgeCore)と同一のサンプリング(z15半画素・SEG=SORA.VISIBILITY.PATH_CHUNK(64)のチャンク)・同一の丸め・
+// 同一の除外規則(目的点側/観測点側/山頂部の帯)で、割り当てられたチャンク帯域 [chunk0, chunk1) のみを判定する。
 // 標高はメインスレッドで dm(0.1m)のInt32に符号化したタイル(z15=5A→5B→5Cマージ済み / z14)を参照する。
 // dm/10 はメインスレッドの Math.round(e*10)/10 と同一のdouble値になるため、判定結果は逐次版とビット一致する。
 
 'use strict';
 
+importScripts('sora-constants.js');   // 数の単一情報源(ハバーサイン・1画素の長さ・大円の補間・日本域)。本体の _visJudgeCore と同じ関数を使うので同じビット列になる
+
 const SENTINEL = -2147483648;   // 標高データ無し
 
-/** Leaflet CRS.Earth.distance と同一のハバーサイン距離(m)。式・演算順も一致させる(R=6371000) */
-function _distanceM(lat1d, lng1d, lat2d, lng2d) {
-    const rad = Math.PI / 180,
-        lat1 = lat1d * rad,
-        lat2 = lat2d * rad,
-        sinDLat = Math.sin((lat2d - lat1d) * rad / 2),
-        sinDLon = Math.sin((lng2d - lng1d) * rad / 2),
-        a = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon,
-        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return 6371000 * c;
-}
+/** ハバーサイン距離(m)。本体の _geoDistM と同じ関数(sora-constants.js) */
+function _distanceM(lat1d, lng1d, lat2d, lng2d) { return SORA.haversineDistanceM(lat1d, lng1d, lat2d, lng2d); }
 
 self.onmessage = (ev) => {
     const m = ev.data;
@@ -26,6 +19,8 @@ self.onmessage = (ev) => {
     const { jobId, chunk0, chunk1, lat, lng, startTotal, endLat, endLng, endTotal, exclM } = m;
     const obsExclM = m.obsExclM || 0;   // 除外範囲(観測点側)。旧メッセージ形式では0(=無効)
     const inv2R = m.inv2R || 0;         // 地球の丸み+気差 1/(2·Reff) (第116ラウンド。0=補正なし=旧動作)
+    const band = m.band || null;        // 山頂部(第152): {x0,y0,w,h,bits(1bit/画素)}。目的点につながる帯の画素の遮蔽は無視(本体の_sbHasと同じ)
+    const bandHas = (gx, gy) => { const bx = gx - band.x0, by = gy - band.y0; if (bx < 0 || by < 0 || bx >= band.w || by >= band.h) return false; const i = by * band.w + bx; return ((band.bits[i >> 3] >> (i & 7)) & 1) === 1; };
 
     // タイル索引: key = tx*32768+ty → Int32Array(256*256, dm)
     const tiles15 = new Map();
@@ -54,36 +49,42 @@ self.onmessage = (ev) => {
     const scale15 = Math.pow(2, 15);
     const R128 = 128 / Math.PI;
     const gpy15At = (latd) => (128 - R128 * Math.atanh(Math.sin(latd * Math.PI / 180))) * scale15;
+    const gpx15At = (lngd) => 128 * (lngd / 180 + 1) * scale15;
+    const SEG = SORA.VISIBILITY.PATH_CHUNK;
     const kept = lat.length;
     const blocked = new Uint8Array(kept);   // 1 = この帯域内に遮蔽あり(除外範囲を除く)
+    const endInJapan = SORA.insideJapan(endLat, endLng);
 
     for (let i = 0; i < kept; i++) {
         const sLat = lat[i], sLng = lng[i];
         const sTotal = startTotal[i];
-        // _visJudgeCore と同一のパラメータ化
+        // _visJudgeCore と同一のパラメータ化(経路は大円。区間(SEG標本)の両端を球面補間で求め、中は画素座標の直線で近似する)
         const distM = _distanceM(sLat, sLng, endLat, endLng);
-        const stepM = 40075016.686 * Math.cos(sLat * Math.PI / 180) / (scale15 * 256) / 2;
+        const stepM = SORA.metersPerPixel(sLat, 15) / 2;
         const steps = Math.max(2, Math.ceil(distM / stepM));
-        const sx15 = 128 * (sLng / 180 + 1) * scale15;
-        const dx = (128 * (endLng / 180 + 1) * scale15 - sx15) / steps;
-        const dLat = endLat - sLat;
+        const path = SORA.greatCirclePath(sLat, sLng, endLat, endLng);
+        const seaAsZero = endInJapan && SORA.insideJapan(sLat, sLng);   // 日本域: 標高タイルの無い所=海→海面0mとして遮る(可視マップと同じ)
         const endDrop = distM * distM * inv2R;   // 目的点の沈み込み(_visJudgeCoreと同一の式・演算順)
-        // 担当チャンクのみ判定(チャンク境界=逐次版のSEG=64境界と一致させ、緯度の線形補間もビット一致させる)
+        // 担当チャンクのみ判定(チャンク境界=逐次版のSEG境界と一致させ、区間内の補間もビット一致させる)
         outer:
         for (let c = chunk0; c < chunk1; c++) {
-            const j0 = 1 + c * 64;
+            const j0 = 1 + c * SEG;
             if (j0 >= steps) break;
-            const j1 = Math.min(j0 + 63, steps - 1);
-            const gyA = gpy15At(sLat + dLat * (j0 / steps));
-            const dgy = (j1 > j0) ? (gpy15At(sLat + dLat * (j1 / steps)) - gyA) / (j1 - j0) : 0;
+            const j1 = Math.min(j0 + SEG - 1, steps - 1);
+            const pA = path.at(j0 / steps), pB = (j1 > j0) ? path.at(j1 / steps) : pA;
+            const gxA = gpx15At(pA.lng), gyA = gpy15At(pA.lat);
+            const dgx = (j1 > j0) ? (gpx15At(pB.lng) - gxA) / (j1 - j0) : 0;
+            const dgy = (j1 > j0) ? (gpy15At(pB.lat) - gyA) / (j1 - j0) : 0;
             for (let j = j0; j <= j1; j++) {
-                const e = elevAtPix15((sx15 + dx * j) | 0, (gyA + dgy * (j - j0)) | 0);
-                if (e === null || e === undefined) continue;
+                const gx = (gxA + dgx * (j - j0)) | 0, gy = (gyA + dgy * (j - j0)) | 0;
+                let e = elevAtPix15(gx, gy);
+                if (e === null || e === undefined) { if (!seaAsZero) continue; e = 0; }
                 const r = j / steps;
                 const d = distM * r;
                 const lineElev = sTotal + (endTotal - endDrop - sTotal) * r;
                 if (e - d * d * inv2R > lineElev) {
                     if (distM * (1 - r) <= exclM) continue;   // 除外範囲(目的点側)のNGは無視
+                    if (band && bandHas(gx, gy)) continue;    // 山頂部(目的点につながる帯)の地形は遮蔽に数えない(第152)
                     if (d <= obsExclM) continue;              // 除外範囲(観測点側)のNGは無視
                     blocked[i] = 1;
                     break outer;   // この画素はNG確定(帯域内の早期打ち切り)

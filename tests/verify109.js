@@ -36,7 +36,7 @@ const check=(n,ok,d)=>{ console.log(`${ok?'PASS':'FAIL'} ${n}${d?'  '+d:''}`); o
       maxZ: mapAdapter.getMaxZoom(),
     }));
     check('A1 ?maplibre=0でもMapLibre(Leafletグローバル/シャドウ無し)', r.engine==='maplibre'&&r.canvas&&r.noLeafletGlobal&&r.noShadow);
-    check('A2 アダプタのgetMaxZoom=18(従来換算)', r.maxZ===18, `maxZ=${r.maxZ}`);
+    check('A2 アダプタのgetMaxZoom=20(従来換算18+2。第63で最大ズーム+2段階=第164でピン更新)', r.maxZ===20, `maxZ=${r.maxZ}`);
     const r2=await p.evaluate(()=>{
       mapAdapter.setView(34.5, 133.5, 11);
       const c=mapAdapter.getCenter();
@@ -81,7 +81,7 @@ const check=(n,ok,d)=>{ console.log(`${ok?'PASS':'FAIL'} ${n}${d?'  '+d:''}`); o
   // B3: ズーム値の換算(アプリ内部=Leaflet換算)とズームコントロール
   {
     const r=await p.evaluate(()=>({ ad: mapAdapter.getZoom(), gl: glMap.getZoom(), maxZ: mapAdapter.getMaxZoom() }));
-    check('B3 ズーム換算(adapter=GL+1・maxZoom18)', Math.abs(r.ad-(r.gl+1))<1e-9&&r.maxZ===18, JSON.stringify(r));
+    check('B3 ズーム換算(adapter=GL+1・maxZoom20=第63の+2段階)', Math.abs(r.ad-(r.gl+1))<1e-9&&r.maxZ===20, JSON.stringify(r));
     const z0=r.ad;
     await p.click('.maplibregl-ctrl-zoom-in');
     await p.waitForTimeout(700);

@@ -1,5 +1,5 @@
 {
- "note": "normalizeAppStateの挙動の凍結標本(第41ラウンド)。各スカラーキーに8種の崩れた値(neg/pos/frac/str/empty/nul/bfalse/btrue)を入れた時の正規化結果。正規化規則を意図的に変える時だけ更新する",
+ "note": "normalizeAppStateの挙動の凍結標本(第41ラウンド)。各スカラーキーに8種の崩れた値(neg/pos/frac/str/empty/nul/bfalse/btrue)を入れた時の正規化結果。正規化規則を意図的に変える時だけ更新する 第159: startApiElev/endApiElev は数値以外→null、startHeight/endHeight は数値以外→0 に(保存データの型そろえ=_sanitizeStoredShapes)。 homeStart/homeEnd は地点の物(lat/lng)でなければ null。",
  "scenarios": {
   "neg": -1000000000,
   "pos": 1000000000,
@@ -15,61 +15,61 @@
    "neg": -1000000000,
    "pos": 1000000000,
    "frac": 3.7,
-   "str": "garbage",
-   "empty": "",
+   "str": null,
+   "empty": null,
    "nul": null,
-   "bfalse": false,
-   "btrue": true
+   "bfalse": null,
+   "btrue": null
   },
   "endApiElev": {
    "neg": -1000000000,
    "pos": 1000000000,
    "frac": 3.7,
-   "str": "garbage",
-   "empty": "",
+   "str": null,
+   "empty": null,
    "nul": null,
-   "bfalse": false,
-   "btrue": true
+   "bfalse": null,
+   "btrue": null
   },
   "startHeight": {
    "neg": -1000000000,
    "pos": 1000000000,
    "frac": 3.7,
-   "str": "garbage",
-   "empty": "",
-   "nul": null,
-   "bfalse": false,
-   "btrue": true
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
   },
   "endHeight": {
    "neg": -1000000000,
    "pos": 1000000000,
    "frac": 3.7,
-   "str": "garbage",
-   "empty": "",
-   "nul": null,
-   "bfalse": false,
-   "btrue": true
+   "str": 0,
+   "empty": 0,
+   "nul": 0,
+   "bfalse": 0,
+   "btrue": 0
   },
   "homeStart": {
-   "neg": -1000000000,
-   "pos": 1000000000,
-   "frac": 3.7,
-   "str": "garbage",
-   "empty": "",
+   "neg": null,
+   "pos": null,
+   "frac": null,
+   "str": null,
+   "empty": null,
    "nul": null,
-   "bfalse": false,
-   "btrue": true
+   "bfalse": null,
+   "btrue": null
   },
   "homeEnd": {
-   "neg": -1000000000,
-   "pos": 1000000000,
-   "frac": 3.7,
-   "str": "garbage",
-   "empty": "",
+   "neg": null,
+   "pos": null,
+   "frac": null,
+   "str": null,
+   "empty": null,
    "nul": null,
-   "bfalse": false,
-   "btrue": true
+   "bfalse": null,
+   "btrue": null
   },
   "mySetCurrentId": {
    "neg": -1000000000,
@@ -102,6 +102,16 @@
    "btrue": true
   },
   "refractionEnabled": {
+   "neg": -1000000000,
+   "pos": 1000000000,
+   "frac": 3.7,
+   "str": "garbage",
+   "empty": "",
+   "nul": null,
+   "bfalse": false,
+   "btrue": true
+  },
+  "astroRefraction": {
    "neg": -1000000000,
    "pos": 1000000000,
    "frac": 3.7,

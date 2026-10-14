@@ -7,7 +7,7 @@ GNU General Public License v3.0 (LICENSEファイル参照)
 フレーム(日時)毎の 空の回転基底・表示天体の方位/高度/視半径/月相 を事前計算して返す。
 メインスレッドは再生時にこの結果をデキューして表示するだけ(日時情報メニューとは切り離した別処理)。
 */
-importScripts('https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js');
+importScripts('vendor/astronomy.browser.min.js');   // 自前配信(vendor/。版は固定・指紋は vendor/MANIFEST.json)
 
 const KM_PER_AU = 149597870.7;
 

@@ -75,7 +75,8 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (e) {
-    return ContentService.createTextOutput(JSON.stringify({ error: e.toString() }))
+    // 例外の本文は外へ出さない(内部の情報を公開しない。第159のセキュリティ点検)
+    return ContentService.createTextOutput(JSON.stringify({ error: 'internal' }))
       .setMimeType(ContentService.MimeType.JSON);
   } finally {
     lock.releaseLock();

@@ -13,6 +13,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 Version History:
+Version 1.98.0 - 2026-10-12: security: 第159ラウンド — セキュリティ対策(依頼者: 2026年10月の国内の不正アクセス多発(JPCERT-AT-2026-0030・IPAの注意喚起)を受けた点検)。①第三者ライブラリの自前配信: MapLibre 4.7.1・three 0.160.0・astronomy-engine 2.1.19・GeographicLib 2.2.0(npm)・qrcode-generator 1.4.4・Draco を vendor/ に固定(出所・版・ライセンス・内容の指紋 sha384/sha256 を vendor/MANIFEST.json に)。CDN(jsDelivr/unpkg/sourceforge)への読み込みを全て撤去・MathJax を撤去(ヘルプの気差係数の数式(TeX 18行)はHTMLに書き直し)・ワーカーの importScripts と Draco も vendor/ へ ②読み込み元の許可リスト(CSP meta): script-src は自サイト+'wasm-unsafe-eval'(Draco の WASM)+Googleのログイン(accounts.google.com/gsi/client)+ピッカー(apis.google.com)だけ('unsafe-inline'/'unsafe-eval' 無し)・connect-src/img-src/frame-src は使うAPIとタイルの許可リスト・object-src 'none'・base-uri 'self'・worker-src 'self' blob:・Referrer-Policy。CSP違反はコンソールに記録(securitypolicyviolation) ③インラインの onclick=(32箇所: index.html 30+forecast-features.html 2)を data-click 属性+1つの委譲リスナー+許可表(_CLICK_ACTIONS)に・three の読み込みを three-global.js に・reset.html のスクリプトを reset.js に(CSPでインラインを禁じるため) ④保存データの型そろえ(_sanitizeStoredShapes。normalizeAppState の先頭で毎回): 観測点/目的点/Home・My観測点/My目的点/My天体/My辻検索/My宙検索/Myセット・表示天体の色を、数値は数値・文字は文字・色は safeCssColor・真偽は !! に確定させる(他人から受け取ったバックアップJSON/Driveの生ダンプの数値欄に入った文字列(HTML)が innerHTML に届く持続XSSの根を塞ぐ)。escapeHtml は文字列以外も落ちずに文字として扱う。HTML を組む所(地点のポップアップ・My観測点/My目的点/My天体/Myセットの行・ID入りのエラー文・宙検索の一括結果)も Number()/escapeHtml で二重に守る。可視マップの資産の取り込みは島の番号/画素数が数値でなければ拒む・島リスト/ポップアップで escapeHtml ⑤別タブで開くリンクは全て rel=noopener・Myセットのシートを開く window.open は noopener+IDの文字種検査・Sheets/Drive API のパスのシートIDは encodeURIComponent・保存データのシートIDは Google のIDの文字種だけ ⑥reset.html の「すべてのデータを消去」に地図タイルの控え(soranotsuji-maptiles)も。verify184(合格条件の自動検査)。デッサン34(セキュリティ)に脅威モデル・合格条件(自動検査/コンソール点検/運用)を記録 ⑦クライアントIDが空の時の案内文を利用者向けに(非常停止で配る文。第160) ⑧CSP違反の記録に、開発用サーバー(Live Preview)の自動再読み込みが止められた時は「無害」と添える(第161) ⑨Myセットの保存ガードの案内文を正しく(表示中/オフライン指定でないセットは端末に内容を持たないので「切り替え表示してから保存」。以前の「先に読込を」では解決しなかった。第164) ⑩CSP違反の記録は止められた先の URL の「?」より前だけ(問い合わせ部分にアクセストークンが入る事があるため。第165) ⑪リリース準備: 表示中の文言に残っていた封鎖中の「可視マップ」の名前を外す(辻検索/辻メッシュの樹冠・構造物の説明=準備中・山頂部の帯の注記・気差係数の対象の列挙・reset.html の消去の説明)。README の主な機能に可視フィルタ・宙の窓検索・端末の控えを反映(第171) ⑫公開文(依頼者承認): privacy.html 4.外部サービスの節を実際の通信先に差し替え(CDN を消す。改定日 2026-10-14)・/.well-known/security.txt(RFC 9116。Contact=GitHub のリポジトリ)。リリースノートの冒頭に「可視マップは含まない」「宙の窓検索とオフライン表示は今後改善予定」の※(第172) ⑬依頼者が GitHub の非公開の脆弱性報告(Private vulnerability reporting)を本番・開発の両リポジトリで有効化(箱から確認)→ security.txt の Contact を2行に(1行目=security/advisories/new・2行目=リポジトリ。第173)
+Version 1.97.0 - 2026-10-09: feat: 第158ラウンド — 気差を2本立てに(依頼者の方針変更): ①設定の「大気差補正」チェック=地形の見通しの気差係数K(オン=気象条件から算出・既定オン / オフ=K=0=気差なし。第157の「オフでも0.132」を取り下げ。K=0の見え方の検証ができるように)。保存データは一度だけ新既定へ(印 refractionV3) ②新しい「:気差オプション(Astronomy Engine気差補正)」=天体の見かけ高度の大気差(既定オン。地上のKとは別の光線なので二重にはかからない)。appState.astroRefraction・ワーカーへは astroRefraction で渡す・共有URL(辞書v22)・ヘルプ ③宙の窓検索(デッサン05): 位置情報メニューのボタンを「宙の窓検索」に(辻検索/辻メッシュ/宙の窓検索の段・可視マップは次の段)・宙の窓メニューに注記・コントロールに「:構図をドラッグ(二本指)で変更」「:辻オフセット点をドラッグ(二本指)で変更」(ドラッグの対象=カメラオフセット/辻オフセット。オフで戻す)と「辻検索」「辻メッシュ」ボタン ④地理院タイルのオフライン(デッサン18): 地図の地理院タイル(標準・淡色・写真・ベクトル)は端末の店(IndexedDB)を先に読み、無い時だけ地理院へ(gsicache://プロトコル)。標高タイル(標高グラフ・辻メッシュ・宙の窓)も可視マップと同じ店を先に読む。バックアップメニューに地理タイル/標高タイルの件数・容量・最終更新・全削除 ⑤リリース向けの封鎖: 可視マップは ?kashimap=1 で開錠(forecastと同じ仕組み)。verify183。差分のレビューで直した: 辻オフセット点のドラッグ(と宙の窓/ctrlの欄)を辻メッシュ側のオフセットにも写す(ctrlの「辻メッシュ」が×の位置で検索する)・ドラッグの値は4桁に丸める・宙断面(forecast)のスロットを封鎖される段の外へ・辻ライン365の鍵に気差(2つのチェックと設定登録は _refractionSettingChanged で保存→再計算→365も引き直す)・旧形式のバックアップの取り込みも一度だけ両方オンへ・気差オプションのヘルプの「効く範囲」を実装どおりに(太陽・月・惑星の出没時刻と天体儀の向きは変わらない)・店の件数と容量は索引の鍵カーソルで数える(本文を読まない。地理タイルの店v2/標高タイルの店v3)・数えるのはバックアップを開いている間だけ・「無し」の印は30日で取り直す(SORA.TILE_STORE.MISS_TTL_MS。本体・地形ワーカー・可視マップのワーカー)・標高タイルの取得の失敗は1回で諦める・封鎖中は標高タイルの注記を可視マップ抜きの文に
+Version 1.96.0 - 2026-10-07: refactor/feat: 第157ラウンド — 数の単一情報源 sora-constants.js(地球の大きさ・大気差・観測者・標高タイル・可視判定の既定値と、気差係数の式・局所半径・ハバーサイン・1画素の長さ・大円の補間。本体はscriptタグ、ワーカーはimportScripts、道具はrequireで同じ値を読む=1箇所を直すと他も直る)。気差係数は「設定に表示されている値」で全処理が計算(refractionKInUse: 大気差補正オフ=測量標準0.132、オン=気象条件から算出。標高グラフ・辻検索/My辻・辻メッシュ・可視マップ・辻ライン・宙の窓の地形/建物/花火の8箇所の『オフ=0』を1つに)。統一可視判定(標高グラフ・辻検索・辻メッシュのワーカー)も可視マップと同じ3つに=経路を大円に(区間ごとに球面補間)・海(データ無し)は海面0mで遮る(日本域)・K。山リストに「ズーム」列(z15(1画素≈4m・DEM5A/5B/5C)など。索引index.jsonにzooms・端末の索引にzoom[無ければ資産の計算条件から補う])。最大表示範囲より広い資産しか無い山は範囲に▲を付けて示し、選ぶと表示範囲を繰り上げる(「:端末保存」で列が空だった件)。島リストは4,000行ずつ描き、残りは進捗(描画中 n/N)を出しながら続ける(富士山700kmの4万行)。可視マップ節: 「可視タイル:」の上に水平線・「範囲を計算」の下に剣ヶ峯の注記(依頼者起草)。verify182。差分のレビューで直した: 基準視高度の自動算出の鍵にK(気差係数を切り替えると再計算・URL復元は気象値の後で鍵を取り直す)・宙の窓の陰影の鍵にK・古い形式のバックアップ取り込みで設定の大気差の部品を同期(syncRefractionUiFromState)・辻メッシュの帯域分割もPATH_CHUNK・端末の資産の再利用はKが同じ時だけ・道具の答え合わせ(judgeLikeApp)も大円+海面0m
+Version 1.95.0 - 2026-10-06: feat/fix: 第156ラウンド — 可視マップ節をデッサン05の改訂版に(依頼者): ①段組み=検索条件:/山リスト:(+:端末保存)/最大表示範囲:/障害物オプション:→「計算済み可視マップを検索」→注記→水平線→「:目的点/:My目的点」ラジオ+計算範囲リスト(500を外し24〜700)+「:精細」「:最高精細(700kmをz13。約31,000枚・20億画素・PC向け。格子約4GBはChromeの1本2GBの壁を避けてWebAssembly.Memoryの上に)」+「範囲を計算」→水平線→可視タイル/山頂マーカー・全展望マーカー→水平線→標高タイル(件数/容量・注記「可視タイル作成後は、標高タイルは不要です。いつでも、全削除可能です。」・全削除は横幅いっぱい)→可視タイル(件数/容量・一括選択/一括解除トグル=Myセットと同じ黄色・⬇DL/削除/全て登録の三等分・全て登録はMy観測点と同じ赤太字) ②資産の一覧は3行1組(チェック段抜き+目的点名[入力欄の文字はMy観測点と同じ16px] / 範囲・樹冠・構造物 / 島数・サイズ。背景色なし・水平線で区切る) ③山リストに「範囲」「樹冠」「構造物」「サイズ」列(検索条件で選ばれる資産。サーバーの索引にsizes) ④直し: 目的点で計算した島の点滅(鍵「tgt:lat,lon:項番」を最後の「:」で切る)・島リストは全件表示(3,000件の上限を撤廃)・標高タイルの上限8,000→9,500枚・計算前に端末の同じ範囲の資産を探して使う(確認付き。構造物など山リストに無い目的点向け) ⑤気差係数: 可視マップのその場計算は大気差補正オフでも測量標準k=0.132で計算(静的資産と同じ。オンなら設定の値)。気温減率の既定値を0.0065→0.0125(K=0.169→0.132=測量標準。保存済みの値が旧既定のままなら新既定へ) ⑥辻ライン: 線の端を境界(見かけ高度の下限または400km)の時刻へ二分で詰めて揃える(1分刻みの365では端が270〜365kmとまちまちだった)。辻ライン365も400km。verify181
+Version 1.94.0 - 2026-10-03: feat/fix: 第155ラウンド — 可視マップ節の新しい画面構成(デッサン05・依頼者)と、700kmの表示の直し・辻ライン400km・可視フィルタ: ①可視マップ節=推し山の入力(ラベル無し・横幅いっぱい・150字)→AND/OR→百/二百/三百→百高/その他→表示範囲ラジオ100/300/700(60kmを外す・初期値100)→「:樹冠」「:構造物」(別のチェック。資産の種類 terrain/canopy/building/canopy-building を優先順で選ぶ)→検索→「目的点で計算」「My目的点で計算」→計算範囲リスト24〜700(500kmを追加・初期値24)+「:精細(300km以上を1段細かく)」(300km=z13≈15m・700km=z12≈31m。PC向け)→可視タイル/山頂/全展望→注記→端末に保存した資産=標高タイルの件数/容量と「標高タイルを全削除」・可視タイル(資産)の件数/容量と「一括選択」「⬇DL」「削除」「全て登録」・資産ごとに2行(チェック+目的点名の入力欄[150字・空で離れると元に戻る・変更で「全て登録」が赤い太字]/範囲・樹冠・構造物・島数・サイズ)。コントロールも同じ(範囲3つ・樹冠/構造物) ②700kmを計算しても表示範囲が60kmのままで60kmの資産が選ばれていた→計算した範囲まで表示範囲を広げる ③その場計算の後に地図タイル(ラスタ)のソースを読み直す(計算中に取りこぼして縮尺違いのまま残る「マダラ」) ④辻ラインの長さ300km→400km(依頼者: 富士山が見えた最遠が300km台) ⑤辻検索/辻メッシュ/My辻検索の「標高フィルタ」を「可視フィルタ」に改名(表示文言と状況表示。My辻リストCSVの列名は互換のため据え置き)+「:樹冠」「:構造物」のチェック(資産ができるまで無効) ⑥three.jsをES Modules版(three.module.min.js)で読み込む(非推奨の警告を消す)。verify180
+Version 1.93.0 - 2026-10-01: fix/feat: 第154ラウンド — その場計算の「タイルの継ぎ目の模様」の直しと、計算範囲リスト24〜700km・経過表示(依頼者の報告と設計変更): ①槍ヶ岳48kmで出た縦横の継ぎ目=標高タイル1枚の中の無効画素(DEM5Aの測量範囲の縁)を次の源(5B/5C/10B)で埋めておらず、タイルの形の穴(データ無し=見えない)が残っていた(道具で再現: 2,500枚中、データ画素96.4%)。ワーカーと道具を「画素ごとに無い所を次の源で埋める」に ②取得は同時4本・3回まで再試行(通信の失敗・5xx・429)・地図タイルより低い優先度(priority:low)・目的点に近い順 ③計算範囲リスト(デッサン05 8段目)24/36/48/60/100/300/700km四方(初期値60)。範囲で窓の解像度を変える(60kmまでz15≈4m・100km=z14≈8m・300km=z12≈31m・700km=z11≈62m。粗い範囲はDEM10Bをそのズームで読む=小→大の段階計算。枚数の上限4,000) ④計算中の経過表示: 見える画素の広がりを縮小した格子で地図に薄い金で描き(光線が一周するにつれて埋まる)、輪郭ができたら消す ⑤可視マップ節の整列(デッサン05の段組み: 範囲ラジオ→検索→「目的点で計算」「My目的点で計算」を1段→計算範囲リスト→チェック2段。チェックの文言は折り返さない・下のボタンは1段ずつ)・「:樹冠あり」→「:樹冠・構造物あり」。verify179
+Version 1.92.0 - 2026-10-01: feat: 第153ラウンド — 可視マップの段4「目的点で計算」「My目的点で計算」(その場計算・デッサン05 段4/Q20): ①kashimap-worker.js=静的資産を作る道具(tools/kashimap/viewshed.js)と同じ計算(R2の光線・島・輪郭[外周+穴・間引きなし]・ポリライン符号)をブラウザのワーカーで。標高タイル(地理院 5A→5B→5C→10B)はワーカーが取り、端末の店(IndexedDB tiles)に貯めて次からは取りに行かない(枚数の上限・取得の失敗の安全弁つき。「標高タイルを削除」で消せる) ②目的点側の除外はアプリの統一可視判定と同じ規則(山頂部の帯・基準の標高=DEMと目的点の標高の高い方・別の山を含まない高さまで縮める・観測点側の除外半径・大気差の係数は今の設定) ③範囲の選択欄 24/36/48km四方(48kmはPC向け)。計算中はボタンが「計算を中止」。進捗は結果パネルの進捗バーと件数欄 ④結果は資産(origin=計算)として端末に保存し、山リストに所属「My」・種別「目的点」の行(索引番号 tgt:緯度,経度)で並べて選択・描画。File出力/File読込・⬇・✕もそのまま使える。「My目的点で計算」は今のMyセットのMy目的点を順に。verify178
+Version 1.91.1 - 2026-10-01: fix: 第153ラウンド — 山頂部の基準の標高(依頼者の報告「観測点を富士吉田に置いても:山頂部のオン/オフで結果が変わらずプレビューも出ない」): 初期値の富士山の目的点は火口の中心(座標は山頂の代表点・標高は剣ヶ峯の3776m)で、DEMはそこでは火口の底(約3540m)。山頂部の基準を目的点の画素のDEM標高だけで取っていたため、山リストの剣ヶ峯(3776m)が「目的点より226m高い別の山」と判定され山頂部なし(帯が効かない・プレビューは理由の行だけ)になっていた。基準の標高hTを「DEM(3×3画素の最大)と目的点の標高(位置情報の目的点標高。構造物の高さは含めない)の高い方」に。判定(標高グラフ・辻検索・My辻・辻メッシュ)とプレビューへ目的点の標高を渡す(_visSummitBandFor/Raw・computePathVisibilityの7つ目の引数)。プレビューの情報行に「基準の標高…m(目的点の標高。DEMは…m)」。verify177 B7
+Version 1.91.0 - 2026-09-30: feat: 第152ラウンド — 除外範囲メニューに「山頂部」(デッサン05 Q24/Q25・依頼者決定): ①基本オプション>標高グラフ>除外範囲に「:山頂部」チェック(初期値オン)+「山頂部(帯,m)」(初期値300・0〜2000)+「:プレビュー」(目的点の山頂部の範囲を地図に薄い赤で描く。目的点を動かすと描き直す)+「除外範囲をリセット」(15/10/300/チェックを初期値へ)。状態はelevSummitBandEnabled/elevSummitBandM(LS保存。URLは段4の設計で) ②統一可視判定(_visJudgeCore)と辻メッシュのワーカー(tm-vis-worker)に「山頂部の画素の遮蔽は無視」を追加。山頂部=目的点の標高(3×3画素の最大)から帯の高さ以内で目的点につながる画素(8近傍・探索半径3km)。別の山(山リストの山頂)の山頂を含む時は含まない高さまで縮める(可視マップの道具と同じ規則)。目的点ごとに1回計算して保持(_visSummitBandFor)。標高グラフ・辻検索/My辻/辻メッシュの標高フィルタに共通で効く(富士山を北から見た時の「北側の縁に隠れてNG」が直る) ③可視マップ節(メニュー側)に範囲ラジオ・「目的点で計算」(準備中)・「:可視タイル/:樹冠あり/:山頂マーカー/:全展望マーカー」を置き、コントロールと連動(依頼者のデザイン。全展望マーカーは初期値オンへ) ④サーバーから一度読んだ資産は端末(IndexedDB)にも保存して次からは取りに行かない(列は「静(端末)」)。端末の資産の一覧に「⬇」(その山だけをFile出力)。verify177
+Version 1.90.0 - 2026-09-23: feat: 第151ラウンド — 可視マップの資産のFile出力/File読込と端末の資産の管理(依頼者の依頼): ①コントロールの「File出力」を山リスト/島リストのCSVから「選んだ山の資産(計算条件meta・島の索引islands・島の輪郭outline)を1つのJSONに」へ(1山でも複数でも)。「File読込」でそのJSONを端末(IndexedDB: soranotsuji-kashimap/assets)に保存し、山リストから使えるように(同じ資産がサーバーと端末の両方にあれば端末を使う。「静的/動的」列=静[サーバー]/動[端末]/静/動[両方]) ②可視マップ節の注記の下に「端末に保存した資産」の一覧(山・範囲・樹冠・島・サイズ・✕で個別削除)と合計、「資産を全て削除」「標高タイルを削除(段4のその場計算用の店=今は0MB)」 ③reset.htmlの「すべてのデータを消去」でIndexedDB(可視マップの資産・標高タイル・天気のキャッシュ)も消去 ④注記「この機能はPC向け機能なので、スマートフォンでは動作が重たく感じる場合があります」(依頼者起草)を節とコントロールとヘルプへ ⑤静的資産は間引きなし(道具の--tol既定0。富士山60km=頂点328万・outline 7MB)。verify176
+Version 1.89.0 - 2026-09-21: feat: 第150ラウンド — 可視マップ段3(地図表示。デッサン05「実装の段取り」段3の第1弾): ①静的資産(data/kashimap/v1/: index.json+山ごとの{id}/{terrain|canopy}/{range}/{meta,islands,outline}.json。段2の道具 --asset の出力。outline.json=島の外周+穴を画素の角の整数座標でポリライン符号化)を遅延読込し、選んだ山の島を地図に描く: 輪郭=暗い縁取り+山色の線・塗り=同じ金を重ねる(重なるほど濃い=可視辻マーカーの濃淡) ②縞島=選んだ山の島全体を覆う作業用の格子(最大2048画素四方)に各山の島を描いて画素ごとの「見える山の組み合わせ」を求め、同じ組み合わせのつながり(8近傍)を縞島に(重複数2以上。面積・代表点は格子での概算)。重複数がいちばん多い縞島は金と赤の縞で塗る ③島リスト(各山の島+縞島を一つに。列=選択[点滅]・項番・縞・重複数・所属山・読み・代表点の緯度/経度・面積・画素数・山頂からの距離。初期は重複数の降順→面積の降順。行クリックで島へ移動・行チェックで輪郭が点滅[0.5秒交互。選択0/閉じた/裏に回ったら止める]・:縞島のみ・全て選択/解除。表示は上位3000件) ④コントロールメニュー(範囲60/100/300/700km=計算済みだけ選べる・:可視タイル・:樹冠あり[無い山は地形の資産に落とす]・:山頂マーカー・:全展望マーカー[重複数最大の縞島の代表点]・注記・File出力=山リスト+島リストのCSV) ⑤ホバー(PC)で「可視辻(重複数N): 山名」のツールチップと島リストの該当行の強調、クリックで固定ポップアップ(観測点/目的点に設定)。山リストに「島の数」「静的/動的」列。段2の道具はv2(山頂部=山頂から300m以内の高さで山頂につながる山の体そのもの[別の山の山頂を含まない高さまで縮める]を遮蔽に数えない[region。circleは従来の円]・輪郭は外周+穴を全島で辿り面積の自己検査・間引き1px・アプリ用資産の出力・--probeで既知の展望地の見通しを検算)。富士山60km(地形のみ)と毛無山20kmの資産を同梱。verify175
+Version 1.88.1 - 2026-09-21: docs: 第149ラウンド — 可視マップ節の注記に「山リストは百名山・二百名山・三百名山・日本百高山と地理院1003山を元にしています。それ以外の山はMy目的点に登録してご利用ください」を追加(依頼者起草・デッサン05コントロールメニュー6.)。段2の計算の道具 tools/kashimap/viewshed.js(Node: 地理院DEMタイル取得→山頂から放射状R2の視域計算→島の索引/輪郭GeoJSON/計算条件/縮小プレビュー。アプリの統一可視判定と同じ式・除外規則で標本画素を答え合わせ)を追加。アプリの動きは注記の1行以外変更なし
+Version 1.88.0 - 2026-09-21: feat: 第148ラウンド — 可視マップ(段1=山データ+山リスト。デッサン05第7版「実装の段取り」): ①data/mountains.json(地理院「日本の主な山岳標高(1003山)」2026-03-31版1059行+地理院に無い三百名山4座=1063山頂。百/二百/三百名山・百高山[標高順上位100]の印・別名・都道府県[JISコード順]・山頂座標[最高地点]。生成はtools/kashimap/。名山対応表は依頼者検品済み)を遅延読込 ②位置情報メニューに「可視マップ」ボタン(辻検索・辻メッシュと同じ段。宙の窓は次の段へ)と「可視マップ」節(推し山:テキスト[スペース区切り・山名/読み/別名/都道府県名に部分一致]・:AND/:ORラジオ[既定AND]・:百名山[既定オン]/:二百名山/:三百名山/:百高山/:その他チェック・検索ボタン・My目的点で計算ボタン[準備中=無効]・注記) ③結果パネル(辻メッシュと同じ配置/最大化/積み上げ規則・辻検索/辻メッシュ/宙検索とは排他): 山リスト(列=選択・連番・索引番号・山名・読み・所属・都道府県・山頂の緯度/経度・標高・種別。見出しソート・行チェックで選択・全て選択/全て解除・行クリックで山頂へ移動)・件数「山N件 / 選択M」 ④選んだ山の山頂に山色のマーカー(色の席=空いている最小番号・解除で空く・17山目は1山目の色。選択は閉じても保つ) ⑤ヘルプ「可視マップ」節(出典明記)。verify174=16チェック。段2(計算の道具)以降は次ラウンド〜
 Version 1.87.0 - 2026-08-23: feat: 第127ラウンド — Googleドライブ同期の「:自動更新」(依頼者提案・GO): 同期ダイアログの一番下に「:自動更新」チェック(初期値オフ・appState.googleDrive.autoSyncに永続)。オンの間、端末の内容に変更があるとデバウンス(最後の変更から30秒後にまとめて1回=saveAppStateから_autoSyncArm→_autoSyncFlush。画面が裏に回るvisibilitychangeでも待たずに1回)でドライブへ自動保存(quiet=成功/失敗のalertなし)。設計条件3つ: ①デバウンスでAPI割り当てと通信量を守る ②競合ガード=書き込み直前にドライブのmodifiedTimeが前回同期と一致するか確認し、不一致(他端末が先に保存・この端末が未同期)なら自動では上書きせず👎に戻して人に委ねる ③トークン切れは🈚️でログインを促す・通信失敗は静かに諦めて次の機会に(変更は端末に残る)。内容の変更なし(簿記保存のみ=指紋一致)は書かない / 第128ラウンド(リリース前の追補): ①辻メッシュ精度フィルタに「:○」(±0.25°)を追加して初期値に(実用域=辻検索の◎○に相当。依頼者指定)・「:◎×8」は撤去(旧保存/URLのx8は最も近いx4へ読み替え=normalizeAppState)・辻時刻の精度フィルタオプションselectにも○を追加・短縮URL辞書v21(新既定の&tsujiMeshAccuracy=o1ペア) ②宙の窓ボタンで開き直す度にカメラオフセット方位角/視高度をリセット(前回のズレ残り対策。URL復元の自動オープンはリセットしない=共有構図を守る) ③更新系の結合レベルテスト(verify172: 一括更新の進捗%・checking多重押下・シート作成の実往復・ログイン/ログアウト) / 第130ラウンド(リリース前の追補2・依頼者指摘): 辻メッシュの読み取り専用の精度フィルタ表示(メニュー+結果パネルの「:○」)を精度フィルタオプションへ連動(○選択時=◎と○がオン・◎系選択時=◎のみ。_tmSyncSymODisplay。状態キーtsujiMeshSymOは常時false固定のまま=URL/保存互換不変) / 第131ラウンド(リリース前の追補3・依頼者の設計モデルで確定): 「:○」は常時オンの固定表示へ(第130の連動方式を取り下げ・_tmSyncSymODisplay撤去)。モデル=精度フィルタ(◎○)は対象の下限(この機能は○精度までを扱う)を示す固定の枠・精度フィルタオプションは保持する精度の範囲(選択精度以上を含む: ○なら○◎◎×2…・◎なら◎◎×2…)を決める。コントロールの精度フィルタオプション(表示切替で○を選べる)との整合のため表示条件の分岐を持たない / 第132ラウンド(リリース前の追補4・依頼者依頼3件): ①結果コントロールの精度フィルタオプション(select-tsujimesh-time-eps・非永続)の初期値も○へ(検索メニュー側と考え方のベースを揃える。求める場所には範囲があるため) ②My観測点/My目的点に「写真から追加」ボタン(1段目の下・横幅いっぱい): 写真のExif位置情報(JPEG/TIFF・端末内のバイト走査のみで送信/保存しない=プライバシーポリシーにも明記)から行を追加(名前=新規○○名・緯度経度=写真・標高=緯度経度から再取得・高さ=0・すぐ全て登録が押せる状態)。_exifGpsFromArrayBuffer+addMyPointFromPhoto ③宙の辻フォルダの「追加/解除」ボタンは設けない判断(ID+目印[appProperties]追跡で名前変更・移動に耐えるため関連づけ直し不要。ヘルプへ「名前変更・移動しても連携は保たれる」を明記) / 第133ラウンド(リリース前の追補5・依頼者指摘2件): ①不具合修正: 結果コントロールのスナップショット固定値(第64)が「:○」を検索完了時に強制オフ→◎○オンへ(_resCtlSet/_resCtlFromAppState。第128で○が既定になって以降、_tmBuildRowsの行絞り込みで最良精度が○の日の行が結果リストから落ちていた=リリース前に発見・修正) ②精度フィルタオプション「:○」ツールチップから「辻検索の◎○に相当する実用域」を削除(デッサンの考え方はUIに書かない) ③reset.htmlへ「消去は端末内のみ・ドライブの宙の辻フォルダは残りログインし直すと再同期」の注記(依頼者の疑問への回答を利用者向けに明文化)
 Version 1.86.2 - 2026-08-23: fix: 第125ラウンド — Googleドライブ同期ダイアログの[New]が両方に付くことがある不具合の修正(依頼者報告)。原因は日付比較ではなく[New]の意味: 旧実装は「前回同期からその側が変わったか」を両側独立に表示(第36設計)しており、①両側とも変わった競合時 ②同期簿記が無い時のフォールバック、の2経路で両方に点灯した。修正: [New]は常にどちらか一方だけ=片側だけ変わっていればその側(簿記保存でsavedAtが進んでも付かない第36の性質は維持)・両側変わった競合時は更新日時そのもの(ミリ秒までの日時比較)で新しい側だけに付ける。👍/👎の判定(指紋+modifiedTime)は不変
 Version 1.86.1 - 2026-08-22: fix: 第122ラウンド — ①天体儀の天の川オフセット点の逆回り修正(依頼者報告: オフセット中心角を変えると中心→オフセット点の方位線が軌跡とズレる)。原因は_mwBuildMilkyWayRingのオフセット点だけ収録角を生のまま銀経へ渡していた反転漏れ(第93の符号統一「夏の天の川を上から見て時計回りが正」の取り残し=v1.75.0以来)。依頼者の基準(2026-06-21夏至の日の入・天頂から中心を見て時計回りが正)で数値検証: 正典のgetMilkyWayBaseRaDec系(天体儀の軌跡・辻ライン・辻検索・辻メッシュ・My辻検索)は角度+30/+60でaz126°→156°→186°と時計回り=正しく、天体儀のオフセット点マーカー+方位線だけ逆回り(+30が-30の位置)だった。修正はgetMilkyWayBaseRaDecへの一本化(以後この点は構造的に軌跡・検索と一致) ②名称修正「全天儀」→「天体儀」(依頼者指摘: 全天儀は造語だった。UI・ツールチップ・ヘルプ・デッサン等の全文置換。DOM idとVersion History過去行はそのまま)
@@ -154,7 +167,7 @@ Version 1.0.0 - 2026-01-29: Initial release
 // 1. 定数定義
 // ============================================================
 
-const APP_VERSION = '1.87.0';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
+const APP_VERSION = '1.98.0';   // 冒頭のVersion Historyの最新版数と揃えて更新する(起動ログ・フッター表示に使用)
 
 /** アプリのバージョン文字列を返す (index.htmlのフッター表示などから利用) */
 function getAppVersion() {
@@ -188,12 +201,13 @@ async function loadMuniData() {
     muniData = await resp.json();
     return muniData;
 }
-const EARTH_RADIUS = 6378137;
-const REFRACTION_K = 0.132; // 大気差補正定数: 0.132
-// 標準大気モデルの定数
-const STD_P = 1013.25;  // 標準気圧 (hPa)
-const STD_T = 15.0;     // 標準気温 (°C)
-const STD_L = 0.0065;   // 標準気温減率 Γ (K/m) 正値。0.0065が国際標準大気、0.0125が測量標準
+// 数の単一情報源は sora-constants.js(SORA)。ここは本体の中で使ってきた名前を SORA の値に結びつけるだけ(値はここに書かない)
+const EARTH_RADIUS = SORA.EARTH.WGS84_SEMI_MAJOR_M;   // 注意: 名前は「地球半径」だが値は赤道半径a。航程線の終点(getDestinationRhumb)・球面の終点(_smDestPoint)・建物タイルの半径で球の半径として使っている(0.1%長い。直すなら数値が動くので別途)
+const REFRACTION_K = SORA.REFRACTION.K_STANDARD;      // 測量標準の気差係数0.132(ヘルプの目安・道具の既定)。第158から本体の計算では使わない(大気差補正オフはK=0=refractionKInUse)
+const STD_P = SORA.REFRACTION.STD_PRESSURE_HPA;       // 標準気圧 (hPa)
+const STD_T = SORA.REFRACTION.STD_TEMPERATURE_C;      // 標準気温 (°C)
+const STD_L = SORA.REFRACTION.STD_LAPSE_RATE_K_PER_M; // 既定の気温減率 Γ (K/m)。0.0125=測量標準(K=0.132になる)
+const STD_L_OLD = SORA.REFRACTION.ISA_LAPSE_RATE_K_PER_M;   // 旧既定値(国際標準大気0.0065)。保存データの移行判定に使う
 
 const POLARIS_RA = 2.530304;
 const POLARIS_DEC = 89.264109;
@@ -304,6 +318,22 @@ let _glBaseLayerId = 'std';  // 表示中のベースレイヤ(std/photo/pale/os
 const FEATURE_FORECAST_ENABLED = (() => {
     try { return new URLSearchParams(window.location.search).get('forecast') === '1'; } catch (e) { return false; }
 })();
+
+// ==== リリース方針(2026-10-09 たけちゃんさん判断・第158): 可視マップの一時封鎖 ====
+// 宙の窓検索とオフライン表示を先にリリースし、可視マップ(とMyサイト)はじっくり作り込む。forecastと同じく、開発時はURLに ?kashimap=1 を付けると表示できる。
+// 封鎖中もHTMLとコードはそのまま(配線は走る)で、ボタンの段・メニューの節・ヘルプの節を .feature-locked で隠し、検索/計算の入口で止める。
+const FEATURE_KASHIMAP_ENABLED = (() => {
+    try { return new URLSearchParams(window.location.search).get('kashimap') === '1'; } catch (e) { return false; }
+})();
+function applyFeatureLocks() {
+    if (FEATURE_KASHIMAP_ENABLED) return;
+    for (const id of ['row-kashimap-btn', 'section-kashimap', 'help-kashimap', 'kashimap-panel']) { const el = document.getElementById(id); if (el) el.classList.add('feature-locked'); }
+    // 封鎖中は「可視タイル」が画面に無いので、バックアップメニューの標高タイルの注記とボタンの説明は可視マップ抜きの文に(開錠時はデッサン18の文のまま)
+    const note = document.getElementById('backup-demtiles-note');
+    if (note) note.textContent = '標高グラフ・辻検索・辻メッシュ・宙の窓の計算に使う控えです。いつでも全削除できます(次に使う時に国土地理院から取り直します)。';
+    const bDem = document.getElementById('btn-backup-demtiles-clear');
+    if (bDem) bDem.title = '端末に貯めた標高タイルを全て削除します(次に使う時にまた取りに行きます)';
+}
 
 /** 封鎖中の予測系機能のUIはindex.htmlから分離済み(forecast-features.html)。
  *  開発時(?forecast=1)のみ、各スロット(ff-slot-*)へfetchで注入して復元する。
@@ -454,8 +484,10 @@ const APP_DEFAULTS = {
     mwShowConstNames: { def: false, bool: 'coerce' },
     mwConstNameSort: { def: 'aiueo', enum: ['aiueo', 'pos'] },   // 50音順 / 座標順
     elevExcludeEnabled: { def: true, bool: 'nf' },
-    elevExcludeRadius: { def: 15, min: 0, max: 10000 },   // 目的点側: 自己遮蔽+鋭峰の写り込みを吸収する既定15m
-    elevExcludeObsRadius: { def: 10, min: 0, max: 10000 },// 観測点側: 自己遮蔽を吸収しつつ足元の実在遮蔽を無視しすぎない既定10m
+    elevExcludeRadius: { def: SORA.VISIBILITY.EXCLUDE_TARGET_M, min: 0, max: 10000 },   // 目的点側: 自己遮蔽+鋭峰の写り込みを吸収する既定15m
+    elevExcludeObsRadius: { def: SORA.VISIBILITY.EXCLUDE_OBSERVER_M, min: 0, max: 10000 },// 観測点側: 自己遮蔽を吸収しつつ足元の実在遮蔽を無視しすぎない既定10m
+    elevSummitBandEnabled: { def: true, bool: 'nf' },     // 山頂部(第152・Q25): 目的点の山頂部(帯)の地形を遮蔽に数えない
+    elevSummitBandM: { def: SORA.VISIBILITY.SUMMIT_BAND_M, min: 0, max: 2000 },     // 山頂部の帯の高さ(m)。既定300=山頂の肩まで(第151・依頼者決定。可視マップの静的資産と同じ)
     // ---- 辻検索 ----
     tsujiSearchBaseAz: { def: 0 },
     tsujiSearchOffsetAz: { def: 0 },
@@ -582,8 +614,10 @@ let appState = {
                           //   accuracyFilter, accDblCircle, accCircle, accTriangle, accDash,
                           //   checked, memo }
 
-    // 大気差補正の有効/無効
-    refractionEnabled: false,
+    // 大気差補正(地形の見通しの気差係数K): オン=気象条件から算出した値(既定)・オフ=0(気差なし)。第158
+    refractionEnabled: true,
+    // 気差オプション(Astronomy Engineの天体の大気差=見かけ高度)。地上のKとは別の光線(天体→目)なので二重にはかからない。既定オン(第158)
+    astroRefraction: true,
 
     // 大気差補正係数 (meteoから計算)
     refractionK: calculateKFromMeteo(STD_P, STD_T, STD_L),
@@ -663,6 +697,7 @@ window.onload = async function() {
 
     // 2.7. 封鎖中の予測系機能: 開発時(?forecast=1)のみUIを注入(既定は何もしない)
     await loadForecastFeatures();
+    applyFeatureLocks();   // 可視マップの封鎖(第158)
 
     // 3. 地図初期化
     initMap();
@@ -880,13 +915,7 @@ const mapAdapter = {
 // Leaflet CRS.Earth.distance互換のHaversine距離(m)。R=6371000。
 // 手順4のLeaflet撤去にあたり、L.latLng().distanceTo()を使っていた箇所の数値を変えないため
 // 同じ式・同じ半径で置き換える(可視判定・検索条件表示などで従来値と一致させる)
-function _geoDistM(lat1, lng1, lat2, lng2) {
-    const rad = Math.PI / 180, R = 6371000;
-    const sinDLat = Math.sin((lat2 - lat1) * rad / 2);
-    const sinDLng = Math.sin((lng2 - lng1) * rad / 2);
-    const a = sinDLat * sinDLat + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * sinDLng * sinDLng;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+function _geoDistM(lat1, lng1, lat2, lng2) { return SORA.haversineDistanceM(lat1, lng1, lat2, lng2); }   // 式と半径は sora-constants.js(辻メッシュのワーカーと同じ関数)
 
 // MapLibre用の小型コントロール(IControl)。Leaflet版と同じマークアップ/IDを使い、CSSと配線を共有する
 function _glDivControl(build) {
@@ -907,9 +936,9 @@ function _glBldg3dToggle(on) {
         if (!glMap.getSource('gsi-bvmap')) {
             glMap.addSource('gsi-bvmap', {
                 type: 'vector',
-                tiles: ['https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/{z}/{x}/{y}.pbf'],
+                tiles: [_mtUrl('https://cyberjapandata.gsi.go.jp/xyz/optimal_bvmap-v1/{z}/{x}/{y}.pbf')],
                 minzoom: 4, maxzoom: 16,
-                attribution: '<a href="https://github.com/gsi-cyberjapan/optimal_bvmap" target="_blank">国土地理院最適化ベクトルタイル</a>',
+                attribution: '<a href="https://github.com/gsi-cyberjapan/optimal_bvmap" target="_blank" rel="noopener noreferrer">国土地理院最適化ベクトルタイル</a>',
             });
         }
         if (!glMap.getLayer('bldg-3d')) {
@@ -931,8 +960,113 @@ function _glBldg3dToggle(on) {
     glMap.easeTo({ pitch: on ? 60 : 0, duration: 600 });   // ONで斜め視点、OFFで真上へ戻す
 }
 
+
+// ==== 地理院タイルの端末キャッシュ(オフライン表示。第158・デッサン18の13〜24段目) ====
+// 地図の地理院タイル(標準・淡色・写真・ベクトル)は、端末の店(IndexedDB 'soranotsuji-maptiles')を先に読み、無い時だけ国土地理院へ取りに行って店に入れる。
+// 国土地理院の回答(問合せ・2026年10月): 端末にキャッシュされ、当該端末にだけ地図が表示されるのであれば、出典の明示のみで利用できる(申請不要)。
+// 店は自動で貯まるので、バックアップメニューに件数・容量・最終更新日時と「全削除」を置く。安全弁: 店の合計が MT_MAX_BYTES を超えたら新しく貯めない(表示はする)。
+const MT_DB = 'soranotsuji-maptiles', MT_STORE = 'tiles';
+const MT_FETCH_TIMEOUT_MS = 20000;
+const MT_MAX_BYTES = 1024 * 1024 * 1024;   // 1GB
+const MT_HOST = 'cyberjapandata.gsi.go.jp';
+let _mtDbP = null, _mtBytes = null, _mtBytesP = null, _mtCapWarned = false, _mtRefreshTimer = null, _mtProtocolAdded = false, _mtProtocolHandler = null;   // _mtProtocolHandler: 検査が直接呼べるように持っておく
+function _mtDb() {
+    if (_mtDbP) return _mtDbP;
+    _mtDbP = new Promise((ok, ng) => {
+        try {
+            const req = indexedDB.open(MT_DB, 2);   // v2(第158): size/savedAt の索引(件数・容量・最終更新を本文を読まずに数える)
+            req.onupgradeneeded = () => { const db = req.result, tx = req.transaction; const st = db.objectStoreNames.contains(MT_STORE) ? tx.objectStore(MT_STORE) : db.createObjectStore(MT_STORE, { keyPath: 'key' }); _idbEnsureStatIndexes(st); };
+            req.onsuccess = () => ok(req.result);
+            req.onerror = () => ng(req.error);
+        } catch (e) { ng(e); }
+    });
+    _mtDbP.catch(() => { _mtDbP = null; });
+    return _mtDbP;
+}
+async function _mtIdb(mode, fn) {
+    const db = await _mtDb();
+    return new Promise((ok, ng) => { const r = fn(db.transaction(MT_STORE, mode).objectStore(MT_STORE)); r.onsuccess = () => ok(r.result); r.onerror = () => ng(r.error); });
+}
+/** 店の統計用の索引(size・savedAt)。onupgradeneeded の中で呼ぶ(地理タイルの店 v2・標高タイルの店 v3) */
+function _idbEnsureStatIndexes(st) { if (!st.indexNames.contains('size')) st.createIndex('size', 'size'); if (!st.indexNames.contains('savedAt')) st.createIndex('savedAt', 'savedAt'); }
+/** 店の件数・合計バイト・最終更新(ms)を、索引の鍵カーソルだけで数える(本文=タイルのバイト列を読まない。第158のレビュー: 1GBの店を値カーソルで舐めると、タイルが貯まるたびに表示が止まる)。
+ *  「無し」の印(size 0)は件数に入れない。索引の無い店(開けなかった時の保険)は null */
+function _idbStatByIndex(st) {
+    return new Promise((ok, ng) => {
+        if (!st.indexNames.contains('size') || !st.indexNames.contains('savedAt')) { ok(null); return; }
+        let n = 0, bytes = 0, last = 0, pending = 2;
+        const done = () => { if (--pending === 0) ok({ n, bytes, last }); };
+        const rq = st.index('size').openKeyCursor();
+        rq.onsuccess = () => { const c = rq.result; if (!c) { done(); return; } const sz = Number(c.key) || 0; if (sz > 0) n++; bytes += sz; c.continue(); };
+        rq.onerror = () => ng(rq.error);
+        const rl = st.index('savedAt').openKeyCursor(null, 'prev');   // 最終更新=索引の末尾1件
+        rl.onsuccess = () => { const c = rl.result; if (c) last = Number(c.key) || 0; done(); };
+        rl.onerror = () => ng(rl.error);
+    });
+}
+/** 「無し」(404)の印がまだ有効か(寿命は SORA.TILE_STORE.MISS_TTL_MS=30日。過ぎた印は取り直す) */
+function _storeMissFresh(rec) { return !!(rec && rec.miss && (Date.now() - (Number(rec.savedAt) || 0)) < SORA.TILE_STORE.MISS_TTL_MS); }
+/** 地理タイルの店の件数・合計バイト・最終更新(ms) */
+async function _mtStat() {
+    try {
+        const db = await _mtDb();
+        return (await _idbStatByIndex(db.transaction(MT_STORE, 'readonly').objectStore(MT_STORE))) || { n: 0, bytes: 0, last: 0 };
+    } catch (e) { return { n: 0, bytes: 0, last: 0 }; }
+}
+async function _mtClear() { try { await _mtIdb('readwrite', st => st.clear()); } catch (e) {} _mtBytes = 0; _mtCapWarned = false; }
+/** バックアップメニューの地理タイル/標高タイルの行を書き直す(少し待ってまとめて) */
+function _mtScheduleRefresh() { if (_mtRefreshTimer) return; _mtRefreshTimer = setTimeout(() => { _mtRefreshTimer = null; _mtRefreshBackupRows(); }, 1500); }
+async function _mtRefreshBackupRows() {
+    const put = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const when = (ms) => ms ? formatGdriveDateTime(new Date(ms).toISOString()) : '-';
+    if (!document.getElementById('backup-maptiles-count')) return;
+    const sec = document.getElementById('sec-backup');
+    if (sec && sec.classList.contains('closed')) return;   // 閉じている間は数えない(開いた時に toggleSection が数え直す。第158のレビュー: タイルが貯まるたびに2つの店を数えない)
+    const [mt, dem] = await Promise.all([_mtStat(), (typeof _kmTilesStat === 'function') ? _kmTilesStat() : Promise.resolve({ n: 0, bytes: 0, last: 0 })]);
+    _mtBytes = mt.bytes;
+    put('backup-maptiles-count', mt.n.toLocaleString()); put('backup-maptiles-size', _kmMB(mt.bytes)); put('backup-maptiles-updated', when(mt.last));
+    put('backup-demtiles-count', dem.n.toLocaleString()); put('backup-demtiles-size', _kmMB(dem.bytes)); put('backup-demtiles-updated', when(dem.last || 0));
+}
+/** 地図タイルの読み込み: gsicache://<URL> を店→無ければ地理院の順で。404は MapLibre の既定と同じく静かに「タイル無し」(status 404 の例外) */
+function _mtEnsureProtocol() {
+    if (_mtProtocolAdded || typeof maplibregl === 'undefined') return;
+    _mtProtocolAdded = true;
+    try { if (typeof _kmDb === 'function') _kmDb().catch(() => {}); } catch (_) {}   // 標高タイルの店(可視マップと共通)を先に用意しておく(ワーカーも読む)
+    _mtProtocolHandler = async (params, abortController) => {
+        const url = params.url.replace('gsicache://', '');
+        let rec = null;
+        try { rec = await _mtIdb('readonly', st => st.get(url)); } catch (_) { rec = null; }
+        const notFound = () => { const e = new Error('HTTP 404'); e.status = 404; throw e; };
+        if (rec && rec.miss) { if (_storeMissFresh(rec)) notFound(); rec = null; }   // 古い「無し」の印(30日)は取り直す
+        if (rec && rec.buf) return { data: rec.buf };
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), MT_FETCH_TIMEOUT_MS);
+        try { if (abortController && abortController.signal) abortController.signal.addEventListener('abort', () => ctl.abort(), { once: true }); } catch (_) {}
+        let res;
+        try { res = await fetch(url, { signal: ctl.signal, mode: 'cors' }); } finally { clearTimeout(timer); }
+        if (res.status === 404) {
+            _mtIdb('readwrite', st => st.put({ key: url, size: 0, miss: true, savedAt: Date.now() })).catch(() => {});
+            notFound();
+        }
+        if (!res.ok) { const e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+        const buf = await res.arrayBuffer();
+        if (_mtBytes === null) { if (!_mtBytesP) _mtBytesP = _mtStat().then(s => { _mtBytes = s.bytes; }, () => { _mtBytes = 0; }); await _mtBytesP; }   // 最初の1枚だけ数える(同時に届いた分は同じ約束を待つ)
+        if (_mtBytes + buf.byteLength <= MT_MAX_BYTES) {
+            _mtBytes += buf.byteLength;
+            _mtIdb('readwrite', st => st.put({ key: url, size: buf.byteLength, buf, savedAt: Date.now() })).catch(() => {});
+            _mtScheduleRefresh();
+        } else if (!_mtCapWarned) { _mtCapWarned = true; console.warn(`地理タイルの店が上限(${_kmMB(MT_MAX_BYTES)})に達したので、これ以上は貯めません(バックアップメニューの「地理タイルを全削除」で空けられます)`); }
+        return { data: buf };
+    };
+    maplibregl.addProtocol('gsicache', _mtProtocolHandler);
+}
+/** 地理院のタイルURLを店経由の形にする(地理院のタイルだけ。OSMなどはそのまま) */
+function _mtUrl(url) { return url.includes(MT_HOST) ? 'gsicache://' + url : url; }
+
 function initMapGL(mapEl) {
-    const gsiAttr = '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">地理院タイル</a>';
+    _mtEnsureProtocol();   // 地理院タイルは端末の店を先に読む(第158)
+    // 注: attribution/customAttribution/Popup.setHTML に渡す文字列は、必ずこの関数の中の定数だけにする(利用者やシートの値を混ぜない。MapLibre はここをHTMLとして描く。第159)
+    const gsiAttr = '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地理院タイル</a>';
     const rasterSrc = (tiles, attribution, maxzoom) => ({ type: 'raster', tiles, tileSize: 256, maxzoom, attribution });
     glMap = new maplibregl.Map({
         container: mapEl,
@@ -942,12 +1076,12 @@ function initMapGL(mapEl) {
             // 生成ツール: tests/build-glyphs.js)
             glyphs: 'fonts/{fontstack}/{range}.pbf',
             sources: {
-                'base-std': rasterSrc(['https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'], gsiAttr, 18),
-                'base-photo': rasterSrc(['https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg'], gsiAttr, 18),
-                'base-pale': rasterSrc(['https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'], gsiAttr, 18),
+                'base-std': rasterSrc([_mtUrl('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png')], gsiAttr, 18),
+                'base-photo': rasterSrc([_mtUrl('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg')], gsiAttr, 18),
+                'base-pale': rasterSrc([_mtUrl('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png')], gsiAttr, 18),
                 // OSMは単一ホストが現行推奨(HTTP/2下でa/b/cサブドメイン分割は接続数が増えるだけで逆効果)
                 'base-osm': rasterSrc(['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                    '<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>', 19),
+                    '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>', 19),
             },
             layers: [
                 { id: 'base-std', type: 'raster', source: 'base-std', layout: { visibility: 'visible' } },
@@ -967,7 +1101,7 @@ function initMapGL(mapEl) {
         compact: true,   // ⓘアイコンで折りたたみ(タップ/クリックで展開。常時1行表示より省スペース)
         // ベース地図の出典は各ソースのattribution(表示中のものだけ出る)に任せ、ここには
         // 地図ソースでないデータの出典のみ載せる(標高タイル+宙の窓の写真テクスチャ=国土地理院・気象=Open-Meteo。重複表示の防止)
-        customAttribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院(標高・写真)</a>,<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles (Mapzen/AWS)</a>,<a href="https://open-meteo.com/" target="_blank">Open-Meteo</a>'
+        customAttribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">国土地理院(標高・写真)</a>,<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener noreferrer">Terrain Tiles (Mapzen/AWS)</a>,<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>'
     }), 'bottom-right');
     // タイル取得失敗は警告のみ(オフラインでも他機能を止めない)。
     // ※辻メッシュ画像は第36ラウンドでcanvasソース化し非同期ロード自体が無くなったため、
@@ -1050,6 +1184,9 @@ function initMapGL(mapEl) {
         // 一般クリック(画素ポップアップ/地点移動)へは流さない(Leafletのマーカー優先と同じ)
         if (_glTmGoldShown && glMap.getLayer('tm-gold-dots') &&
             glMap.queryRenderedFeatures(e.point, { layers: ['tm-gold-dots'] }).length) return;
+        // 可視マップの島(塗り)の上のクリックはレイヤ側の固定ポップアップ(観測点/目的点の設定つき)に任せる(第150)
+        if (_kmActive && _kmTiles && glMap.getLayer('km-fill') &&
+            glMap.queryRenderedFeatures(e.point, { layers: ['km-fill'] }).length) return;
         onMapClick({ latlng: { lat: e.lngLat.lat, lng: e.lngLat.lng }, originalEvent: e.originalEvent });
     });
     glMap.on('dblclick', (e) => { onMapDblClick({ latlng: { lat: e.lngLat.lat, lng: e.lngLat.lng }, originalEvent: e.originalEvent }); });
@@ -1163,6 +1300,12 @@ function initMapGL(mapEl) {
                 `精度角距離 ${(+f.properties.dist).toFixed(5)}°<br>クリックで観測点に設定`, 8);
         });
         glMap.on('mouseleave', 'tm-gold-dots', () => { glMap.getCanvas().style.cursor = ''; _glTmHideTip(); });
+        // 可視マップ(第150・段3): 島の輪郭/塗り・縞島・点滅のソースとレイヤ(ホバー/クリックもここで配線)
+        try { _kmAddMapLayers(); } catch (e) { console.warn('可視マップ レイヤ:', e); }
+        // 山頂部のプレビュー(第152・基本オプション「:プレビュー」): 目的点の山頂部の範囲(薄い赤の塗り+赤い線)
+        glMap.addSource('summit-band', { type: 'geojson', data: emptyFC });
+        glMap.addLayer({ id: 'sb-fill', type: 'fill', source: 'summit-band', paint: { 'fill-color': '#e53935', 'fill-opacity': 0.25 } });
+        glMap.addLayer({ id: 'sb-line', type: 'line', source: 'summit-band', paint: { 'line-color': '#c62828', 'line-width': 2 } });
         // スタイル準備前に描画された分をやり直す(マーカーはDOMなので影響なし・線/円が対象)
         if (typeof appState === 'object' && appState.start) {
             try { updateLocationDisplay(); } catch (e) { console.warn('MapLibre(R2) 初回再描画:', e); }
@@ -1306,13 +1449,13 @@ function glUpdateMyPointMarkers() {
         _glAddMarker('mypoint', pt.lat, pt.lng, null, {
             pin: pinColor, className: `location-marker ${cls}`,
             popupHtml: `
-            <b>${title}</b><br>
+            <b>${escapeHtml(title)}</b><br>
             ${escapeHtml(pt.name)}<br>
-            ID: ${pt.id}<br>
-            緯度: ${pt.lat}°<br>
-            経度: ${pt.lng}°<br>
-            標高: ${pt.elev !== null ? pt.elev : '--'} m<br>
-            高さ: ${pt.height || 0} m
+            ID: ${Number(pt.id)}<br>
+            緯度: ${Number(pt.lat)}°<br>
+            経度: ${Number(pt.lng)}°<br>
+            標高: ${pt.elev !== null && pt.elev !== undefined ? Number(pt.elev) : '--'} m<br>
+            高さ: ${Number(pt.height || 0)} m
         `,
             onClick: () => apply(pt),
         });
@@ -1715,7 +1858,34 @@ function initMap() {
 // 4. UIイベント設定
 // ============================================================
 
+/** HTMLの data-click="関数名" data-arg="引数" を、1つの委譲リスナーで配線する(インラインの onclick= を使わない=CSPで script-src 'self' を保つため)。
+ *  呼べる関数はこの表に載せた物だけ(属性の文字列を評価しない) */
+const _CLICK_ACTIONS = Object.freeze({
+    toggleSection: (a) => toggleSection(a), togglePanel: () => togglePanel(), toggleHelp: () => toggleHelp(),
+    showGraph: (a) => showGraph(a), applyLineStyle: (a) => applyLineStyle(a), resetBodyStyle: () => resetBodyStyle(),
+    closeUrlPicker: () => closeUrlPicker(), closeStarSearchPopup: () => closeStarSearchPopup(), closePalette: () => closePalette(),
+    closeLocationPicker: () => closeLocationPicker(), closeGraph: () => closeGraph(), closeGdriveSyncDialog: () => closeGdriveSyncDialog(),
+});
+function _wireDataClick() {
+    document.addEventListener('click', (e) => {
+        const el = e.target && e.target.closest ? e.target.closest('[data-click]') : null;
+        if (!el) return;
+        const fn = _CLICK_ACTIONS[el.dataset.click];
+        if (fn) fn(el.dataset.arg);
+    });
+    // 読み込み元の許可リスト(CSP)に引っかかった物をコンソールに残す(機能が静かに止まらないように。開発者が見つけるための記録)
+    document.addEventListener('securitypolicyviolation', (e) => {
+        // 開発用サーバー(VS Code Live Preview)が差し込む自動再読み込みの部品(ws://127.0.0.1:<ポート>)は宙の辻の外。止められても無害なので、その旨を添える(第161)
+        const devTool = /vscode_livepreview/.test(e.sourceFile || '') || /^wss?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(e.blockedURI || '');
+        // 止められた先の URL は「?」より前だけを記録する(Google のピッカーの枠の URL などは問い合わせ部分にアクセストークンを含むことがあり、
+        // コンソールの行をそのまま貼って共有すると秘密が漏れる。第165: GitHub の push protection が依頼者の貼り付けを止めた)
+        const where = e.blockedURI ? (e.blockedURI.includes('?') ? e.blockedURI.split('?')[0] + '?…' : e.blockedURI) : '(インライン)';
+        console.warn(`CSP違反: ${e.violatedDirective} が ${where} を止めました(${e.sourceFile || ''}:${e.lineNumber || ''})${devTool ? ' — 開発用サーバー(Live Preview)の自動再読み込み。宙の辻の外で、無害' : ''}`);
+    });
+}
+
 function setupUI() {
+    _wireDataClick();
     // 全テキストボックスのautocomplete無効化 (ブラウザのフォーム復元を防止)
     document.querySelectorAll('input').forEach(el => el.setAttribute('autocomplete', 'off'));
     document.getElementById('btn-help').onclick = toggleHelp;
@@ -1839,6 +2009,7 @@ function setupUI() {
     document.getElementById('btn-tsuji-search').onclick = toggleTsujiSearch;
     document.getElementById('btn-tsujimesh').onclick = toggleTsujiMesh;
     setupTsujiMeshPanelControls();
+    setupKashimapControls();   // 可視マップ(第148・段1)
 
     // 位置情報: 観測点/目的点モードの変更をlocalStorage保存
     document.querySelectorAll('input[name="loc-mode"]').forEach(radio => {
@@ -1889,6 +2060,7 @@ function setupUI() {
         if (el) el.addEventListener('change', (e) => {
             appState[key] = Math.max(-360, Math.min(360, parseFloat(e.target.value) || 0));
             e.target.value = appState[key];
+            _tsujiLinkPropagate('tsuji', false);   // 辻メッシュ側のオフセットにも写す(辻検索メニューの外の欄なので委譲リスナーが拾わない。第158のレビュー)
             saveAppState();
             updateOffsetDistances();
             if (appState.isSoramadoActive && !_smFailed) drawSoramado();   // 検索中心(×)マーカーの追従
@@ -2384,6 +2556,11 @@ function setupUI() {
     // バックアップ / インポート
     document.getElementById('btn-backup').onclick = exportBackup;
     document.getElementById('btn-import').onclick = importBackup;
+    // 端末の店の全削除(第158・デッサン18): 地理タイル(地図)と標高タイル(可視マップの店と同じ)
+    const bMt = document.getElementById('btn-backup-maptiles-clear');
+    if (bMt) bMt.onclick = async () => { if (!confirm('端末に貯めた地理タイル(地図)を全て削除しますか？(次に地図を表示した時にまた取りに行きます)')) return; await _mtClear(); _mtRefreshBackupRows(); };
+    const bDem = document.getElementById('btn-backup-demtiles-clear');
+    if (bDem) bDem.onclick = async () => { if (!confirm(FEATURE_KASHIMAP_ENABLED ? '端末に貯めた標高タイルを全て削除しますか？(可視タイル=資産は残ります)' : '端末に貯めた標高タイルを全て削除しますか？(次に使う時にまた取りに行きます)')) return; await _kmTilesClear(); _mtRefreshBackupRows(); if (typeof _kmRenderStoreList === 'function') _kmRenderStoreList(); };
 
     // --- ★追加: 気象パラメータ連動 ---
     const iK = document.getElementById('input-refraction-k');
@@ -2411,9 +2588,14 @@ function setupUI() {
     chkRefraction.addEventListener('change', (e) => {
         appState.refractionEnabled = e.target.checked;
         setRefractionFormEnabled(e.target.checked);
-        saveAppState();
-        updateAll();
+        showKInUse();
+        _refractionSettingChanged();
     });
+    // 気差オプション(天体の見かけ高度の大気差。Astronomy Engine)。第158
+    const chkAstro = document.getElementById('chk-astro-refraction');
+    if (chkAstro) chkAstro.addEventListener('change', (e) => { appState.astroRefraction = e.target.checked; _refractionSettingChanged(); });
+    // 係数欄には「いま使う値」を出す(オフ=0・オン=気象条件からの算出値)。全ての地形の見通しの計算がこの値を使う(第157・第158)
+    const showKInUse = () => { iK.value = refractionKInUse().toFixed(4); };   // オフ=0.0000・オン=気象条件からの算出値(第158)
 
     // 気象条件が変わったら K を再計算して表示する関数
     const updateK = () => {
@@ -2442,16 +2624,8 @@ function setupUI() {
     // 設定登録ボタン
     btnRegSettings.onclick = registerSettings;
 
-    // 起動時の初期値を入力欄にセット
-    if(appState.meteo) {
-        iP.value = appState.meteo.p;
-        iT.value = appState.meteo.t;
-        iL.value = appState.meteo.l;
-        iK.value = appState.refractionK.toFixed(4);
-    }
-    // 起動時のチェックボックス状態を反映
-    chkRefraction.checked = appState.refractionEnabled;
-    setRefractionFormEnabled(appState.refractionEnabled);
+    // 起動時: チェック・気象3欄・係数欄を appState に合わせる(バックアップの取り込みでも同じ関数を呼ぶ)
+    syncRefractionUiFromState();
 
 }
 
@@ -2485,7 +2659,10 @@ function buildStateToSave() {
         soraFolderName: appState.soraFolderName,
         googleDrive: appState.googleDrive,
         meteo: appState.meteo, //気象パラメータのみ保存(Kはmeteoから再計算)
+        meteoDefaultsV2: true,   // 気温減率の既定値0.0125への移行済み(v1.95.0)
         refractionEnabled: appState.refractionEnabled,
+        astroRefraction: appState.astroRefraction,
+        refractionV3: true,   // 気差の2本立て(v1.97.0)へ移行済みの印(無い保存データは起動時に新既定=両方オンへ)
         isDPActive: appState.isDPActive,
         // isDP365Active は意図的に保存しない:
         // - 365日計算はキャッシュ無効化(位置/日付変更)を伴うため起動時のキャッシュ復元が困難
@@ -2510,6 +2687,8 @@ function buildStateToSave() {
         elevExcludeEnabled: appState.elevExcludeEnabled,
         elevExcludeRadius: appState.elevExcludeRadius,
         elevExcludeObsRadius: appState.elevExcludeObsRadius,
+        elevSummitBandEnabled: appState.elevSummitBandEnabled,
+        elevSummitBandM: appState.elevSummitBandM,
         tsujiMoonFilterEnabled: appState.tsujiMoonFilterEnabled,
         tsujiMoonBase: appState.tsujiMoonBase,
         tsujiMoonTolerance: appState.tsujiMoonTolerance,
@@ -2639,9 +2818,14 @@ function loadAppState() {
             if(saved.soraFolderName) appState.soraFolderName = saved.soraFolderName;
             if(saved.googleDrive) appState.googleDrive = { ...appState.googleDrive, ...saved.googleDrive };
             if(saved.meteo) appState.meteo = saved.meteo;
+            // 気温減率の既定値を0.0065→0.0125へ(v1.95.0)。保存値が旧既定のまま(触っていない)なら新既定へ移す(一度でも保存すれば meteoDefaultsV2 が立って二度と触らない)
+            if (saved.meteo && saved.meteoDefaultsV2 !== true && +saved.meteo.p === STD_P && +saved.meteo.t === STD_T && +saved.meteo.l === STD_L_OLD) appState.meteo = { p: STD_P, t: STD_T, l: STD_L };
             // meteoからKを再計算 (refractionKは保存しない)
             appState.refractionK = calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l);
             if(saved.refractionEnabled !== undefined) appState.refractionEnabled = saved.refractionEnabled;
+            if(saved.astroRefraction !== undefined) appState.astroRefraction = saved.astroRefraction;
+            // 気差の2本立て(v1.97.0): 旧い保存データ(1つのチェックが地上のKと天体の大気差の両方を兼ねていた)は、一度だけ新しい既定(両方オン)にする
+            if (saved.refractionV3 !== true) { appState.refractionEnabled = true; appState.astroRefraction = true; }
             if(saved.isDPActive !== undefined) appState.isDPActive = saved.isDPActive;
             // isDP365Active は読み込まない: 起動時は常に OFF で初期化済み (saveAppStateにも保存しない)
             if(saved.locMode) appState.locMode = saved.locMode;
@@ -2689,7 +2873,7 @@ function loadAppState() {
             ['soraSensorKey','soraAspectW','soraAspectH','soraFNumberIdx','soraFisheye','soraPeaking','soraGrayscale','soraBaseAz','soraBaseAlt','soraTraj','soraCenterCross','soraTargetCross','soraSearchCenter','soraOrient','soraFisheyeShape','soraPanorama',
              'soraMovInterval','soraMovShots','soraMovFps','soraMovDispStep','soraMovImgMb','soraMovPlayMode',
              'soraMwBrightness','soraElevShade','soraSunShade','soraExpFormat','soraExpW','soraExpH','soraLabelScale','soraPhotoTex',
-             'baseOptMwBase','mwOffsetAngle','tsujiLineIncludeOffset','mySetFilterText','mySetFilterName','mySetFilterMemo','mySetFilterEnabled','mwShowBodies','mwShowBodyNames','mwShowConstFig','mwShowConstBounds','mwShowConstNames','mwConstNameSort','elevExcludeEnabled','elevExcludeRadius','elevExcludeObsRadius'].forEach(k => { if (saved[k] !== undefined) appState[k] = saved[k]; });
+             'baseOptMwBase','mwOffsetAngle','tsujiLineIncludeOffset','mySetFilterText','mySetFilterName','mySetFilterMemo','mySetFilterEnabled','mwShowBodies','mwShowBodyNames','mwShowConstFig','mwShowConstBounds','mwShowConstNames','mwConstNameSort','elevExcludeEnabled','elevExcludeRadius','elevExcludeObsRadius','elevSummitBandEnabled','elevSummitBandM'].forEach(k => { if (saved[k] !== undefined) appState[k] = saved[k]; });
             // 標高関連（API標高とユーザー入力高）
             if(saved.startApiElev !== undefined) appState.startApiElev = saved.startApiElev;
             if(saved.endApiElev !== undefined) appState.endApiElev = saved.endApiElev;
@@ -2741,7 +2925,94 @@ function loadAppState() {
 
 /** 読み込んだ appState を安全な値に正規化（冪等）。旧バージョン/不整合データの自己修復。 */
 const APP_SCHEMA = 3;
+/** 保存データ(localStorage・バックアップJSON・Driveの生ダンプ・Myセットの写し)から入る「リスト/地点」の型を確定させる(第159のセキュリティ監査)。
+ *  これらは CSV/シートの取り込みと違って検証なしで appState に入っていたので、数値のつもりの欄に文字列(HTML)が入ると、
+ *  行やポップアップを組み立てる innerHTML にそのまま届いていた(他人から受け取ったバックアップで持続するXSS)。
+ *  方針: 数値の欄は数値に(直せない行は捨てる)・文字の欄は文字に(長さに上限)・色は safeCssColor・真偽は !!。
+ *  normalizeAppState の先頭で毎回呼ぶので、起動・取り込み・Myセット切替・URL復元の全部の入口で効く。 */
+function _sanitizeStoredShapes() {
+    const fin = (v) => { const n = typeof v === 'number' ? v : parseFloat(v); return Number.isFinite(n) ? n : null; };
+    const intId = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) && n >= 1 && n <= 1000000 ? n : null; };
+    const str = (v, max) => (v === null || v === undefined) ? '' : String(v).slice(0, max);
+    const dropped = [];
+    // 観測点/目的点/Home(緯度経度は必須。標高・APIの標高・高さは数値か null)
+    const fixPoint = (p, label) => {
+        if (!p || typeof p !== 'object') return null;
+        const lat = fin(p.lat), lng = fin(p.lng);
+        if (lat === null || lng === null || Math.abs(lat) > 90 || Math.abs(lng) > 360) { dropped.push(label); return null; }
+        const q = { ...p, lat, lng, elev: fin(p.elev) ?? 0 };
+        if ('apiElev' in p) q.apiElev = fin(p.apiElev);
+        if ('height' in p) q.height = fin(p.height) ?? 0;
+        return q;
+    };
+    const dflt = (k) => JSON.parse(JSON.stringify(APP_DEFAULTS[k] && 'def' in APP_DEFAULTS[k] ? APP_DEFAULTS[k].def : null));
+    appState.start = fixPoint(appState.start, 'start') || { lat: DEFAULT_START.lat, lng: DEFAULT_START.lng, elev: DEFAULT_START.elev + DEFAULT_START.height };
+    appState.end = fixPoint(appState.end, 'end') || { lat: DEFAULT_END.lat, lng: DEFAULT_END.lng, elev: DEFAULT_END.elev + DEFAULT_END.height };
+    appState.homeStart = appState.homeStart == null ? null : fixPoint(appState.homeStart, 'homeStart');
+    appState.homeEnd = appState.homeEnd == null ? null : fixPoint(appState.homeEnd, 'homeEnd');
+    for (const k of ['startApiElev', 'endApiElev']) appState[k] = fin(appState[k]);          // 数値でなければ null(=未取得。表示は start.elev に戻る)
+    for (const k of ['startHeight', 'endHeight']) appState[k] = fin(appState[k]) ?? 0;        // 数値でなければ 0
+    // My観測点/My目的点
+    // 緯度経度が「未入力」(null/空)の行は正当な途中の状態(行追加して後で入れる)なので残す。入っているのに数値にならない行だけ捨てる
+    const emptyOrFin = (v) => (v === null || v === undefined || v === '') ? null : fin(v);
+    const fixMyPoints = (list, label) => (Array.isArray(list) ? list : []).map((p, i) => {
+        if (!p || typeof p !== 'object') { dropped.push(`${label}[${i}]`); return null; }
+        const id = intId(p.id), lat = emptyOrFin(p.lat), lng = emptyOrFin(p.lng);
+        const latBad = (p.lat !== null && p.lat !== undefined && p.lat !== '' && lat === null), lngBad = (p.lng !== null && p.lng !== undefined && p.lng !== '' && lng === null);
+        if (id === null || latBad || lngBad || (lat !== null) !== (lng !== null)) { dropped.push(`${label}[${i}]`); return null; }
+        return { ...p, id, lat, lng, elev: fin(p.elev), height: fin(p.height) ?? 0, name: str(p.name, 300), memo: str(p.memo, 1000), checked: !!p.checked };
+    }).filter(Boolean);
+    appState.myObservations = fixMyPoints(appState.myObservations, 'myObservations');
+    appState.myTargets = fixMyPoints(appState.myTargets, 'myTargets');
+    // My天体
+    appState.myStars = (Array.isArray(appState.myStars) ? appState.myStars : []).map((st, i) => {
+        if (!st || typeof st !== 'object') { dropped.push(`myStars[${i}]`); return null; }
+        const id = intId(st.id), ra = fin(st.ra), dec = fin(st.dec);
+        if (id === null || ra === null || dec === null) { dropped.push(`myStars[${i}]`); return null; }
+        return { ...st, id, ra, dec, name: str(st.name, 300), color: safeCssColor(st.color, '#DDA0DD'), visible: !!st.visible, isDashed: !!st.isDashed };
+    }).filter(Boolean);
+    // 表示天体の色・線種
+    if (Array.isArray(appState.bodies)) appState.bodies.forEach(b => { if (!b || typeof b !== 'object') return; const d = DEFAULT_BODIES.find(x => x.id === b.id); b.color = safeCssColor(b.color, d ? d.color : '#DDA0DD'); b.isDashed = !!b.isDashed; b.visible = !!b.visible; });
+    // My辻検索(parseMyTsujiCsvLine と同じ型に。モード/時刻/方向の列挙は normalizeAppState の既存の検査が続けて見る)
+    const numOr = (v, def, min, max) => { const n = fin(v); return n === null ? def : Math.max(min, Math.min(max, n)); };
+    appState.myTsujiSearches = (Array.isArray(appState.myTsujiSearches) ? appState.myTsujiSearches : []).map((t, i) => {
+        if (!t || typeof t !== 'object') { dropped.push(`myTsujiSearches[${i}]`); return null; }
+        const id = intId(t.id); if (id === null) { dropped.push(`myTsujiSearches[${i}]`); return null; }
+        const q = { ...t, id, name: str(t.name, 300), memo: str(t.memo, 1000), bodyIds: str(t.bodyIds, 1000),
+            days: Math.round(numOr(t.days, 365, 1, 36500)), obsId: intId(t.obsId), tgtId: intId(t.tgtId),
+            baseAz: fin(t.baseAz), baseAlt: fin(t.baseAlt), offsetAz: numOr(t.offsetAz, 0, -360, 360), offsetAlt: numOr(t.offsetAlt, 0, -360, 360),
+            toleranceAz: numOr(t.toleranceAz, 15, 0, 360), toleranceAlt: numOr(t.toleranceAlt, 15, 0, 360), mwOffsetAngle: numOr(t.mwOffsetAngle, 0, -360, 360),
+            moonBase: numOr(t.moonBase, 14.8, 0, 30), moonTolerance: numOr(t.moonTolerance, 2, 0, 15), checked: !!t.checked };
+        for (const k of Object.keys(q)) { if (/^(moonFilter|timeFilter|startPrePost|endPrePost|dowFilter|dow[A-Z][a-z]{2}|monthFilter|month\w+|accuracyFilter|acc[A-Z]\w*|elevationOption|elevOK|elevNG|mwOffsetEnabled|visCanopy|visBuilding)$/.test(k)) q[k] = !!q[k]; }
+        for (const k of ['startTime', 'startOffset', 'endTime', 'endOffset']) { if (k in q && !/^\d{1,2}:\d{2}$/.test(String(q[k]))) q[k] = '00:00'; }
+        for (const k of ['startMode', 'endMode', 'startPrePostDir', 'endPrePostDir', 'centerMode']) { if (k in q) q[k] = str(q[k], 20); }
+        return q;
+    }).filter(Boolean);
+    // Googleドライブの控え(フォルダ/ファイルのID)は Google のIDの文字種だけ。違えば null(次の同期で印から探し直す)
+    if (appState.googleDrive && typeof appState.googleDrive === 'object') {
+        for (const k of ['rootFolderId', 'settingsFolderId', 'mySetsFolderId', 'appFileId']) {
+            const v = appState.googleDrive[k];
+            if (v !== null && v !== undefined && !(typeof v === 'string' && /^[A-Za-z0-9_-]{10,200}$/.test(v))) appState.googleDrive[k] = null;
+        }
+    }
+    // Myセット(id は整数・名前/メモは文字・シートIDは Google のIDの文字種だけ、違えば未連携に戻す)
+    appState.mySets = (Array.isArray(appState.mySets) ? appState.mySets : []).map((m, i) => {
+        if (!m || typeof m !== 'object') { dropped.push(`mySets[${i}]`); return null; }
+        const id = intId(m.id); if (id === null) { dropped.push(`mySets[${i}]`); return null; }
+        const sheetId = (typeof m.sheetId === 'string' && /^[A-Za-z0-9_-]{10,200}$/.test(m.sheetId)) ? m.sheetId : null;
+        return { ...m, id, name: str(m.name, 300), memo: str(m.memo, 1000), sheetId, checked: !!m.checked, offline: !!m.offline, saveMode: m.saveMode === 'load' ? 'load' : 'save' };
+    }).filter(Boolean);
+    // My宙検索の id/観測点ID/目的点ID(他の欄は normalizeAppState の既存の検査)
+    appState.mySoraSearches = (Array.isArray(appState.mySoraSearches) ? appState.mySoraSearches : []).map((t, i) => {
+        if (!t || typeof t !== 'object') return null;
+        const id = intId(t.id); if (id === null) { dropped.push(`mySoraSearches[${i}]`); return null; }
+        return { ...t, id, obsId: intId(t.obsId), tgtId: intId(t.tgtId) };
+    }).filter(Boolean);
+    if (dropped.length) console.warn(`保存データの形が直せない行を外しました: ${dropped.slice(0, 10).join(', ')}${dropped.length > 10 ? ' …' : ''}`);
+}
+
 function normalizeAppState() {
+    _sanitizeStoredShapes();   // 先に型を確定させる(第159)
     // スキーマ1→2: 既定色の変更(天の川:紫→薄紫 / M42:薄紫→紫)。
     // 旧既定色のまま使っていた保存データだけ新既定色へ追従する(カスタム色は保持)。
     if ((appState._loadedSchema || 0) < 2) {
@@ -3072,6 +3343,7 @@ function _locNameApplyDefaultIfHome(side) {
 }
 
 function updateLocationDisplay() {
+    if (_sbPreviewOn) _sbUpdatePreview(false);   // 目的点が変わったら山頂部のプレビューを描き直す(第152)
 
     const fmt = (pos) => `${pos.lat}, ${pos.lng}`;
 
@@ -3119,7 +3391,7 @@ function updateCalculation() {
             dec = eq.dec;
         }
 
-        const hor = Astronomy.Horizon(obsDate, observer, ra, dec, appState.refractionEnabled ? "normal" : null);
+        const hor = Astronomy.Horizon(obsDate, observer, ra, dec, appState.astroRefraction ? "normal" : null);
 
         let riseStr = "--:--";
         let setStr = "--:--";
@@ -3165,7 +3437,7 @@ function updateCalculation() {
                     let rs = times.rise;
                     let ss = times.set;
                     if (rs === "--:--:--" && ss === "--:--:--") {
-                        const h = Astronomy.Horizon(obsDate, observer, capturedRa, capturedDec, appState.refractionEnabled ? "normal" : null);
+                        const h = Astronomy.Horizon(obsDate, observer, capturedRa, capturedDec, appState.astroRefraction ? "normal" : null);
                         if (h.altitude > 0) { rs = "00:00:00"; ss = "00:00:00"; }
                     }
                     const transitStr = searchStarTransit(capturedRa, capturedDec, observer, startOfDay);
@@ -3267,6 +3539,7 @@ function _dpOffsetEdited() {
     if (appState.isDP365Active && appState.tsujiLineIncludeOffset !== false) updateDP365Lines();
 }
 
+const DP_DIST_LIMIT = 400000;   // 辻ラインの長さ(目的点からの最大距離m。第155: 300→400km。第156: 辻ライン365にも同じ上限)
 async function updateDPLines() {
     // 新しい世代を発番し、既存キューにある古い世代の通常辻ラインタスクをキャンセル(辻ライン365は巻き添えにしない)
     const generation = ++dpCurrentGeneration;
@@ -3280,11 +3553,10 @@ async function updateDPLines() {
 
     // 各天体について 前日/当日/翌日 3本の計算をプールで並列実行
     // stepSeconds=5 (方位角の精度は同等、線分刻みが粗くなるだけ。負荷 1/5)
-    // 当日線 = 目的点から300km以内 かつ その天体の「現在日時に最も近い南中」±12時間。
+    // 当日線 = 目的点から400km以内(第155・依頼者: 富士山が見えた最遠が300km台のため300→400) かつ その天体の「現在日時に最も近い南中」±12時間。
     // 翌日線/前日線 = その南中±24時間を起点とした±12時間(3窓で連続72時間をタイル)。
     // 月のように南中が毎日約50分ずれる天体でも、辻ラインが日付を跨いで連続し、
     // 0時をまたいだ辻時刻(南中23時頃→翌未明5時など)も当日線=実線側に乗る。
-    const DP_DIST_LIMIT = 300000;
     const nowMs = appState.currentDate.getTime();
 
     // 辻オフセットの込み(第85ラウンド・怒号の項目12): 「:辻オフセット方位角/視高度」チェックがオンの時だけ、
@@ -3371,8 +3643,8 @@ async function updateDP365Lines() {
     const inclOffset = appState.tsujiLineIncludeOffset !== false;
     const offAz = inclOffset ? (Number(appState.tsujiSearchOffsetAz) || 0) : 0;
     const offAlt = inclOffset ? (Number(appState.tsujiSearchOffsetAlt) || 0) : 0;
-    // 計算済みキャッシュはオフセット込みの線なので、オフセットが変わっていたら捨てて引き直す
-    const offKey = `${offAz}|${offAlt}`;
+    // 計算済みキャッシュはオフセット込み・気差込みの線なので、オフセットか気差(天体の大気差・地上のK)が変わっていたら捨てて引き直す(第158のレビュー: 気差を切り替えても365だけ古い線が残っていた)
+    const offKey = `${offAz}|${offAlt}|${appState.astroRefraction ? 1 : 0}|${refractionKInUse()}`;
     if (offKey !== _dp365OffsetsKey) {
         _dp365OffsetsKey = offKey;
         clearAllDP365Layers();
@@ -3412,7 +3684,7 @@ async function updateDP365Lines() {
             for (let b = 0; b < BATCH_DAYS && (dOff + b) < totalDays; b++) {
                 const day = new Date(baseDate.getTime() + (dOff + b) * 86400000);
                 for (const body of newBodies) {
-                    batchTasks.push(calculateDPPathPoints(day, body, observer, { stepSeconds: 60, forceWorker: true, owner: 'dp365', altOffset: offAlt }).then(pts => {
+                    batchTasks.push(calculateDPPathPoints(day, body, observer, { stepSeconds: 60, forceWorker: true, owner: 'dp365', altOffset: offAlt, distLimit: DP_DIST_LIMIT }).then(pts => {
                         if (generation !== dp365CurrentGeneration) return;
                         drawDP365Path(pts, body.color, null, body.id, -offAz);
                         doneWork++;
@@ -3589,9 +3861,20 @@ function setupTooltips() {
 // ============================================================
 
 function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    if (str === null || str === undefined || str === '') return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')   // 文字列以外(取り込みデータの数値など)も落ちずに文字として扱う(第159)
               .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+/** CSVのセルに書く自由文(名前・メモ): 表計算ソフトが数式として実行する先頭文字(= @ + - タブ)で始まる時は、先頭にアポストロフィを付けて「文字」にする(数値の負号 -12.3 は対象外)。取り込み側 csvUnprefix と対(往復で元に戻る)。第159: 他人のシート由来の名前が =HYPERLINK(…) のような式だった時の対策 */
+function csvText(v) {
+    const t = String(v ?? '');
+    return /^(=|@|\+|-(?![\d.])|\t|\r)/.test(t) ? "'" + t : t;
+}
+/** csvText の逆: 式の先頭文字の前に付けたアポストロフィを外す(取り込み時) */
+function csvUnprefix(t) { return String(t ?? '').replace(/^'(?=[=@+\-\t\r])/, ''); }
+/** CSSの色として安全な文字列だけ通す(#RGB/#RRGGBB/#RRGGBBAA か英字の色名)。style="color: …" に差し込む値はこれを通す(第159: 色欄に「;background:url(…)」等を混ぜたバックアップ対策) */
+function safeCssColor(c, def) {
+    return (typeof c === 'string' && /^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|[a-zA-Z]{3,20})$/.test(c)) ? c : def;
 }
 
 
@@ -4025,8 +4308,8 @@ async function calculateDPPathPoints(targetDate, body, observer, opts = {}) {
     const valElev = appState.start.elev;
     const dip = getHorizonDip(valElev);
     const limit = -(dip + (16 / 60 + 1.18 / 3600) * 2 + 0.1);
-    const refr = appState.refractionEnabled ? "normal" : null;
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const refr = appState.astroRefraction ? "normal" : null;   // 天体の見かけ高度の大気差(チェックのオン/オフ)
+    const k = refractionKInUse();                                 // 地形の見通しの気差係数(表示されている値)
 
     // 天体メッセージを構築 (固定恒星は ra/dec をプリセット)
     const isFixed = isFixedStar(body.id);
@@ -4093,7 +4376,7 @@ async function calculateDPPathPoints(targetDate, body, observer, opts = {}) {
             body: bodyMsg,
             observerData,
             targetData,  // Worker での反復補正に必要
-            refractionEnabled: appState.refractionEnabled,
+            astroRefraction: appState.astroRefraction,
             k,
             startOfDayMs,
             hourStart: h,
@@ -4205,26 +4488,14 @@ function getFixedStarRaDec(bodyId) {
  * @param {number} hObs 観測者の標高 (m)
  * @param {number} hTarget ターゲットの標高 (m)
  */
-// WGS84 楕円体パラメータ
-const WGS84_SEMI_MAJOR = 6378137;          // 赤道半径
-const WGS84_SEMI_MINOR = 6356752.3142;     // 極半径
+// WGS84 楕円体パラメータ(値は sora-constants.js)
+const WGS84_SEMI_MAJOR = SORA.EARTH.WGS84_SEMI_MAJOR_M;   // 赤道半径
+const WGS84_SEMI_MINOR = SORA.EARTH.WGS84_SEMI_MINOR_M;   // 極半径
 
 /** 観測点緯度 (deg) における WGS84 楕円体上の地心距離 (geocentric radius)。
  *  ρ(φ) = sqrt[((a²cosφ)² + (b²sinφ)²) / ((a cosφ)² + (b sinφ)²)]
  *  lat=0 で a (赤道半径), lat=90 で b (極半径), lat=35° で約 6371km。 */
-function getLocalEarthRadius(latDeg) {
-    const lat = latDeg * Math.PI / 180;
-    const cosLat = Math.cos(lat), sinLat = Math.sin(lat);
-    const a = WGS84_SEMI_MAJOR, b = WGS84_SEMI_MINOR;
-    const a2cos = a * a * cosLat;
-    const b2sin = b * b * sinLat;
-    const acos = a * cosLat;
-    const bsin = b * sinLat;
-    return Math.sqrt(
-        (a2cos * a2cos + b2sin * b2sin) /
-        (acos * acos + bsin * bsin)
-    );
-}
+function getLocalEarthRadius(latDeg) { return SORA.getLocalEarthRadius(latDeg); }   // 式は sora-constants.js(辻ラインのワーカーと同じ関数)
 
 function calculateDistanceForAltitudes(altObs, hObs, hTarget, obsLat, tgtLat) {
     // 観測者高 hObs / ターゲット高 hTarget で、観測高度 altObs に見える地表距離。
@@ -4233,8 +4504,7 @@ function calculateDistanceForAltitudes(altObs, hObs, hTarget, obsLat, tgtLat) {
     const R_obs = (typeof obsLat === 'number') ? getLocalEarthRadius(obsLat) : EARTH_RADIUS;
     const R_tgt = (typeof tgtLat === 'number') ? getLocalEarthRadius(tgtLat) : R_obs;
 
-    // 気差係数kを気象パラメータから都度計算 (気差OFF時は0)
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const k = refractionKInUse();   // 気差係数(設定に表示されている値。オフ=0)
     // 有効地球半径モデル: 光路の屈折を「地球半径が 1/(1-k) 倍に膨らんだ」
     // と等価に扱うため、各点の地心距離も Reff ベースで計算する。
     const Reff_obs = R_obs / (1 - k);
@@ -4374,11 +4644,13 @@ function calculateGreatCirclePoints(start, end) {
  * K = 503 * (P / T^2) * (0.034 - Γ)
  * Γ: 気温減率 (正値, K/m)
  */
-function calculateKFromMeteo(p, tCel, l) {
-    const tKelvin = tCel + 273.15; // ケルビンに変換
-    // 近似式 (l = 気温減率Γ、正値)
-    const k = 503 * (p / (tKelvin * tKelvin)) * (0.034 - l);
-    return k;
+function calculateKFromMeteo(p, tCel, l) { return SORA.calculateKFromMeteo(p, tCel, l); }   // 式は sora-constants.js
+
+/** いま使う気差係数K=設定メニューに表示されている値。大気差補正オンなら気象条件から算出した値(既定)、オフなら0=気差なし(第157・依頼者: 「表示されている値で計算」/第158: オフ=0)。
+ *  地形の見通しに関わる計算(標高グラフ・辻検索/My辻検索・辻メッシュ・可視マップ・辻ライン・宙の窓の地形/建物/花火)は全てこの1つの関数から値を取る。
+ *  天体の見かけ高度の大気差(Astronomy.Horizonの'normal')は、これまでどおりチェックのオン/オフに従う(別の量) */
+function refractionKInUse() {
+    return appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;   // オフ=0(気差なし。第158・依頼者: K=0の見え方を確かめられるように)
 }
 
 // ------------------------------------------------------
@@ -4663,10 +4935,8 @@ const GSI_DEM_SOURCES = [
 
 // GSIのDEMタイルは日本域のみ。この範囲外のGSI URLは取得自体をスキップする(海外での404嵐=
 // 「標高グラフが固まって見える」主因の対策。範囲は離島含め広めに取る: 南鳥島154.0E/沖ノ鳥島20.4N)
-const _GSI_BBOX = { latMin: 20.0, latMax: 46.0, lngMin: 122.0, lngMax: 156.0 };
-function _pointInsideJapan(lat, lng) {
-    return lat >= _GSI_BBOX.latMin && lat <= _GSI_BBOX.latMax && lng >= _GSI_BBOX.lngMin && lng <= _GSI_BBOX.lngMax;
-}
+const _GSI_BBOX = SORA.DEM.JAPAN_BBOX;   // 値は sora-constants.js(可視マップのワーカーと同じ範囲)
+function _pointInsideJapan(lat, lng) { return SORA.insideJapan(lat, lng); }
 function _tileOutsideJapan(z, x, y) {
     const n = Math.pow(2, z);
     const lngW = x / n * 360 - 180, lngE = (x + 1) / n * 360 - 180;
@@ -4801,12 +5071,18 @@ async function _getTileImageData(tileUrl) {
         return null;
     }
     try {
-        const img = await _loadTileImage(tileUrl);
+        const img = await _demTileLoad(tileUrl);   // 端末の店(可視マップと同じ標高タイルの店)を先に読み、無ければ取りに行って店へ(第158)
+        if (img === null) {   // 店に「無し」(404)の印、または取得で404
+            _tileCache.set(tileUrl, _TILE_FAIL);
+            if (_tileCache.size > _TILE_CACHE_MAX) _tileCache.delete(_tileCache.keys().next().value);
+            return null;
+        }
         const canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 256;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
+        if (img.close) img.close();
         let imgData = ctx.getImageData(0, 0, 256, 256);
         if (tileUrl.includes('/terrarium/')) imgData = _terrariumToGsi(imgData);   // 全球DEMはGSI符号へ正規化
         _tileCache.set(tileUrl, imgData);
@@ -4816,6 +5092,47 @@ async function _getTileImageData(tileUrl) {
         _tileCache.set(tileUrl, _TILE_FAIL);
         if (_tileCache.size > _TILE_CACHE_MAX) _tileCache.delete(_tileCache.keys().next().value);
         return null;
+    }
+}
+
+// ---- 標高タイルの端末の店(第158): 可視マップのその場計算(kashimap-worker)と同じ IndexedDB 'soranotsuji-kashimap' の tiles(鍵 kind/z/x/y・PNGのバイト列) ----
+const DEM_TILE_URL_RE = /\/xyz\/(dem5a_png|dem5b_png|dem5c_png|dem_png)\/(\d+)\/(\d+)\/(\d+)\.png$/;
+async function _demDecode(buf) {
+    const blob = new Blob([buf], { type: 'image/png' });
+    if (typeof createImageBitmap === 'function') return createImageBitmap(blob);
+    const u = URL.createObjectURL(blob);
+    try { return await _loadTileImage(u); } finally { URL.revokeObjectURL(u); }
+}
+/** 標高タイル1枚の画像(ImageBitmap/Image)。null=無し(404)。店に無ければ取りに行って店へ入れる。店が使えない時や取得に失敗した時は従来の Image 読みへ */
+async function _demTileLoad(tileUrl) {
+    const m = tileUrl.match(DEM_TILE_URL_RE);
+    if (!m) return await _loadTileImage(tileUrl);   // 地理院の標高タイル以外(全球DEMなど)は従来の Image 読み(店は使わない)
+    const key = `${m[1]}/${m[2]}/${m[3]}/${m[4]}`;
+    let db = null;
+    try { db = await _kmDb(); } catch (_) { db = null; }
+    const rec = (k) => _kmIdb('tiles', 'readonly', st => st.get(k)).catch(() => undefined);
+    const put = (r) => _kmIdb('tiles', 'readwrite', st => st.put(r)).catch(() => {});
+    if (db) {
+        const r = await rec(key);
+        if (r) {
+            if (r.miss || !r.buf) { if (_storeMissFresh(r)) return null; }   // 新しい「無し」の印=404。古い印(30日)は取り直す
+            else { try { return await _demDecode(r.buf); } catch (_) {} }
+        }
+    }
+    if (typeof fetch !== 'function') return await _loadTileImage(tileUrl);   // fetch の無い環境は従来の Image 読み
+    let fetched = false;
+    try {
+        const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 12000);
+        let res; try { res = await fetch(tileUrl, { signal: ctl.signal, mode: 'cors' }); } finally { clearTimeout(timer); }
+        if (res.status === 404) { if (db) await put({ key, kind: m[1], z: +m[2], x: +m[3], y: +m[4], size: 0, miss: true, savedAt: Date.now() }); return null; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const buf = await res.arrayBuffer();
+        fetched = true;
+        if (db) { put({ key, kind: m[1], z: +m[2], x: +m[3], y: +m[4], size: buf.byteLength, buf, savedAt: Date.now() }); _mtScheduleRefresh(); }
+        return await _demDecode(buf);
+    } catch (e) {
+        if (fetched) return await _loadTileImage(tileUrl);   // 取れたのに復号できない時だけ従来の Image 読みへ
+        throw e;   // 取得の失敗は1回で諦める(呼び元が失敗の印を付ける。第158のレビュー: 旧経路で取り直すと失敗の待ち時間が2倍だった)
     }
 }
 
@@ -4957,11 +5274,11 @@ function createLocationPopup(title, pos, target, apiElev, height) {
     const alt = calculateApparentAltitude(dist, pos.elev, target.elev, pos.lat, target.lat);
 
     return `
-        <b>${title}</b><br>
-        緯度: ${pos.lat}°<br>
-        経度: ${pos.lng}°<br>
-        標高: ${apiElev != null ? apiElev : pos.elev} m<br>
-        高さ: ${height != null ? height : 0} m<br>
+        <b>${escapeHtml(title)}</b><br>
+        緯度: ${Number(pos.lat)}°<br>
+        経度: ${Number(pos.lng)}°<br>
+        標高: ${Number(apiElev != null ? apiElev : pos.elev)} m<br>
+        高さ: ${Number(height != null ? height : 0)} m<br>
         相手距離: ${(dist/1000).toFixed(2)} km<br>
         相手方位: ${az.toFixed(4)}°<br>
         相手高度: ${alt.toFixed(4)}°
@@ -4972,8 +5289,7 @@ function createLocationPopup(title, pos, target, apiElev, height) {
 function calculateApparentAltitude(dist, hObs, hTarget, obsLat, tgtLat) {
     if (dist <= 0) return 0; // 距離0の場合は0度とする
 
-    // 気差係数k (気差OFF時は0)
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const k = refractionKInUse();   // 気差係数(設定に表示されている値。オフ=0)
 
     // 観測点・目的点の局所地球半径 (緯度依存) と有効半径 (気差込み)
     const R_obs = (typeof obsLat === 'number') ? getLocalEarthRadius(obsLat) : EARTH_RADIUS;
@@ -5045,7 +5361,7 @@ function updateShortcutsData(startOfDay, observer) {
         setT('time-moonrise', mr ? formatTime(mr.date, startOfDay) : "--:--");
         setT('time-moonset', ms ? formatTime(ms.date, startOfDay) : "--:--");
 
-        const refr = appState.refractionEnabled ? "normal" : null;
+        const refr = appState.astroRefraction ? "normal" : null;
         setT('alt-sunrise', sr ? getRiseSetAlt('Sun', sr.date, observer, refr) : "--");
         setT('alt-sunset', ss ? getRiseSetAlt('Sun', ss.date, observer, refr) : "--");
         setT('alt-moonrise', mr ? getRiseSetAlt('Moon', mr.date, observer, refr) : "--");
@@ -5062,7 +5378,7 @@ function updateShortcutsData(startOfDay, observer) {
 
 function updateTwilightData(startOfDay, observer) {
     try {
-        const refr = appState.refractionEnabled ? "normal" : null;
+        const refr = appState.astroRefraction ? "normal" : null;
         // 夜明側 (ascending)
         const astroDawn = Astronomy.SearchAltitude('Sun', observer, +1, startOfDay, 1, -18);
         const nautDawn  = Astronomy.SearchAltitude('Sun', observer, +1, startOfDay, 1, -12);
@@ -5356,7 +5672,7 @@ function searchStarRiseSet(ra, dec, observer, startOfDay) {
     for (let m = 0; m <= 1440; m += 1) { 
         const time = new Date(start + m * 60000);
         
-        const hor = Astronomy.Horizon(time, observer, ra, dec, appState.refractionEnabled ? "normal" : null); 
+        const hor = Astronomy.Horizon(time, observer, ra, dec, appState.astroRefraction ? "normal" : null); 
         const alt = hor.altitude;
         
         if (prevAlt !== null) {
@@ -5380,7 +5696,7 @@ function searchStarTransit(ra, dec, observer, startOfDay) {
     const start = startOfDay.getTime();
     for (let m = 0; m <= 1440; m += 1) {
         const time = new Date(start + m * 60000);
-        const hor = Astronomy.Horizon(time, observer, ra, dec, appState.refractionEnabled ? "normal" : null);
+        const hor = Astronomy.Horizon(time, observer, ra, dec, appState.astroRefraction ? "normal" : null);
         if (hor.altitude > maxAlt) {
             maxAlt = hor.altitude;
             transitTime = time;
@@ -5492,16 +5808,16 @@ function renderMyStarsList() {
         const dashClass = star.isDashed ? 'dashed' : 'solid';
         const li = document.createElement('li');
         li.innerHTML = `
-            <input type="radio" name="mystars-select" value="${star.id}" class="mystars-radio">
+            <input type="radio" name="mystars-select" value="${Number(star.id)}" class="mystars-radio">
             <input type="checkbox" class="body-checkbox" ${star.visible ? 'checked' : ''}>
-            <div class="style-indicator ${dashClass}" style="color: ${escapeHtml(star.color)};"></div>
+            <div class="style-indicator ${dashClass}" style="color: ${safeCssColor(star.color, '#DDA0DD')};"></div>
             <div class="body-info">
                 <span class="body-name-label">${escapeHtml(star.name)}</span>
-                <span class="body-name-id" id="bodyid-${star.id}">ID: ${star.id}</span>
-                <span id="data-${star.id}" class="body-detail-text">方位角 --° / 視高度 --°</span>
-                <span id="riseset-${star.id}" class="body-detail-text">出時刻 --:--:-- / 入時刻 --:--:--</span>
-                <span id="transit-${star.id}" class="body-detail-text">南中時 --:--:-- / 視半径 -.---°</span>
-                <span id="radec-${star.id}" class="body-detail-text">赤経 ${star.ra.toFixed(6)}h / 赤緯 ${star.dec.toFixed(6)}°</span>
+                <span class="body-name-id" id="bodyid-${Number(star.id)}">ID: ${Number(star.id)}</span>
+                <span id="data-${Number(star.id)}" class="body-detail-text">方位角 --° / 視高度 --°</span>
+                <span id="riseset-${Number(star.id)}" class="body-detail-text">出時刻 --:--:-- / 入時刻 --:--:--</span>
+                <span id="transit-${Number(star.id)}" class="body-detail-text">南中時 --:--:-- / 視半径 -.---°</span>
+                <span id="radec-${Number(star.id)}" class="body-detail-text">赤経 ${star.ra.toFixed(6)}h / 赤緯 ${star.dec.toFixed(6)}°</span>
             </div>`;
         // チェックボックス: 表示/非表示
         li.querySelector('.body-checkbox').addEventListener('change', function() {
@@ -5600,6 +5916,8 @@ function isCsvCommentLine(line) {
 //  ※動画/画像Blob用のsoraExportDownload(遅延revoke)は用途が異なるため対象外
 // ============================================================
 /** ファイル選択ダイアログを開き、選んだテキストファイルの中身(UTF-8)をコールバックへ渡す */
+const PICK_FILE_MAX_BYTES = 8 * 1024 * 1024;   // 取り込むテキストファイル(バックアップJSON・CSV)の上限。端末の保存枠(localStorage 5〜10MB)に収まる範囲
+const STORE_WRITE_MAX_CHARS = 4 * 1024 * 1024;   // バックアップ/Driveからの書き戻しの合計文字数の上限
 function pickTextFile(accept, onText) {
     const input = document.createElement('input');
     input.type = 'file';
@@ -5607,6 +5925,7 @@ function pickTextFile(accept, onText) {
     input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        if (file.size > PICK_FILE_MAX_BYTES) { alert(`ファイルが大きすぎます(${(file.size / 1048576).toFixed(1)}MB)。${PICK_FILE_MAX_BYTES / 1048576}MBまでのファイルを選んでください。`); return; }   // 取り込み口の大きさの上限(第159)
         const reader = new FileReader();
         reader.onload = (ev) => onText(String(ev.target.result));
         reader.readAsText(file, 'UTF-8');
@@ -5643,7 +5962,7 @@ function importMyStarsCsv() {
             const cols = lines[i].split(',');
             if (cols.length < 4) { alert(`${i + 1}行目: 列数が不足しています`); return; }
             const id = parseInt(toHalfWidth(cols[0].trim()));
-            const name = cols[1].trim();
+            const name = csvUnprefix(cols[1].trim());
             const ra = parseFloat(toHalfWidth(cols[2].trim()));
             const dec = parseFloat(toHalfWidth(cols[3].trim()));
             if (isNaN(id) || id < 1 || id > 1000) { alert(`${i + 1}行目: IDが無効です(1〜1000)`); return; }
@@ -5680,7 +5999,7 @@ function appendMyStarsCsv() {
             const cols = lines[i].split(',');
             if (cols.length < 4) { alert(`${i + 1}行目: 列数が不足しています`); return; }
             const id = parseInt(toHalfWidth(cols[0].trim()));
-            const name = cols[1].trim();
+            const name = csvUnprefix(cols[1].trim());
             const ra = parseFloat(toHalfWidth(cols[2].trim()));
             const dec = parseFloat(toHalfWidth(cols[3].trim()));
             if (isNaN(id) || id < 1 || id > 1000) { alert(`${i + 1}行目: IDが無効です(1〜1000)`); return; }
@@ -5735,7 +6054,7 @@ function exportMyStarsCsv() {
     const bom = '\uFEFF';
     let csv = bom + '天体ID,天体名,赤経,赤緯\r\n';
     targets.forEach(s => {
-        csv += `${s.id},${s.name},${s.ra},${s.dec}\r\n`;
+        csv += `${s.id},${csvText(s.name)},${s.ra},${s.dec}\r\n`;
     });
     downloadTextFile(`soranotsuji-My天体-${formatFileDateTime()}.csv`, csv);
 }
@@ -5897,11 +6216,15 @@ function importBackup() {
         if (data.mySoraSearches && Array.isArray(data.mySoraSearches)) appState.mySoraSearches = data.mySoraSearches;
         if (data.settings) {
             if (data.settings.refractionEnabled !== undefined) appState.refractionEnabled = data.settings.refractionEnabled;
+            if (data.settings.astroRefraction !== undefined) appState.astroRefraction = data.settings.astroRefraction;
+            // 気差の2本立て(v1.97.0)より前のバックアップ(astroRefraction が無い)は、1つのチェックが両方を兼ねていた旧い意味なので、loadAppState の移行と同じく両方オン(新既定)にする
+            if (data.settings.astroRefraction === undefined && data.settings.refractionEnabled !== undefined) { appState.refractionEnabled = true; appState.astroRefraction = true; }
             if (data.settings.meteo) {
                 if (data.settings.meteo.p !== undefined) appState.meteo.p = data.settings.meteo.p;
                 if (data.settings.meteo.t !== undefined) appState.meteo.t = data.settings.meteo.t;
                 if (data.settings.meteo.l !== undefined) appState.meteo.l = data.settings.meteo.l;
             }
+            syncRefractionUiFromState();   // チェック・気象3欄・係数欄も取り込んだ値に(第157のレビュー: 画面が古いままで、計算だけ新しいKになっていた)
         }
         normalizeAppState();   // インポートしたMy宙検索等を既定の範囲・選択肢に丸める
         saveAppState();
@@ -6025,25 +6348,25 @@ function renderMyPointsList(type) {
         row.innerHTML = `
             <hr class="tsujisearch-separator">
             <div class="mypoint-row-header">
-                <input type="radio" name="${cfg.prefix}-select" value="${pt.id}" class="mystars-radio" ${idx === 0 ? 'checked' : ''}>
-                <input type="checkbox" class="body-checkbox mypoint-check" data-id="${pt.id}" ${pt.checked ? 'checked' : ''} title="CSV出力の選択">
-                <span class="mypoint-id">ID:${String(pt.id).padStart(4, ' ')}</span>
+                <input type="radio" name="${cfg.prefix}-select" value="${Number(pt.id)}" class="mystars-radio" ${idx === 0 ? 'checked' : ''}>
+                <input type="checkbox" class="body-checkbox mypoint-check" data-id="${Number(pt.id)}" ${pt.checked ? 'checked' : ''} title="CSV出力の選択">
+                <span class="mypoint-id">ID:${String(Number(pt.id)).padStart(4, ' ')}</span>
             </div>
             <div class="control-row">
-                <input type="text" class="mypoint-name" value="${escapeHtml(pt.name)}" placeholder="${cfg.label}名" maxlength="150" data-id="${pt.id}" autocomplete="off">
+                <input type="text" class="mypoint-name" value="${escapeHtml(pt.name)}" placeholder="${cfg.label}名" maxlength="150" data-id="${Number(pt.id)}" autocomplete="off">
             </div>
             <div class="control-row">
-                <input type="text" class="mypoint-latlng" value="${pt.lat !== null && pt.lat !== undefined ? pt.lat + ', ' + pt.lng : ''}" placeholder="地名、Plus Code、緯度,経度" maxlength="150" data-id="${pt.id}" autocomplete="off">
+                <input type="text" class="mypoint-latlng" value="${pt.lat !== null && pt.lat !== undefined ? Number(pt.lat) + ', ' + Number(pt.lng) : ''}" placeholder="地名、Plus Code、緯度,経度" maxlength="150" data-id="${Number(pt.id)}" autocomplete="off">
             </div>
             <div class="control-row">
                 <label class="mypoint-label">標高:</label>
-                <input type="number" class="mypoint-elev" value="${pt.elev !== null && pt.elev !== undefined ? pt.elev : ''}" placeholder="標高" step="0.1" data-id="${pt.id}">
+                <input type="number" class="mypoint-elev" value="${pt.elev !== null && pt.elev !== undefined ? Number(pt.elev) : ''}" placeholder="標高" step="0.1" data-id="${Number(pt.id)}">
                 <label class="mypoint-label">高さ:</label>
-                <input type="number" class="mypoint-height" value="${pt.height !== null && pt.height !== undefined ? pt.height : ''}" placeholder="高さ" step="0.1" data-id="${pt.id}">
+                <input type="number" class="mypoint-height" value="${pt.height !== null && pt.height !== undefined ? Number(pt.height) : ''}" placeholder="高さ" step="0.1" data-id="${Number(pt.id)}">
             </div>
             <div class="control-row">
                 <label class="mypoint-label">メモ:</label>
-                <input type="text" class="mypoint-memo" value="${escapeHtml(pt.memo || '')}" placeholder="メモ(150文字)" maxlength="150" data-id="${pt.id}" autocomplete="off">
+                <input type="text" class="mypoint-memo" value="${escapeHtml(pt.memo || '')}" placeholder="メモ(150文字)" maxlength="150" data-id="${Number(pt.id)}" autocomplete="off">
             </div>`;
         // イベント: 名前変更
         row.querySelector('.mypoint-name').addEventListener('input', () => setMyPointDirty(type, true));
@@ -6281,7 +6604,7 @@ function registerAllMyPoints(type) {
     for (const pt of points) {
         if (!pt.name || pt.lat === null || pt.lat === undefined || pt.lng === null || pt.lng === undefined) {
             document.getElementById(`${cfg.prefix}-error`).innerHTML =
-                `<span class="mypoint-error-text">${cfg.label}ID:${pt.id}に未入力のものがあります。入力するか、行削除してください。</span>`;
+                `<span class="mypoint-error-text">${cfg.label}ID:${escapeHtml(pt.id)}に未入力のものがあります。入力するか、行削除してください。</span>`;
             return;
         }
     }
@@ -6391,12 +6714,12 @@ function importMyPointsCsv(type) {
             const cols = lines[i].split(',');
             if (cols.length < 6) { alert(`${i + 1}行目: 列数が不足しています(6列必要)`); return; }
             const id = parseInt(toHalfWidth(cols[0].trim()));
-            const name = cols[1].trim();
+            const name = csvUnprefix(cols[1].trim());
             const lat = parseFloat(toHalfWidth(cols[2].trim()));
             const lng = parseFloat(toHalfWidth(cols[3].trim()));
             let elev = cols[4].trim() === '' ? null : parseFloat(toHalfWidth(cols[4].trim()));
             const height = parseFloat(toHalfWidth(cols[5].trim())) || 0;
-            const memo = (cols[6] !== undefined ? cols[6] : '').trim();
+            const memo = csvUnprefix((cols[6] !== undefined ? cols[6] : '').trim());
             if (isNaN(id) || id < 1 || id > 1000) { alert(`${i + 1}行目: IDが無効です(1〜1000)`); return; }
             if (usedIds.has(id)) { alert(`${i + 1}行目: ID ${id} が重複しています`); return; }
             if (isNaN(lat) || isNaN(lng)) { alert(`${i + 1}行目: 緯度/経度が無効です`); return; }
@@ -6438,13 +6761,13 @@ function appendMyPointsCsv(type) {
             const cols = lines[i].split(',');
             if (cols.length < 6) { alert(`${i + 1}行目: 列数が不足しています(6列必要)`); return; }
             const id = parseInt(toHalfWidth(cols[0].trim()));
-            const name = cols[1].trim();
+            const name = csvUnprefix(cols[1].trim());
             const latText = toHalfWidth(cols[2].trim()), lngText = toHalfWidth(cols[3].trim());
             const lat = parseFloat(latText);
             const lng = parseFloat(lngText);
             let elev = cols[4].trim() === '' ? null : parseFloat(toHalfWidth(cols[4].trim()));
             const height = parseFloat(toHalfWidth(cols[5].trim())) || 0;
-            const memo = (cols[6] !== undefined ? cols[6] : '').trim();
+            const memo = csvUnprefix((cols[6] !== undefined ? cols[6] : '').trim());
             if (isNaN(id) || id < 1 || id > 1000) { alert(`${i + 1}行目: IDが無効です(1〜1000)`); return; }
             if (isNaN(lat) || isNaN(lng)) { alert(`${i + 1}行目: 緯度/経度が無効です`); return; }
             csvEntries.push({ id, name, lat, lng, elev, height, memo, latText, lngText });
@@ -6512,7 +6835,7 @@ function exportMyPointsCsv(type) {
     const bom = '\uFEFF';
     let csv = bom + `${cfg.label}ID,${cfg.label}名,緯度,経度,標高,高さ,メモ\r\n`;
     targets.forEach(pt => {
-        csv += `${pt.id},${pt.name},${pt.lat},${pt.lng},${pt.elev !== null ? pt.elev : ''},${pt.height},${pt.memo || ''}\r\n`;
+        csv += `${pt.id},${csvText(pt.name)},${pt.lat},${pt.lng},${pt.elev !== null ? pt.elev : ''},${pt.height},${csvText(pt.memo || '')}\r\n`;
     });
     downloadTextFile(`soranotsuji-${cfg.labelFull}-${formatFileDateTime()}.csv`, csv);
 }
@@ -6784,7 +7107,7 @@ function registerAllMyTsuji() {
             t.obsId == null || t.tgtId == null ||
             t.baseAz == null || t.baseAlt == null) {
             document.getElementById('mytsuji-error').innerHTML =
-                `<span class="mypoint-error-text">辻検索ID:${t.id}に未入力のものがあります。入力するか、行削除してください。</span>`;
+                `<span class="mypoint-error-text">辻検索ID:${escapeHtml(t.id)}に未入力のものがあります。入力するか、行削除してください。</span>`;
             return;
         }
     }
@@ -6876,7 +7199,7 @@ function parseMyTsujiCsvLine(cols, lineNum) {
     if (cols.length < 6) { alert(`${lineNum}行目: 列数が不足しています(最低6列必要)`); return null; }
     const id = parseInt(toHalfWidth(cols[0].trim()));
     if (isNaN(id) || id < 1 || id > 1000) { alert(`${lineNum}行目: 辻検索IDが無効です(1〜1000)`); return null; }
-    const name = cols[1].trim();  // 全角保持
+    const name = csvUnprefix(cols[1].trim()).slice(0, 150);  // 全角保持(上限は画面の入力欄と同じ)
     if (!name) { alert(`${lineNum}行目: 辻検索名が空です`); return null; }
     const days = parseInt(toHalfWidth(cols[2].trim()));
     if (isNaN(days) || days < 1 || days > 36500) { alert(`${lineNum}行目: 検索期間が無効です(1〜36500)`); return null; }
@@ -6986,7 +7309,7 @@ function parseMyTsujiCsvLine(cols, lineNum) {
     const elevOK = legacy ? false : parseBoolOr(cols[33 + ci + di + mfi]);
     const elevNG = legacy ? false : parseBoolOr(cols[34 + ci + di + mfi]);
     // メモ (末尾列)
-    const memo = ((legacy ? cols[20] : cols[35 + ci + di + mfi]) ?? '').trim();
+    const memo = csvUnprefix(((legacy ? cols[20] : cols[35 + ci + di + mfi]) ?? '').trim());
     return {
         id, name, days, bodyIds,
         obsId, tgtId,
@@ -7111,9 +7434,9 @@ function _buildMyTsujiCsv(targets) {
     targets.forEach(t => {
         csv += [
             t.id,
-            t.name ?? '',
+            csvText(t.name ?? ''),
             t.days ?? '',
-            t.bodyIds ?? '',
+            csvText(t.bodyIds ?? ''),
             t.obsId ?? '',
             t.tgtId ?? '',
             t.baseAz ?? '',
@@ -7156,7 +7479,7 @@ function _buildMyTsujiCsv(targets) {
             t.elevationOption ? 'ON' : 'OFF',
             t.elevOK ? 'ON' : 'OFF',
             t.elevNG ? 'ON' : 'OFF',
-            t.memo ?? ''
+            csvText(t.memo ?? '')
         ].join(',') + '\r\n';
     });
     return csv;
@@ -7262,6 +7585,7 @@ function copyMyTsujiSearchUrl(includeDateTime) {
     params.set('tsujiMonth12', t.month12 ? 'true' : 'false');
     // 検索の計算に効く全体設定(第95ラウンド): 大気差/気象は取得時点の値・天の川の基準点は行の値で再現
     params.set('refractionEnabled', appState.refractionEnabled ? 'true' : 'false');
+    params.set('astroRefraction', appState.astroRefraction ? 'true' : 'false');
     params.set('meteoP', String(appState.meteo.p));
     params.set('meteoT', String(appState.meteo.t));
     params.set('meteoL', String(appState.meteo.l));
@@ -7290,7 +7614,7 @@ async function executeSingleMyTsujiSearch(t, searchStartMsOverride, snapshotObs,
         lng: obs.lng,
         elev: (obs.elev || 0) + (obs.height || 0)
     };
-    const refractionEnabled = appState.refractionEnabled;
+    const astroRefraction = appState.astroRefraction;   // 天体の見かけ高度の大気差(気差オプション)
     let searchStartMs;
     if (searchStartMsOverride != null) {
         searchStartMs = searchStartMsOverride;
@@ -7327,7 +7651,7 @@ async function executeSingleMyTsujiSearch(t, searchStartMsOverride, snapshotObs,
 
     const bodyChunkResults = await Promise.all(perBodyChunks.map(({ bodyMsg }) =>
         runTsujiChunks({
-            bodyMsg, observerData, refractionEnabled,
+            bodyMsg, observerData, astroRefraction,
             targetAz, targetAlt, toleranceAz, toleranceAlt,
             centerMode: t.centerMode, centerAz0: ((t.baseAz || 0) + 360) % 360, centerAlt0: t.baseAlt || 0,   // 検索中心オプション(行ごとに独立)
             searchStartMs, days: t.days,
@@ -7371,7 +7695,7 @@ async function decorateMyTsujiResults(results) {
         if (visCache.has(vkey)) continue;
         const sTot = (r.obs.elev || 0) + (r.obs.height || 0);
         const eTot = (r.tgt.elev || 0) + (r.tgt.height || 0);
-        const v = await computePathVisibility(r.obs.lat, r.obs.lng, sTot, r.tgt.lat, r.tgt.lng, eTot);
+        const v = await computePathVisibility(r.obs.lat, r.obs.lng, sTot, r.tgt.lat, r.tgt.lng, eTot, r.tgt.elev);
         visCache.set(vkey, v.visible ? 'OK' : 'NG');
     }
     const decorated = [];
@@ -7905,7 +8229,7 @@ async function downloadTsujiResultCsv(decorated, filename, onProgress) {
         'プレビューURL'
     ];
     const esc = v => {
-        const s = String(v ?? '');
+        const s = csvText(v);   // 式の先頭文字はアポストロフィで文字に(第159)
         if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
         return s;
     };
@@ -8130,11 +8454,15 @@ function renderMyTsujiSearches() {
             <hr class="tsujisearch-separator">
             <div class="control-row left-row">
                 <input type="checkbox" class="body-checkbox mytsuji-elev-option" data-id="${t.id}" ${t.elevationOption ? 'checked' : ''}>
-                <label>標高フィルタ</label>
+                <label>可視フィルタ</label>
             </div>
             <div class="control-row left-row">
                 <input type="checkbox" class="body-checkbox mytsuji-elev-ok" data-id="${t.id}" ${t.elevOK ? 'checked' : ''} ${t.elevationOption ? '' : 'disabled'}> <label class="tsuji-acc-label">:OK</label>
                 <input type="checkbox" class="body-checkbox mytsuji-elev-ng" data-id="${t.id}" ${t.elevNG ? 'checked' : ''} ${t.elevationOption ? '' : 'disabled'}> <label class="tsuji-acc-label">:NG</label>
+            </div>
+            <div class="control-row left-row" title="樹冠(木の高さ)・構造物(建物)を入れた可視判定(可視マップの樹冠・構造物の資産ができたら使えます)">
+                <input type="checkbox" class="body-checkbox mytsuji-vis-canopy" data-id="${t.id}" disabled> <label class="km-label">:樹冠</label>
+                <input type="checkbox" class="body-checkbox mytsuji-vis-building" data-id="${t.id}" disabled> <label class="km-label">:構造物</label>
             </div>
             <div class="control-row">
                 <label class="mytsuji-label">メモ:</label>
@@ -8318,7 +8646,7 @@ function renderCelestialList() {
         const dashClass = body.isDashed ? 'dashed' : 'solid';
         li.innerHTML = `
             <input type="checkbox" class="body-checkbox" ${body.visible ? 'checked' : ''}>
-            <div class="style-indicator ${dashClass}" style="color: ${escapeHtml(body.color)};"></div>
+            <div class="style-indicator ${dashClass}" style="color: ${safeCssColor(body.color, '#DDA0DD')};"></div>
             <div class="body-info">
                 <span class="body-name-label">${escapeHtml(body.name)}</span>
                 <span class="body-name-id" id="bodyid-${escapeHtml(body.id)}">ID: ${escapeHtml(body.id)}</span>
@@ -8404,6 +8732,29 @@ function applyLineStyle(type) {
 }
 
 // 設定登録 (大気差係数など)
+/** 設定メニューの大気差の部品(チェック・気象3欄の値と有効/無効・係数欄)を appState に合わせる1本。起動時と、古い形式のバックアップの取り込みのように appState 側が先に変わった時に呼ぶ(第157のレビュー) */
+function syncRefractionUiFromState() {
+    const chk = document.getElementById('chk-refraction'), iK = document.getElementById('input-refraction-k'), chkAstro = document.getElementById('chk-astro-refraction');
+    const iP = document.getElementById('input-meteo-p'), iT = document.getElementById('input-meteo-t'), iL = document.getElementById('input-meteo-l');
+    const btnReset = document.getElementById('btn-reset-meteo'), btnReg = document.getElementById('btn-reg-settings');
+    if (!chk || !iK || !iP || !iT || !iL) return;
+    if (appState.meteo) { iP.value = appState.meteo.p; iT.value = appState.meteo.t; iL.value = appState.meteo.l; }
+    const enabled = !!appState.refractionEnabled;
+    chk.checked = enabled;
+    [iP, iT, iL].forEach(el => { el.readOnly = !enabled; el.disabled = !enabled; });   // 係数欄(iK)はデッサン仕様により常に読み取り専用
+    if (btnReset) btnReset.disabled = !enabled;
+    if (btnReg) btnReg.disabled = !enabled;
+    iK.value = refractionKInUse().toFixed(4);   // 係数欄には「いま使う値」(オフ=0・オン=気象条件からの算出値)
+    if (chkAstro) chkAstro.checked = !!appState.astroRefraction;
+}
+
+/** 気差の設定(大気差補正のチェック・気差オプション・気象条件の登録)が変わった時の共通処理: 保存→再計算→辻ライン365も引き直す。
+ *  updateAll は通常の辻ラインしか引き直さないので、365は鍵(オフセット・気差)の比較を持つ updateDP365Lines を呼んで検知させる(第158のレビュー: 切り替えても365だけ古い線が残っていた) */
+function _refractionSettingChanged() {
+    saveAppState();
+    updateAll();
+    if (appState.isDP365Active) updateDP365Lines();
+}
 function registerSettings() {
     const iK = document.getElementById('input-refraction-k');
     const iP = document.getElementById('input-meteo-p');
@@ -8433,8 +8784,7 @@ function registerSettings() {
     iK.value = k.toFixed(4);
     alert(`大気差補正係数を ${k.toFixed(4)} に設定しました`);
 
-    saveAppState();
-    updateAll(); // 再計算して描画更新
+    _refractionSettingChanged();   // 保存・再計算・辻ライン365の引き直し
 }
 
 function resetBodyStyle() {
@@ -8517,7 +8867,7 @@ function closeMilkyWayInstrument() {
 // --- 辻検索 入力連動 ---
 // 位置が変わった場合のみ再計算（ユーザーの手動入力値を保護）
 function updateTsujiSearchInputs() {
-    const posKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+    const posKey = _basePosKey();
     if (posKey === appState._lastTsujiPosKey) return;
     appState._lastTsujiPosKey = posKey;
 
@@ -8970,7 +9320,7 @@ function _tsujiLinkRefreshUI(side) {
 
 let _tsujiLinkInitFrom = 'tsuji';   // 起動時にどちらを正として揃えるか(URL復元がメッシュ側なら'mesh')
 /** 連動の実行: from='tsuji'|'mesh'の値をもう一方へ写し、相手側メニューの表示を追従させる */
-function _tsujiLinkPropagate(from) {
+function _tsujiLinkPropagate(from, save = true) {   // save=false: 連続で呼ぶ所(ドラッグ中)は呼び元が最後に1回保存する(第158)
     const fromTsuji = from === 'tsuji';
     let changed = false;
     for (const [tk, mk] of TSUJI_LINK_PAIRS) {
@@ -8978,7 +9328,7 @@ function _tsujiLinkPropagate(from) {
         if (appState[dst] !== appState[src]) { appState[dst] = appState[src]; changed = true; }
     }
     _tsujiLinkRefreshUI(fromTsuji ? 'mesh' : 'tsuji');
-    if (changed) saveAppState();
+    if (changed && save) saveAppState();
 }
 
 /** 時間フィルタのUI状態(活性/非活性)を更新 */
@@ -9013,7 +9363,7 @@ function syncTsujiTimeFilter() {
 // --- 辻メッシュ検索 入力連動/UIヘルパー ---
 /** 位置が変わった場合のみ辻メッシュの基準方位角/視高度を再計算（手動入力値を保護） */
 function updateTsujiMeshSearchInputs() {
-    const posKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+    const posKey = _basePosKey();
     if (posKey === appState._lastTsujiMeshPosKey) return;
     appState._lastTsujiMeshPosKey = posKey;
     const dist = _geoDistM(appState.start.lat, appState.start.lng, appState.end.lat, appState.end.lng);
@@ -9123,6 +9473,7 @@ function toggleTsujiSearch() {
     if (appState.isTsujiSearchActive) {
         if (appState.isTsujiMeshActive) closeTsujiMesh();   // 辻メッシュ検索とは同時表示不可
         if (appState.isSoraSearchActive) closeSoraSearchPanel();   // 宙検索結果とは同時表示不可
+        if (_kmActive) closeKashimap();                      // 可視マップとは同時表示不可(第148)
         btn.classList.add('active');
         pnl.classList.remove('hidden');
         // タイトルのみ書き換える(ヘッダのinnerHTMLを丸ごと書き換えると最大化ボタン⛶がリスナーごと消えるため)
@@ -9142,7 +9493,7 @@ function toggleTsujiSearch() {
 
 // --- 辻メッシュ検索 パネル ---
 let tsujiMeshGeneration = 0;   // キャンセル用世代カウンタ
-const TSUJIMESH_ZOOM = 14;     // DEM標高タイルのズーム (dem_png の最大)
+const TSUJIMESH_ZOOM = SORA.DEM.COARSE_ZOOM;     // DEM標高タイルのズーム (dem_png の最大。値は sora-constants.js)
 const TSUJIMESH_EPS = { o1: 0.25, x1: 0.125, x2: 0.0625, x4: 0.03125 };   // 精度フィルタ→角距離ε(°)。第128: ○(0.25)を追加・×8撤去
 
 let _tsujiMeshRows = [];       // 表示中の結果行(現在の表示順)
@@ -9618,7 +9969,7 @@ function recalcTsujiMeshGoldAtTime() {
             const eq = Astronomy.Equator(row.body.id, time, observer, true, true);
             ra = eq.ra; dec = eq.dec;
         }
-        const hor = Astronomy.Horizon(time, observer, ra, dec, C.refractionEnabled ? 'normal' : null);
+        const hor = Astronomy.Horizon(time, observer, ra, dec, C.astroRefraction ? 'normal' : null);
         const az = hor.azimuth, alt = hor.altitude;
         if (alt < C.minAlt + altLo - 0.05 || alt > C.maxAlt + altHi + 0.05) continue;
         const ca = Math.cos(alt * D2R);
@@ -9668,7 +10019,7 @@ function recalcTsujiMeshGoldAtTime() {
             const eq = Astronomy.Equator(row.body.id, time, observer, true, true);
             ra = eq.ra; dec = eq.dec;
         }
-        const hor = Astronomy.Horizon(time, observer, ra, dec, C.refractionEnabled ? 'normal' : null);
+        const hor = Astronomy.Horizon(time, observer, ra, dec, C.astroRefraction ? 'normal' : null);
         const ca = Math.cos(hor.altitude * D2R);
         const ex = Math.sin(hor.azimuth * D2R) * ca, ny = Math.cos(hor.azimuth * D2R) * ca, uz = Math.sin(hor.altitude * D2R);
         let bestPix = -1, bestDist = Infinity;
@@ -9818,7 +10169,7 @@ function _tmPixDistFn(pix, body) {
         let ra, dec;
         if (fixedRaDec) { ra = fixedRaDec.ra; dec = fixedRaDec.dec; }
         else { const eq = Astronomy.Equator(body.id, time, observer, true, true); ra = eq.ra; dec = eq.dec; }
-        const hor = Astronomy.Horizon(time, observer, ra, dec, C.refractionEnabled ? 'normal' : null);
+        const hor = Astronomy.Horizon(time, observer, ra, dec, C.astroRefraction ? 'normal' : null);
         if (out) { out.az = hor.azimuth; out.alt = hor.altitude; }   // 観測点中心の天体位置(ワーカーのbestAz/bestAltと同義)
         const ca = Math.cos(hor.altitude * D2R);
         const ex = Math.sin(hor.azimuth * D2R) * ca, ny = Math.cos(hor.azimuth * D2R) * ca, uz = Math.sin(hor.altitude * D2R);
@@ -10224,7 +10575,7 @@ function selectTsujiMeshRow(idx, jump) {
  *  - 除外範囲(目的点の半径○m以内)のNGは無視
  *  タイルは対象領域〜目的点のコリドー(扇形)を先取りする(5B/5Cは前段で取得できなかった座標のみ)。
  *  戻り値: Uint8Array(kept) 1=OK / 中断(世代交代)は null */
-async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeight, end, endElev, gxBase, gyBase, gridW, refLat, generation, setStatus) {
+async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeight, end, endElev, gxBase, gyBase, gridW, refLat, generation, setStatus, endGroundElev) {
     const _exclR = elevExcludeRadii();
     const exclKm = _exclR.tgt / 1000;
     const obsExclM = _exclR.obs;
@@ -10235,7 +10586,7 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
     const tgx15 = 128 * (end.lng / 180 + 1) * scale15;
 
     // コリドー(対象領域〜目的点の扇形)の幾何とタイル列挙(実DEMの先取りと、ワーカーへの帯域割り当ての両方で使う)
-    const EARTH_R = 6371000;
+    const EARTH_R = SORA.EARTH.HAVERSINE_RADIUS_M;   // 球の半径(値は sora-constants.js)
     const mPerDegLat = Math.PI * EARTH_R / 180;
     const mPerDegLng = mPerDegLat * Math.cos(end.lat * Math.PI / 180);
     const scale14 = Math.pow(2, TSUJIMESH_ZOOM);
@@ -10245,23 +10596,28 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
         return { lat: Math.asin((eL - 1) / (eL + 1)) * 180 / Math.PI, lng };
     };
     const toXY = (ll) => ({ x: (ll.lng - end.lng) * mPerDegLng, y: (ll.lat - end.lat) * mPerDegLat });
-    const h14 = 40075016.686 * Math.cos(refLat * Math.PI / 180) / (scale14 * 256);
-    const corners = [[gxBase, gyBase], [gxBase + gridW, gyBase], [gxBase, gyBase + gridW], [gxBase + gridW, gyBase + gridW]]
-        .map(([gx, gy]) => toXY(pixLL14(gx, gy)));
-    const maxDist = Math.max(...corners.map(c => Math.hypot(c.x, c.y))) + 16 * h14;
+    const h14 = SORA.metersPerPixel(refLat, TSUJIMESH_ZOOM);
+    const cornerLL = [[gxBase, gyBase], [gxBase + gridW, gyBase], [gxBase, gyBase + gridW], [gxBase + gridW, gyBase + gridW]].map(([gx, gy]) => pixLL14(gx, gy));
+    const corners = cornerLL.map(toXY);
+    // 経路は大円(第157)。角から目的点への大円は地図の直線より極側へふくらむ(東西300kmで1〜2km)ので、各角の大円の途中の点も扇形に入れる。
+    // 入れないと、ふくらんだ先の標本が取っていないタイルに当たり「データ無し→海面0m」と誤って見通せてしまう(第157のレビュー)
+    const bowPts = [];
+    for (const ll of cornerLL) { const gc = SORA.greatCirclePath(ll.lat, ll.lng, end.lat, end.lng); for (let i = 1; i < 16; i++) { const q = gc.at(i / 16); bowPts.push(toXY({ lat: q.lat, lng: q.lng })); } }
+    const sectorPts = corners.concat(bowPts);
+    const maxDist = Math.max(...sectorPts.map(c => Math.hypot(c.x, c.y))) + 16 * h14;
     const tgx14 = tgx15 / 2, tgy14 = gpy15At(end.lat) / 2;
     const inside = tgx14 >= gxBase && tgx14 <= gxBase + gridW && tgy14 >= gyBase && tgy14 <= gyBase + gridW;
     const wrapPi = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
     let azC = 0, span = 2 * Math.PI;
     if (!inside) {
-        const azs = corners.map(c => Math.atan2(c.x, c.y));
+        const azs = sectorPts.map(c => Math.atan2(c.x, c.y));   // 角と、角からの大円の途中の点(ふくらみ)の方位で扇形を決める
         const ds = azs.map(a => wrapPi(a - azs[0]));
         azC = azs[0] + (Math.min(...ds) + Math.max(...ds)) / 2;
         span = Math.max(...ds) - Math.min(...ds);
     }
     // コリドー内のタイル座標を列挙(タイル中心の方位/距離でセクター絞り込み)。d=目的点からの平面距離(帯域割り当て用)
     const listTiles = (zoom) => {
-        const tileSizeM = 40075016.686 * Math.cos(refLat * Math.PI / 180) / Math.pow(2, zoom);
+        const tileSizeM = SORA.metersPerPixel(refLat, zoom) * 256;
         const tileR = tileSizeM * 0.75;
         const degLatR = (maxDist + tileR) / mPerDegLat, degLngR = (maxDist + tileR) / mPerDegLng;
         const tNW = _getTileInfo(end.lat + degLatR, end.lng - degLngR, zoom);
@@ -10305,7 +10661,7 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
                     map.set(tx * 32768 + ty, img);
                     done++;
                     if ((done & 7) === 0 || done === coords.length) {
-                        setStatus(`(標高フィルタ 標高タイル取得中(${label})… ${done}/${coords.length})`);
+                        setStatus(`(可視フィルタ 標高タイル取得中(${label})… ${done}/${coords.length})`);
                         setTsujiMeshProgress(done, coords.length);
                     }
                 }
@@ -10349,6 +10705,8 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
     // 実効地球(丸み+気差)は全画素で共通の1値(目的点緯度で代表。画素間の局所半径差は判定に無視できる。
     // 逐次判定とワーカー並列判定へ同じ値を渡してビット一致を保つ)
     const visInv2R = _visInv2Reff(end.lat, end.lat);
+    const band = await _visSummitBandFor(end.lat, end.lng, endGroundElev);   // 山頂部(第152)。逐次判定とワーカー判定へ同じ帯を渡す。endGroundElev=目的点の標高(第153)
+    if (generation !== tsujiMeshGeneration) return null;
     const flags = new Uint8Array(kept);
     if (kept === 0) { window._tmLastVisFlags = flags; return flags; }
 
@@ -10360,9 +10718,9 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
             const sx15 = 128 * (sLng / 180 + 1) * scale15;
             const s0 = elevAtPix15(sx15 | 0, gpy15At(sLat) | 0);
             const startTotal = (s0 !== null && s0 !== undefined ? s0 : elevA[i]) + pixHeight;
-            flags[i] = _visJudgeCore(sLat, sLng, startTotal, end.lat, end.lng, endElev, exclM, obsExclM, elevAtPix15, visInv2R).visible ? 1 : 0;
+            flags[i] = _visJudgeCore(sLat, sLng, startTotal, end.lat, end.lng, endElev, exclM, obsExclM, elevAtPix15, visInv2R, band).visible ? 1 : 0;
             if ((i & 255) === 0 || i === kept - 1) {
-                setStatus(`(標高フィルタ可視判定中… ${(i + 1).toLocaleString()}/${kept.toLocaleString()}画素)`);
+                setStatus(`(可視フィルタ 可視判定中… ${(i + 1).toLocaleString()}/${kept.toLocaleString()}画素)`);
                 setTsujiMeshProgress(i + 1, kept);
                 if ((i & 2047) === 0) await new Promise(r2 => setTimeout(r2, 0));   // UIへ制御を返す
                 if (generation !== tsujiMeshGeneration) return null;
@@ -10377,12 +10735,12 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
     if (!useWorkers) return judgeSequential();
 
     // --- ワーカープール並列判定(結果は逐次判定とビット一致) ---
-    // 経路を統一コアのSEG=64チャンク境界で帯域分割し、各ワーカーが全画素の担当帯域のみ判定する。
+    // 経路を統一コアのSEG(SORA.VISIBILITY.PATH_CHUNK=64)チャンク境界で帯域分割し、各ワーカーが全画素の担当帯域のみ判定する。
     // タイルは帯域毎に必要な環帯(目的点からの距離レンジ+余白)分だけをdm(0.1m)のInt32に符号化して転送する
     // (総転送量≒コリドー1式。ワーカー毎の複製を持たないため、長距離でもメモリが増えない)。
     try {
         // 観測点側の標高と、帯域計算のための距離レンジを先に求める
-        setStatus('(標高フィルタ 判定データ準備中…)');
+        setStatus('(可視フィルタ 判定データ準備中…)');
         const latArr = new Float64Array(kept), lngArr = new Float64Array(kept), startTotals = new Float64Array(kept);
         let minDistM = Infinity, maxDistM = 0, minAbsLat = 90, maxAbsLat = 0;
 
@@ -10399,13 +10757,14 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
             if (al < minAbsLat) minAbsLat = al;
             if (al > maxAbsLat) maxAbsLat = al;
         }
-        const Kc = 40075016.686 / (scale15 * 256) / 2;   // stepM = Kc*cos(lat)
+        const Kc = SORA.EARTH.EQUATOR_CIRCUMFERENCE_M / (scale15 * 256) / 2;   // stepM = Kc*cos(lat)(統一可視判定の刻みと同じ式)
         const maxSteps = Math.max(2, Math.ceil(maxDistM / (Kc * Math.cos(maxAbsLat * Math.PI / 180))));
         const minSteps = Math.max(2, Math.ceil(minDistM / (Kc * Math.cos(minAbsLat * Math.PI / 180))));
-        const Cmax = Math.max(1, Math.ceil((maxSteps - 1) / 64));
+        const SEG = SORA.VISIBILITY.PATH_CHUNK;   // 帯域の区切り=統一コア/ワーカーと同じ値(単一情報源。第157のレビュー: ここだけ64の生の数だった)
+        const Cmax = Math.max(1, Math.ceil((maxSteps - 1) / SEG));
         const W = Math.max(1, Math.min(tmVisPool.size, Cmax));
         const chunkPer = Math.ceil(Cmax / W);
-        const tileSize15M = 40075016.686 * Math.cos(refLat * Math.PI / 180) / scale15;
+        const tileSize15M = SORA.metersPerPixel(refLat, 15) * 256;
         const tileSize14M = tileSize15M * 2;
         const distMargin = Math.max(500, maxDistM * 0.005);
         const SENT = -2147483648;
@@ -10447,7 +10806,7 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
             const c0 = w * chunkPer, c1 = Math.min(Cmax, c0 + chunkPer);
             if (c0 >= c1) continue;
             // 帯域のサンプルが取り得る「目的点からの距離」レンジ(保守的)でタイルを割り当てる
-            const jS = 1 + c0 * 64, jE = c1 * 64;
+            const jS = 1 + c0 * SEG, jE = c1 * SEG;
             const rMin = Math.min(1, jS / maxSteps);
             const rMax = Math.min(1, jE / minSteps);
             const dNear = (1 - rMax) * minDistM, dFar = (1 - rMin) * maxDistM;
@@ -10464,15 +10823,16 @@ async function computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeigh
                 lat: latArr, lng: lngArr, startTotal: startTotals,
                 endLat: end.lat, endLng: end.lng, endTotal: endElev, exclM, obsExclM,
                 inv2R: visInv2R,   // 地球の丸み+気差(第116ラウンド。逐次判定と同じ値でビット一致)
+                band: band ? { x0: band.x0, y0: band.y0, w: band.w, h: band.h, bits: band.bits } : null,   // 山頂部(第152。構造化クローンで各ワーカーへ)
                 tiles15: t15, tiles14: t14,
             }, transfer, (p) => { doneCounts[jobIdx] = p.done; }));
             await new Promise(r2 => setTimeout(r2, 0));   // 符号化中もUIへ制御を返す
         }
-        setStatus(`(標高フィルタ可視判定中(${jobs.length}並列)… 0/${kept.toLocaleString()}画素)`);
+        setStatus(`(可視フィルタ 可視判定中(${jobs.length}並列)… 0/${kept.toLocaleString()}画素)`);
         const progTimer = setInterval(() => {
             if (generation !== tsujiMeshGeneration) { tmVisPool.terminateAll(); return; }
             const eq = Math.min(kept, Math.floor(doneCounts.reduce((a, b) => a + b, 0) / jobs.length));
-            setStatus(`(標高フィルタ可視判定中(${jobs.length}並列)… ${eq.toLocaleString()}/${kept.toLocaleString()}画素)`);
+            setStatus(`(可視フィルタ 可視判定中(${jobs.length}並列)… ${eq.toLocaleString()}/${kept.toLocaleString()}画素)`);
             setTsujiMeshProgress(eq, kept);
         }, 200);
         let results;
@@ -10578,7 +10938,7 @@ async function startTsujiMeshSearch() {
     const baseAzA = new Float32Array(maxCount), baseAltA = new Float32Array(maxCount);
     const latA = new Float64Array(maxCount), lngA = new Float64Array(maxCount), elevA = new Float32Array(maxCount);
     const dEA = new Float32Array(maxCount), dNA = new Float32Array(maxCount);   // 領域中心からの変位角(rad)。地平座標系の画素位置補正用
-    const EARTH_R = 6371000;
+    const EARTH_R = SORA.EARTH.HAVERSINE_RADIUS_M;   // 球の半径(値は sora-constants.js)
     const mPerDegLat = Math.PI * EARTH_R / 180;
     const mPerDegLng = mPerDegLat * Math.cos(start.lat * Math.PI / 180);
     const geod = geodesic.Geodesic.WGS84;
@@ -10634,7 +10994,7 @@ async function startTsujiMeshSearch() {
     // 標高フィルタ: 許容範囲内の対象画素それぞれを、標高グラフと同一のアルゴリズムで可視判定する
     let visFlags = null;   // Uint8Array(kept) 1=OK(可視)
     if (elevOptOn) {
-        visFlags = await computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeight, end, endElev, gxBase, gyBase, gridW, start.lat, generation, setStatus);
+        visFlags = await computeTsujiMeshVisibilityFlags(latA, lngA, elevA, kept, pixHeight, end, endElev, gxBase, gyBase, gridW, start.lat, generation, setStatus, appState.endApiElev);
         if (generation !== tsujiMeshGeneration || !visFlags) return;
         if (viewshedMode !== 'all') {
             // OK/NGチェックで選んだ対象だけへ圧縮(グリッド索引も再構築)
@@ -10656,7 +11016,7 @@ async function startTsujiMeshSearch() {
             if (kept === 0) {
                 setStatus('(対象画素なし)');
                 hideTsujiMeshProgress();
-                contentEl.innerHTML = '<div style="padding:8px;color:#999;">許容範囲内かつ標高フィルタ対象の画素がありません(OK/NGチェックや許容範囲を見直してください)</div>';
+                contentEl.innerHTML = '<div style="padding:8px;color:#999;">許容範囲内かつ可視フィルタ対象の画素がありません(OK/NGチェックや許容範囲を見直してください)</div>';
                 return;
             }
         }
@@ -10693,7 +11053,7 @@ async function startTsujiMeshSearch() {
         baseAz, baseAlt, dE, dN, tanLat: Math.tan(start.lat * Math.PI / 180),
         minAlt, maxAlt, binSize, nBins, binIndex, binPixels,
         observerData: { lat: start.lat, lng: start.lng, elev: start.elev },
-        refractionEnabled: appState.refractionEnabled,
+        astroRefraction: appState.astroRefraction,
         offsetAz: appState.tsujiMeshOffsetAz, offsetAlt: appState.tsujiMeshOffsetAlt,
         centerMode: appState.tsujiMeshCenterMode,
         grid, gridW, gridPos: gridPosA.slice(0, kept), gxBase, gyBase,
@@ -10742,7 +11102,7 @@ async function startTsujiMeshSearch() {
             try {
                 const res = await tsujiMeshPool.runTask({
                     type: 'search', reqId: `${body.id}_${c}`, body: bodyMsg,
-                    observerData, refractionEnabled: appState.refractionEnabled,
+                    observerData, astroRefraction: appState.astroRefraction,
                     offsetAz: appState.tsujiMeshOffsetAz, offsetAlt: appState.tsujiMeshOffsetAlt,
                     centerMode: appState.tsujiMeshCenterMode, epsilon,
                     searchStartMs, dayStart, dayEnd,
@@ -10785,7 +11145,7 @@ async function startTsujiMeshSearch() {
     // 初期画面: 最大ズーム-3で観測点を(下部パネルに隠れない領域の)中央に表示する
     if (glMap) {
         let coveredPx = 0;
-        for (const id of ['elevation-panel', 'milkyway-panel', 'soramado-panel', 'tsujisearch-panel', 'tsujimesh-panel']) {
+        for (const id of ['elevation-panel', 'milkyway-panel', 'soramado-panel', 'tsujisearch-panel', 'tsujimesh-panel', 'kashimap-panel']) {
             const el = document.getElementById(id);
             if (!el || el.classList.contains('hidden')) continue;
             coveredPx = Math.max(coveredPx, window.innerHeight - el.getBoundingClientRect().top);
@@ -11098,6 +11458,1332 @@ async function _tmExportMeshRowsCsv(rows) {
     if (statusEl) statusEl.textContent = `${prevStatus} CSV出力完了(${list.length.toLocaleString()}行)`;
 }
 
+
+// ============================================================
+// 可視マップ(デッサン05 第7版「実装の段取り」段1=山データ+山リスト。第148ラウンド)
+// 山データ data/mountains.json(地理院1003山+地理院に無い三百名山4座。tools/kashimap/で生成)を遅延読込し、
+// 位置情報メニューの「可視マップ」節の検索条件で絞り込んだ山リストを結果パネルに出す。
+// 選んだ山の山頂に山色のマーカー。塗り・島・動的計算(段2〜4)はまだ無い。
+// ============================================================
+const KM_DATA_URL = 'data/mountains.json';
+const KM_ASSET_BASE = 'data/kashimap/v1/';   // 静的資産(段2の道具 tools/kashimap/viewshed.js --asset の出力)。別リポジトリのGitHub PagesのURLに差し替えられる
+const KM_RANGES = [100, 300, 700];            // 表示範囲ラジオ(km四方。第155・デッサン05: 60kmを外し100/300/700・初期値100)。資産の範囲がこれ以外(24kmなど)でも、その値以下で最大の資産を使う
+const KM_STRIPE_MAX = 20;                     // 地図に縞で塗る縞島の上限(重複数が最大の縞島を面積の大きい順に)
+const KM_ISLAND_ROW_CHUNK = 4000;             // 島リストを一度に描く行数(これを超える分は画面を止めずに続けて描き、進捗を出す。第157)
+const KM_SOURCE_TOLERANCE = 1.5;              // 島のgeojsonソースの間引き(タイル画素)。MapLibre既定0.375の4倍(下の_kmAddMapLayers参照)
+let _kmDataP = null;               // 山データの読込Promise(1回だけ。失敗時はnullに戻して再試行可)
+let _kmById = null;                // id -> 山データ
+let _kmActive = false;             // 結果パネル表示中(辻検索/辻メッシュ/宙検索とは排他)
+let _kmRows = [];                  // 今の検索結果(山データの参照)
+const _kmSelected = new Map();     // 選択中の山 id -> 色の席(0〜)。席は空いている最小番号(解除で空く。17席目は1席目の色)
+const KM_LIST_LABEL = { '100': '百', '200': '二百', '300': '三百', 'high': '高', 'my': 'My' };   // my=その場で計算した目的点(山リストに無い山・構造物)
+let _kmIndexP = null, _kmIndex = null;        // 静的資産の索引(index.json)。取れない時は空の索引
+const _kmDeviceIndex = new Map();             // 端末(IndexedDB)に保存した資産の索引 key -> {key,id,name,kind,range,islands,size,savedAt,origin}
+let _kmDeviceLoaded = false;                  // 端末の索引を一度でも読んだか(検索のたびに読み直さない=大きな保存中の待ちを避ける)
+const _kmNoAutoSave = new Set();              // 一覧から消した直後の資産はサーバーから読み直しても保存し直さない(山を選び直すまで)
+let _kmDbP = null;                            // IndexedDB(DB: soranotsuji-kashimap / store: assets=資産, tiles=標高タイル[段4])
+const _kmAssets = new Map();                  // 'id/kind/range' -> Promise<資産>(1回だけ読む)
+const _kmShown = new Map();                   // 描画中の山 id -> {id, seat, kind, range, asset}
+let _kmRange = 100, _kmCanopy = true, _kmBuilding = true, _kmTiles = true, _kmSummitMk = true, _kmZenMk = true, _kmStripeOnly = false;   // 全展望マーカーは初期値オン(第152・依頼者のデザイン)。樹冠と構造物は別のチェック(第155)
+let _kmIslandRows = [];                       // 島リストの行(各山の島+縞島)
+let _kmStripes = [];                          // 縞島(作業用格子の連結成分。重複数の降順→面積の降順)
+let _kmStripeGrid = null;                     // 縞島の作業用格子(点滅用の輪郭を後から辿る)
+const _kmBlink = new Set();                   // 点滅中の島のキー('山id:項番' / 'S:縞島の項番')
+let _kmBlinkTimer = null, _kmBlinkOn = false;
+let _kmPopup = null;                          // クリックで固定したポップアップ
+let _kmRefreshSeq = 0;                        // 描画更新の世代(古い非同期の結果を捨てる)
+
+/** 山データの遅延読込(1回だけ) */
+function _kmLoadData() {
+    if (!_kmDataP) {
+        _kmDataP = fetch(KM_DATA_URL)
+            .then(r => { if (!r.ok) throw new Error('mountains.json ' + r.status); return r.json(); })
+            .then(d => {
+                const list = (d && Array.isArray(d.mountains)) ? d.mountains : [];
+                _kmById = new Map(list.map(m => [m.id, m]));
+                return list;
+            })
+            .catch(e => { _kmDataP = null; throw e; });
+    }
+    return _kmDataP;
+}
+// --- 端末の資産の保存(IndexedDB。DB: soranotsuji-kashimap / assets: File読込で取り込んだ資産・その場で計算した資産[段4] / tiles: 標高タイル[段4]) ---
+function _kmDb() {
+    if (_kmDbP) return _kmDbP;
+    _kmDbP = new Promise((ok, ng) => {
+        try {
+            // v2(第152): assets=要約だけ(一覧と索引はこれだけ読む) / bodies=本文(meta・islandsObj・outlineObj。使う時だけ読む) / tiles=標高タイル(段4)
+            const req = indexedDB.open('soranotsuji-kashimap', 3);   // v3(第158): tiles に size/savedAt の索引(件数・容量を本文を読まずに数える)
+            req.onupgradeneeded = (ev) => {
+                const db = req.result, tx = req.transaction;
+                if (!db.objectStoreNames.contains('assets')) db.createObjectStore('assets', { keyPath: 'key' });
+                if (!db.objectStoreNames.contains('tiles')) db.createObjectStore('tiles', { keyPath: 'key' });
+                if (!db.objectStoreNames.contains('bodies')) db.createObjectStore('bodies', { keyPath: 'key' });
+                _idbEnsureStatIndexes(tx.objectStore('tiles'));
+                if (ev.oldVersion === 1) {   // v1の資産(要約+本文が1件)を要約と本文に分ける
+                    const st = tx.objectStore('assets'), bd = tx.objectStore('bodies');
+                    st.openCursor().onsuccess = (e2) => {
+                        const c = e2.target.result; if (!c) return;
+                        const v = c.value;
+                        if (v.meta || v.islandsObj || v.outlineObj) {
+                            bd.put({ key: v.key, meta: v.meta, islandsObj: v.islandsObj, outlineObj: v.outlineObj });
+                            const { meta, islandsObj, outlineObj, ...summary } = v; c.update(summary);
+                        }
+                        c.continue();
+                    };
+                }
+            };
+            req.onsuccess = () => ok(req.result);
+            req.onerror = () => ng(req.error);
+        } catch (e) { ng(e); }
+    });
+    _kmDbP.catch(() => { _kmDbP = null; });
+    return _kmDbP;
+}
+async function _kmIdb(store, mode, fn) {
+    const db = await _kmDb();
+    return new Promise((ok, ng) => {
+        const r = fn(db.transaction(store, mode).objectStore(store));
+        r.onsuccess = () => ok(r.result);
+        r.onerror = () => ng(r.error);
+    });
+}
+/** 端末の資産の索引を読み直す(assets=要約だけを読む。本文 bodies は触らない) */
+async function _kmLoadDeviceIndex() {
+    const next = new Map();   // 読み終えてから一度に差し替える(読んでいる途中に描画更新が走っても端末の資産が一瞬消えないように)
+    try {
+        const db = await _kmDb();
+        await new Promise((ok, ng) => {
+            const req = db.transaction('assets', 'readonly').objectStore('assets').openCursor();
+            req.onsuccess = () => {
+                const c = req.result;
+                if (!c) { ok(); return; }
+                const v = c.value;
+                next.set(v.key, { key: v.key, id: v.id, name: v.name, kind: v.kind, range: v.range, islands: v.islands, size: v.size, savedAt: v.savedAt, dropM: v.dropM, origin: v.origin || 'import', lat: v.lat, lon: v.lon, elev: v.elev, height: v.height, k: v.k, zoom: v.zoom });
+                c.continue();
+            };
+            req.onerror = () => ng(req.error);
+        });
+        _kmDeviceIndex.clear(); for (const [k, v] of next) _kmDeviceIndex.set(k, v);
+        // 第157より前に保存した資産にはズームが無い→資産の計算条件(meta.zoom)から補って要約だけ書き直す(1回きり)
+        for (const v of Array.from(next.values()).filter(v => v.zoom === undefined || v.zoom === null)) {
+            try { const rec = await _kmStoreGet(v.key); const z = rec && rec.meta ? _kmNum(rec.meta.zoom) : undefined; const zz = (z !== undefined) ? z : 0; v.zoom = zz; if (rec) await _kmStorePutSummary({ ...rec, zoom: zz }); } catch (e) { console.warn('可視マップ: ズームの補完', v.key, e); }   // ズームの無い資産は 0(不明の印)を書いて、次の読み直しで本文を読まない(第157のレビュー)
+        }
+    } catch (e) { console.warn('可視マップ: 端末の資産の索引', e); }
+    _kmDeviceLoaded = true;
+    _kmSyncPseudo();
+    _kmRenderStoreList();
+    return _kmDeviceIndex;
+}
+/** 資産1件(要約+本文)を読む。無ければ undefined */
+async function _kmStoreGet(key) {
+    const [summary, body] = await Promise.all([_kmIdb('assets', 'readonly', st => st.get(key)), _kmIdb('bodies', 'readonly', st => st.get(key))]);
+    if (!summary) return undefined;
+    return { ...summary, meta: body && body.meta, islandsObj: body && body.islandsObj, outlineObj: body && body.outlineObj };
+}
+/** 資産1件を書く(要約は assets、本文は bodies へ) */
+async function _kmStorePut(rec) {
+    const { meta, islandsObj, outlineObj, ...summary } = rec;
+    const db = await _kmDb();
+    return new Promise((ok, ng) => {
+        const tx = db.transaction(['assets', 'bodies'], 'readwrite');
+        tx.objectStore('assets').put(summary); tx.objectStore('bodies').put({ key: rec.key, meta, islandsObj, outlineObj });
+        tx.oncomplete = () => ok(); tx.onerror = () => ng(tx.error); tx.onabort = () => ng(tx.error);
+    });
+}
+/** 資産の要約だけを書き直す(本文=meta/islands/outlineは触らない。ズームの補完・名前の変更などの軽い更新) */
+async function _kmStorePutSummary(rec) { const { meta, islandsObj, outlineObj, ...summary } = rec; return _kmIdb('assets', 'readwrite', st => st.put(summary)); }
+async function _kmStoreDelete(key) { const db = await _kmDb(); return new Promise((ok, ng) => { const tx = db.transaction(['assets', 'bodies'], 'readwrite'); tx.objectStore('assets').delete(key); tx.objectStore('bodies').delete(key); tx.oncomplete = () => ok(); tx.onerror = () => ng(tx.error); }); }
+async function _kmStoreClear() { const db = await _kmDb(); return new Promise((ok, ng) => { const tx = db.transaction(['assets', 'bodies'], 'readwrite'); tx.objectStore('assets').clear(); tx.objectStore('bodies').clear(); tx.oncomplete = () => ok(); tx.onerror = () => ng(tx.error); }); }
+async function _kmTilesClear() { return _kmIdb('tiles', 'readwrite', st => st.clear()); }
+/** 標高タイル(その場計算に使う分)の件数と合計サイズ(バイト)。404の印(size 0)は件数に入れない */
+async function _kmTilesStat() {
+    try {
+        const db = await _kmDb();
+        return (await _idbStatByIndex(db.transaction('tiles', 'readonly').objectStore('tiles'))) || { n: 0, bytes: 0, last: 0 };   // 索引の鍵カーソルだけで数える(本文を読まない。第158)
+    } catch (e) { return { n: 0, bytes: 0, last: 0 }; }
+}
+async function _kmTilesSize() { return (await _kmTilesStat()).bytes; }
+function _kmMB(bytes) { return (bytes / 1048576).toFixed(bytes >= 10485760 ? 0 : 1) + ' MB'; }
+/** 可視マップ節の「端末に保存した資産」(デッサン05の21〜27段目・第155→第156で3行1組に): 標高タイルの件数/容量、可視タイル(資産)の件数/容量、
+ *  資産ごとに3行(1行目=チェック[段抜き]+目的点名の入力欄 / 2行目=範囲・樹冠・構造物 / 3行目=島数・サイズ。背景色は付けず水平線で区切る)。一括選択・⬇DL・削除・全て登録はチェックした行に効く */
+const _kmStoreChecked = new Set();   // チェック中の資産の鍵(描き直しても保つ)
+const _kmStoreDirty = new Map();     // 目的点名の未登録の変更 key -> 新しい名前
+function _kmRenderStoreList() {
+    const table = document.getElementById('kashimap-store-table'), empty = document.getElementById('kashimap-store-empty'), total = document.getElementById('kashimap-store-total');
+    if (!table || !empty || !total) return;
+    const recs = Array.from(_kmDeviceIndex.values()).sort((a, b) => a.name.localeCompare(b.name, 'ja') || a.range - b.range);
+    for (const k of Array.from(_kmStoreChecked)) if (!_kmDeviceIndex.has(k)) _kmStoreChecked.delete(k);
+    for (const k of Array.from(_kmStoreDirty.keys())) if (!_kmDeviceIndex.has(k)) _kmStoreDirty.delete(k);
+    const tbody = table.querySelector('tbody'); tbody.innerHTML = '';
+    let sum = 0;
+    for (const r of recs) {
+        sum += r.size || 0;
+        const kind = String(r.kind || 'terrain');
+        const originLabel = r.origin === 'server' ? 'サーバー' : (r.origin === 'compute' ? '計算' : '読込');
+        const name = _kmStoreDirty.has(r.key) ? _kmStoreDirty.get(r.key) : (r.name || r.id);
+        const kText = (r.k !== undefined && r.k !== null && isFinite(+r.k)) ? `・気差係数k=${(+r.k).toFixed(3)}` : '';
+        const tr1 = document.createElement('tr'); tr1.className = 'km-store-row'; tr1.dataset.key = r.key;
+        tr1.innerHTML = `<td rowspan="3" class="km-store-chk"><input type="checkbox" class="body-checkbox kashimap-store-check" ${_kmStoreChecked.has(r.key) ? 'checked' : ''} title="この可視タイルを選ぶ(⬇DL・削除の対象)"></td>` +
+            `<td colspan="3" class="km-store-name-cell"><input type="text" class="kashimap-store-name" maxlength="150" value="${escapeHtml(name)}" title="${escapeHtml(name)}(${originLabel}の資産${kText}。目的点名を書き換えたら「全て登録」)"></td>`;
+        const tr2 = document.createElement('tr'); tr2.className = 'km-store-row2'; tr2.dataset.key = r.key;
+        tr2.innerHTML = `<td>範囲: ${r.range}km</td><td title="樹冠(木の高さ)入りの資産か">樹冠: ${kind.includes('canopy') ? 'あり' : '-'}</td><td title="構造物(建物)入りの資産か">構造物: ${kind.includes('building') ? 'あり' : '-'}</td>`;
+        const tr3 = document.createElement('tr'); tr3.className = 'km-store-row3'; tr3.dataset.key = r.key;
+        tr3.innerHTML = `<td title="島の数">島数: ${(r.islands || 0).toLocaleString()}</td><td colspan="2">サイズ: ${_kmMB(r.size || 0)}</td>`;
+        const chk = tr1.querySelector('.kashimap-store-check');
+        chk.addEventListener('change', () => { if (chk.checked) _kmStoreChecked.add(r.key); else _kmStoreChecked.delete(r.key); _kmStoreUpdateButtons(); });
+        const inp = tr1.querySelector('.kashimap-store-name');
+        inp.addEventListener('input', () => { const v = inp.value; if (v.trim() && v !== (r.name || r.id)) _kmStoreDirty.set(r.key, v); else _kmStoreDirty.delete(r.key); inp.title = `${v}(${originLabel}の資産。目的点名を書き換えたら「全て登録」)`; _kmStoreUpdateButtons(); });
+        inp.addEventListener('blur', () => { if (!inp.value.trim()) { inp.value = r.name || r.id; _kmStoreDirty.delete(r.key); inp.title = `${inp.value}(${originLabel}の資産)`; _kmStoreUpdateButtons(); } });   // 未入力で離れたら元の値に戻す(05の共通機能)
+        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); } });
+        tbody.appendChild(tr1); tbody.appendChild(tr2); tbody.appendChild(tr3);
+    }
+    table.classList.toggle('hidden', recs.length === 0); empty.classList.toggle('hidden', recs.length > 0);
+    total.textContent = _kmMB(sum);
+    const cnt = document.getElementById('kashimap-store-count'); if (cnt) cnt.textContent = String(recs.length);
+    _kmStoreUpdateButtons();
+    _kmTilesStat().then(st => { const el = document.getElementById('kashimap-tiles-size'); if (el) el.textContent = _kmMB(st.bytes); const n = document.getElementById('kashimap-tiles-count'); if (n) n.textContent = String(st.n); });
+}
+/** 一覧のボタンの状態(⬇DL・削除はチェックがある時だけ。全て登録は未登録の変更がある時に赤い太字) */
+function _kmStoreUpdateButtons() {
+    const nChk = _kmStoreChecked.size, dirty = _kmStoreDirty.size > 0;
+    const dl = document.getElementById('btn-kashimap-store-dl'), del = document.getElementById('btn-kashimap-store-del'), ap = document.getElementById('btn-kashimap-store-apply'), all = document.getElementById('btn-kashimap-store-selall');
+    if (dl) dl.disabled = nChk === 0; if (del) del.disabled = nChk === 0;
+    if (ap) { ap.classList.toggle('dirty', dirty); ap.title = dirty ? `目的点名の変更(${_kmStoreDirty.size}件)を端末の資産に反映します` : '目的点名の変更を端末の資産に反映します(変更があると赤い太字になります)'; }
+    if (all) { const allOn = nChk > 0 && nChk === _kmDeviceIndex.size; all.textContent = allOn ? '一括解除' : '一括選択'; all.classList.toggle('myset-toggle-active', allOn); }   // Myセットの一括選択/一括解除と同じ見た目(黄色・黒太字)
+}
+/** 資産の目的点名を書き換える(要約と本文のmeta・islands・outlineの名前も。File出力にも載る) */
+async function _kmStoreRename(key, name) {
+    const rec = await _kmStoreGet(key); if (!rec) return false;
+    rec.name = name;
+    if (rec.meta && rec.meta.mountain) rec.meta.mountain.name = name;
+    if (rec.islandsObj && rec.islandsObj.mountain) rec.islandsObj.mountain.name = name;
+    if (rec.outlineObj) rec.outlineObj.name = name;
+    await _kmStorePut(rec);
+    _kmAssets.delete(key);   // 読み込み済みの資産は名前を持つので作り直す
+    return true;
+}
+/** チェックした資産を1つのJSONにFile出力 */
+async function _kmStoreExportChecked() {
+    const keys = Array.from(_kmStoreChecked); if (!keys.length) { alert('可視タイルの一覧でチェックしてから「⬇DL」を押してください'); return; }
+    const assets = [], names = [];
+    for (const k of keys) { const rec = await _kmStoreGet(k); if (!rec) continue; assets.push({ meta: rec.meta, islands: rec.islandsObj, outline: rec.outlineObj }); names.push(`${rec.name}${rec.range}km`); }
+    if (!assets.length) return;
+    const out = { format: 'soranotsuji-kashimap-assets', v: 1, exported: new Date().toISOString(), app: APP_VERSION, assets };
+    downloadTextFile(`soranotsuji-可視マップ資産-${names.join('+').slice(0, 60)}-${formatFileDateTime()}.json`, JSON.stringify(out), 'application/json;charset=utf-8');
+}
+/** チェックした資産を端末から削除 */
+async function _kmStoreDeleteChecked() {
+    const keys = Array.from(_kmStoreChecked); if (!keys.length) { alert('可視タイルの一覧でチェックしてから「削除」を押してください'); return; }
+    if (!confirm(`チェックした可視タイル(${keys.length}件)を端末から削除しますか？(サーバーの資産は消えません)`)) return;
+    for (const k of keys) { const d = _kmDeviceIndex.get(k); await _kmStoreDelete(k); _kmNoAutoSave.add(k); if (!d || d.origin !== 'server') _kmAssets.delete(k); _kmStoreChecked.delete(k); }   // 端末だけの資産(読込/計算)は描画からも外す。サーバー由来は読み込み済みの分をそのまま使う
+    await _kmLoadDeviceIndex();
+    if (_kmActive) { _kmRenderList(); _kmRefresh(); }
+}
+function _kmNum(v) { return (v !== null && v !== undefined && v !== '' && isFinite(+v)) ? +v : undefined; }
+/** 資産1件を端末(IndexedDB)に保存する(origin: 'server'=サーバーから読んだ / 'import'=File読込 / 'compute'=その場計算)。戻り値=要約 */
+async function _kmStoreSave(meta, isl, ol, origin, bytes) {
+    const id = String(meta.mountain.id), kind = _kmKindOf(meta), range = +meta.range_km;
+    const key = `${id}/${kind}/${range}`;
+    const size = bytes || new Blob([JSON.stringify(meta), JSON.stringify(isl), JSON.stringify(ol)]).size;   // 大きさ(バイト)。分かっていればJSON化し直さない
+    const mt = meta.mountain;
+    await _kmStorePut({ key, id, name: mt.name || id, kind, range, islands: isl.islands.length, size, savedAt: new Date().toISOString(), dropM: meta.summit_area ? meta.summit_area.drop_m : null, origin, k: _kmNum(meta.k), zoom: _kmNum(meta.zoom),
+        lat: _kmNum(mt.lat), lon: _kmNum(mt.lon), elev: _kmNum(mt.elev_list), height: _kmNum(mt.height_m),   // 目的点の計算(id=tgt:…)を山リストの行にする元(無い値はundefined。+null=0にしない)
+        meta, islandsObj: isl, outlineObj: ol });
+    await _kmLoadDeviceIndex();
+    if (_kmActive) _kmRefreshListCells();
+    return { key, name: meta.mountain.name || id, range, kind, islands: isl.islands.length, size };
+}
+/** 山リストの資産の7欄(島の数・静的/動的・範囲・樹冠・構造物・ズーム・サイズ)だけを描き直す(資産の保存/削除で変わる。行の並びとチェックは保つ) */
+const KM_INFO_COL0 = 11;   // 資産の欄が始まる列(選択・連番・索引番号・山名・読み・所属・都道府県・緯度・経度・標高・種別の次)
+function _kmRefreshListCells() {
+    document.querySelectorAll('#kashimap-content tr.td-data-row').forEach(tr => {
+        const m = _kmById ? _kmById.get(tr.dataset.id) : null;
+        const cells = _kmInfoCells(_kmIndexInfo(tr.dataset.id), m ? m.lat : undefined);
+        if (tr.children.length >= KM_INFO_COL0 + cells.length) cells.forEach((c, i) => { const td = tr.children[KM_INFO_COL0 + i]; td.textContent = c.text; if (c.title) td.title = c.title; else td.removeAttribute('title'); });
+    });
+}
+/** 山リストの資産の7欄の文字 [{text, title?}]。検索条件(最大表示範囲・樹冠・構造物)で選ばれる資産のもの(第156・依頼者: どの資産が選ばれるかが見えるように)。
+ *  最大表示範囲より広い資産しか無い時は範囲に▲(第157) */
+function _kmInfoCells(info, lat) {
+    const t = (text, title) => (title ? { text, title } : { text });
+    if (!info) return [t('—'), t(''), t(''), t(''), t(''), t(''), t('')];
+    const beyondTitle = info.beyond ? `最大表示範囲(${_kmRange}km)より広い資産です。選ぶと最大表示範囲を${_kmRangeBucket(info.range)}kmに広げて表示します` : undefined;
+    return [t(info.islands !== null ? info.islands.toLocaleString() : '—'), t(info.label), t(`${info.range}km${info.beyond ? '▲' : ''}`, beyondTitle), t(info.canopy ? 'あり' : '-'), t(info.building ? 'あり' : '-'),
+        t(_kmZoomLabel(info.zoom, lat)), t(info.size ? _kmMB(info.size) : '—')];
+}
+/** File読込: File出力したJSON(1山でも複数でも)を端末に保存する。戻り値=取り込んだ資産の要約 */
+async function _kmImportText(text) {
+    let obj; try { obj = JSON.parse(text); } catch (e) { throw new Error('JSONとして読めません'); }
+    const list = Array.isArray(obj.assets) ? obj.assets : (obj.meta && obj.islands && obj.outline ? [obj] : null);
+    if (!list) throw new Error('可視マップの資産のファイルではありません(meta・islands・outline が要ります)');
+    const done = [];
+    for (const a of list) {
+        const meta = a.meta, isl = a.islands, ol = a.outline;
+        if (!meta || !meta.mountain || !meta.mountain.id || !isl || !Array.isArray(isl.islands) || !ol || ol.v !== 2 || !Array.isArray(ol.islands)) throw new Error('資産の形が違います');
+        if (ol.islands.length !== isl.islands.length) throw new Error('島の索引と輪郭の数が合いません');
+        // 島の番号・画素数は数値だけ(他人から受け取るファイルなので、文字列(HTML)が島リストやポップアップに届かないように型を確定させる。第159)
+        for (const it of isl.islands) { if (!it || typeof it !== 'object' || !Number.isFinite(+it.no) || !Number.isFinite(+it.px)) throw new Error('島の索引の形が違います(no/px)'); it.no = +it.no; it.px = +it.px; }
+        for (const rec of ol.islands) { if (!Array.isArray(rec) || !Number.isFinite(+rec[0]) || !Number.isFinite(+rec[1])) throw new Error('島の輪郭の形が違います(no/px)'); rec[0] = +rec[0]; rec[1] = +rec[1]; }
+        const d = await _kmStoreSave(meta, isl, ol, 'import');
+        _kmAssets.delete(d.key);
+        done.push(d);
+    }
+    if (_kmActive) { _kmRenderList(); _kmRefresh(); }
+    return done;
+}
+/** File出力: 選んで描画中の山の資産(meta・islands・outline)を1つのJSONに */
+function _kmExportAssets() {
+    const shown = Array.from(_kmShown.values()).filter(l => l.asset && l.asset.files);
+    if (!shown.length) { alert('資産のある山を選んでから出力してください(山リストで「静」か「動」の山にチェック)'); return; }
+    const out = { format: 'soranotsuji-kashimap-assets', v: 1, exported: new Date().toISOString(), app: APP_VERSION, assets: shown.map(l => l.asset.files) };
+    const names = shown.map(l => { const m = _kmById.get(l.id); return (m ? m.name : l.id) + l.range + 'km'; }).join('+').slice(0, 60);
+    downloadTextFile(`soranotsuji-可視マップ資産-${names}-${formatFileDateTime()}.json`, JSON.stringify(out), 'application/json;charset=utf-8');
+}
+/** 静的資産の索引(1回だけ。無い/取れない時は空の索引=全て未計算扱い) */
+function _kmLoadIndex() {
+    if (!_kmIndexP) {
+        _kmIndexP = fetch(KM_ASSET_BASE + 'index.json')
+            .then(r => r.ok ? r.json() : { mountains: {} })
+            .catch(() => ({ mountains: {} }))
+            .then(ix => { _kmIndex = (ix && ix.mountains) ? ix : { mountains: {} }; return _kmIndex; });
+    }
+    return _kmIndexP;
+}
+/** その山の資産の在りか(サーバーの索引+端末の索引) kind -> Map(range -> {server, device, islands})。kind=terrain/canopy/building/canopy-building(第155で一般化) */
+function _kmAssetAvail(id) {
+    const out = {};
+    const add = (kind, r, patch) => { const m = out[kind] || (out[kind] = new Map()); const cur = m.get(r) || { server: false, device: false, islands: undefined }; Object.assign(cur, patch); m.set(r, cur); };
+    const ent = _kmIndex && _kmIndex.mountains && _kmIndex.mountains[id];
+    if (ent) for (const kind of Object.keys(ent)) { if (!Array.isArray(ent[kind])) continue; for (const r of ent[kind]) add(kind, r, { server: true, islands: ent.islands ? ent.islands[`${kind}:${r}`] : undefined, size: ent.sizes ? ent.sizes[`${kind}:${r}`] : undefined, zoom: ent.zooms ? ent.zooms[`${kind}:${r}`] : undefined }); }
+    for (const d of _kmDeviceIndex.values()) { if (d.id !== id) continue; add(d.kind, d.range, { device: true, islands: d.islands, size: d.size, zoom: d.zoom }); }
+    return out;
+}
+/** 今の設定(表示範囲・樹冠・構造物)でその山に使う資産 {kind, range, src} を選ぶ。種類は _kmKindPrefs の順(無ければ地形だけに落とす)。範囲は指定以下で最大。
+ *  同じ資産がサーバーと端末の両方にあれば端末(読込済み)を使う */
+function _kmAssetChoice(id) {
+    const av = _kmAssetAvail(id);
+    for (const kind of _kmKindPrefs()) {
+        const m = av[kind]; if (!m) continue;
+        const rs = Array.from(m.keys()).filter(r => r <= _kmRange);
+        if (rs.length) { const range = Math.max(...rs); const e = m.get(range); return { kind, range, src: e.device ? 'device' : 'server' }; }
+    }
+    return null;
+}
+/** 最大表示範囲より広い資産しか無い山の、いちばん狭い資産 {kind, range, src}(無ければnull)。山リストの列に▲付きで示し、選ぶと表示範囲を繰り上げる(第157: 「:端末保存」で列が空だった件) */
+function _kmNearestLargerAsset(id) {
+    const av = _kmAssetAvail(id);
+    for (const kind of _kmKindPrefs()) {
+        const m = av[kind]; if (!m) continue;
+        const rs = Array.from(m.keys()).filter(r => r > _kmRange);
+        if (rs.length) { const range = Math.min(...rs); const e = m.get(range); return { kind, range, src: e.device ? 'device' : 'server' }; }
+    }
+    return null;
+}
+/** 山リストの「島の数」「静的/動的」「範囲」「樹冠」「構造物」「ズーム」「サイズ」欄の元(索引だけで分かる。資産の読込は要らない)。label: 静=サーバー / 動=端末 / 静/動=両方。
+ *  beyond=true は最大表示範囲より広い資産しか無い時(その中でいちばん狭い資産。今の表示範囲では描けない) */
+function _kmIndexInfo(id) {
+    let ch = _kmAssetChoice(id), beyond = false;
+    if (!ch) { ch = _kmNearestLargerAsset(id); beyond = true; }
+    if (!ch) return null;
+    const e = _kmAssetAvail(id)[ch.kind].get(ch.range);
+    const dev = _kmDeviceIndex.get(`${id}/${ch.kind}/${ch.range}`);
+    // 静=サーバーの資産 / 静(端末)=サーバーの資産を端末に保存済み(次からは取りに行かない) / 動=端末だけの資産(File読込・その場計算)
+    const label = e.server ? (e.device ? '静(端末)' : '静') : '動';
+    const zoom = (dev && dev.zoom) || e.zoom || null;
+    return { kind: ch.kind, range: ch.range, src: ch.src, islands: (e.islands === undefined ? null : e.islands), label, origin: dev ? dev.origin : null, rank: (e.server ? 1 : 0) + (e.device ? 2 : 0),
+        size: (dev && dev.size) || e.size || null, zoom, canopy: ch.kind.includes('canopy'), building: ch.kind.includes('building'), beyond };
+}
+/** 「ズーム」欄の文字: z15(1画素≈4m・DEM5A/5B/5C)。1画素の長さは山の緯度で計算 */
+function _kmZoomLabel(zoom, lat) {
+    if (!zoom) return '—';
+    const mpp = SORA.metersPerPixel(isFinite(+lat) ? +lat : 35, zoom);
+    return `z${zoom}(1画素≈${Math.round(mpp)}m・${zoom >= SORA.DEM.FINE_ZOOM ? 'DEM5A/5B/5C' : 'DEM10B'})`;
+}
+/** 整数のポリライン符号(Google polyline符号と同じ5bit可変長+63・倍率なし。先頭は絶対値・以降は差分)→ [[x,y],...] */
+function _kmDecodePoly(s) {
+    const out = []; let i = 0, x = 0, y = 0;
+    const next = () => { let r = 0, sh = 0, b; do { b = s.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20); return (r & 1) ? ~(r >> 1) : (r >> 1); };
+    while (i < s.length) { x += next(); y += next(); out.push([x, y]); }
+    return out;
+}
+/** 資産(islands.json+outline.json+meta.json)の読込と復号。輪郭は画素の角の整数座標→経緯度の多角形(外周+穴)に直す */
+function _kmLoadAsset(id, kind, range) {
+    const key = `${id}/${kind}/${range}`;
+    if (!_kmAssets.has(key)) {
+        const base = `${KM_ASSET_BASE}${id}/${kind}/${range}/`;
+        let bytes = 0;   // サーバーから読んだ時の大きさ(端末に保存する時の表示用。JSON化し直さずに済ませる)
+        const get = f => fetch(base + f).then(r => { if (!r.ok) throw new Error(f + ' ' + r.status); return r.text(); }).then(t => { bytes += new Blob([t]).size; return JSON.parse(t); });
+        // 端末に保存した資産(File読込・その場計算・サーバーから読んだ分)があればそれを使い、無ければサーバーの静的資産を取る
+        const source = _kmDeviceIndex.has(key)
+            ? _kmStoreGet(key).then(rec => { if (!rec) throw new Error('端末の資産が見つかりません ' + key); return [rec.islandsObj, rec.outlineObj, rec.meta, 'device']; })
+            : Promise.all([get('islands.json'), get('outline.json'), get('meta.json')]).then(a => a.concat(['server']));
+        const p = source.then(([isl, ol, meta, src]) => {
+            // サーバーから読んだ資産は端末(IndexedDB)にも保存し、次からは取りに行かない(第152・依頼者の依頼)。描画を先に返し、保存は後回し。失敗しても描画は続ける
+            if (src === 'server' && !_kmNoAutoSave.has(key)) setTimeout(() => _kmStoreSave(meta, isl, ol, 'server', bytes).catch(e => console.warn('可視マップ: 端末への保存に失敗', e)), 0);
+            const WORLD = 256 * Math.pow(2, ol.zoom);
+            const toLL = (x, y) => [(ol.x0 + x) / WORLD * 360 - 180, Math.atan(Math.sinh(Math.PI * (1 - 2 * (ol.y0 + y) / WORLD))) * 180 / Math.PI];
+            const byNo = new Map(isl.islands.map(i => [i.no, i]));
+            const polys = ol.islands.map(rec => {
+                const rings = rec.slice(2).map(_kmDecodePoly);
+                return { no: rec[0], px: rec[1], rings, coords: rings.map(r => { const c = r.map(([x, y]) => toLL(x, y)); c.push(c[0]); return c; }) };
+            });
+            return { id, kind, range, src, meta, islands: isl.islands, byNo, polys, zoom: ol.zoom, x0: ol.x0, y0: ol.y0, w: ol.w, h: ol.h, files: { meta, islands: isl, outline: ol } };
+        });
+        p.catch(() => _kmAssets.delete(key));   // 失敗は次回に再試行
+        _kmAssets.set(key, p);
+    }
+    return _kmAssets.get(key);
+}
+function _kmAssetKey(w) { return `${w.id}/${w.kind}/${w.range}`; }
+/** 金と赤の斜め縞(縞島の塗り) */
+function _kmStripeImage() {
+    const n = 16, cv = document.createElement('canvas'); cv.width = n; cv.height = n;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#ffd700'; c.fillRect(0, 0, n, n);
+    c.strokeStyle = '#d32f2f'; c.lineWidth = 4;
+    c.beginPath(); for (let i = -n; i <= 2 * n; i += 8) { c.moveTo(i, n); c.lineTo(i + n, 0); } c.stroke();
+    return c.getImageData(0, 0, n, n);
+}
+/** 地図のソース/レイヤ(style.loadで1回)。塗り=同じ金を重ねる(重なるほど濃い)。輪郭=暗い縁取り+山色。縞島=金赤の縞。点滅=白い太線 */
+function _kmAddMapLayers() {
+    const emptyFC = { type: 'FeatureCollection', features: [] };
+    // tolerance(タイル画素・既定0.375)を上げて、低いズームで1つの島の頂点が1タイルの上限(65535)を超えないようにする
+    // (富士山60kmの最大の島は輪郭が約100万頂点。ズームに比例して間引かれるのでz15付近では1画素≒4m相当の細かさが残る)
+    glMap.addSource('km-islands', { type: 'geojson', data: emptyFC, tolerance: KM_SOURCE_TOLERANCE, buffer: 64 });
+    const lw = (a, b, c) => ['interpolate', ['linear'], ['zoom'], 8, a, 12, b, 16, c];   // 線幅はズームで(低いズームで輪郭が塗りつぶさないように)
+    glMap.addLayer({ id: 'km-fill', type: 'fill', source: 'km-islands', layout: { visibility: 'none' },
+        paint: { 'fill-color': '#ffd700', 'fill-opacity': 0.22 } });
+    glMap.addLayer({ id: 'km-line-casing', type: 'line', source: 'km-islands', layout: { visibility: 'none' },
+        paint: { 'line-color': '#000', 'line-width': lw(1.2, 2.2, 3.2), 'line-opacity': 0.55 } });
+    glMap.addLayer({ id: 'km-line', type: 'line', source: 'km-islands', layout: { visibility: 'none' },
+        paint: { 'line-color': ['get', 'color'], 'line-width': lw(0.5, 1.0, 1.6) } });
+    glMap.addSource('km-stripes', { type: 'geojson', data: emptyFC });
+    glMap.addImage('km-stripe', _kmStripeImage(), { pixelRatio: 1 });
+    glMap.addLayer({ id: 'km-stripe-fill', type: 'fill', source: 'km-stripes', layout: { visibility: 'none' },
+        paint: { 'fill-pattern': 'km-stripe', 'fill-opacity': 0.85 } });
+    glMap.addLayer({ id: 'km-stripe-line', type: 'line', source: 'km-stripes', layout: { visibility: 'none' },
+        paint: { 'line-color': '#d32f2f', 'line-width': 1.5 } });
+    glMap.addSource('km-blink', { type: 'geojson', data: emptyFC });
+    glMap.addLayer({ id: 'km-blink', type: 'line', source: 'km-blink', layout: { visibility: 'none' },
+        paint: { 'line-color': '#fff', 'line-width': 3.5, 'line-opacity': 0.95 } });
+    // ホバー(PCのみ)=ツールチップ「可視辻(重複数N): 山名」+島リストの該当行を強調。クリック=固定のポップアップ(観測点/目的点の設定つき)
+    glMap.on('mousemove', 'km-fill', (e) => {
+        if (!_kmActive || !_mapDblClickMode) return;
+        const info = _kmHoverInfo(e.features);
+        if (!info) return;
+        glMap.getCanvas().style.cursor = 'pointer';
+        _glTmShowTip(e.lngLat.lat, e.lngLat.lng, `可視辻(重複数${info.dup}): ${escapeHtml(info.names.join('・'))}`, 8);
+        if (!_kmPopup) _kmHighlightRows(info.keys, false);
+    });
+    glMap.on('mouseleave', 'km-fill', () => {
+        glMap.getCanvas().style.cursor = '';
+        _glTmHideTip();
+        if (!_kmPopup) _kmHighlightRows(null);
+    });
+    glMap.on('click', 'km-fill', (e) => { if (_kmActive) _kmShowPopup(e.lngLat, e.features); });
+}
+/** レイヤの表示/非表示(パネルを閉じている間は描かない。「:可視タイル」は塗りだけ) */
+function _kmApplyLayerVisibility() {
+    if (!glMap || !glMap.getLayer('km-fill')) return;
+    const vis = on => on ? 'visible' : 'none';
+    glMap.setLayoutProperty('km-fill', 'visibility', vis(_kmActive && _kmTiles));
+    glMap.setLayoutProperty('km-stripe-fill', 'visibility', vis(_kmActive && _kmTiles));
+    glMap.setLayoutProperty('km-stripe-line', 'visibility', vis(_kmActive && _kmTiles));
+    glMap.setLayoutProperty('km-line-casing', 'visibility', vis(_kmActive));
+    glMap.setLayoutProperty('km-line', 'visibility', vis(_kmActive));
+    if (!_kmActive) glMap.setLayoutProperty('km-blink', 'visibility', 'none');
+}
+/** ホバー/クリックで当たった塗り(重なる山の分だけ来る)→ 重複数・山名・島のキー */
+function _kmHoverInfo(features) {
+    if (!features || !features.length) return null;
+    const keys = [], mids = [], names = [];
+    for (const f of features) {
+        const p = f.properties || {};
+        if (p.key && !keys.includes(p.key)) keys.push(p.key);
+        if (p.mid && !mids.includes(p.mid)) { mids.push(p.mid); names.push(p.name || p.mid); }
+    }
+    return { keys, mids, names, dup: mids.length };
+}
+function _kmHighlightRows(keys, scroll) {
+    const body = document.getElementById('kashimap-detail-body');
+    if (!body) return;
+    let first = null;
+    body.querySelectorAll('tr.td-data-row').forEach(tr => {
+        const on = !!keys && keys.includes(tr.dataset.key);
+        tr.classList.toggle('hover', on);
+        if (on && !first) first = tr;
+    });
+    if (scroll && first) first.scrollIntoView({ block: 'nearest' });
+}
+function _kmShowPopup(lngLat, features) {
+    const info = _kmHoverInfo(features);
+    if (!info) return;
+    if (_kmPopup) { _kmPopup.remove(); _kmPopup = null; }
+    _glTmHideTip();
+    const div = document.createElement('div');
+    const lines = features.map(f => { const p = f.properties || {}; return `${escapeHtml(p.name || '')}(島${escapeHtml(p.no)})`; }).filter((v, i, a) => a.indexOf(v) === i);
+    const isStart = appState.locMode === 'start';
+    div.innerHTML = `<b>可視辻(重複数${info.dup})</b><br>${lines.join('<br>')}<br>` +
+        `<div class="kashimap-note">緯度: ${lngLat.lat.toFixed(6)}° 経度: ${lngLat.lng.toFixed(6)}°</div>` +
+        `<button class="nav-btn small km-popup-set">${isStart ? '観測点' : '目的点'}に設定</button>`;
+    div.querySelector('.km-popup-set').addEventListener('click', async () => {
+        if (_kmPopup) { _kmPopup.remove(); _kmPopup = null; }
+        try { await applyMapPointAction({ lat: lngLat.lat, lng: lngLat.lng }); } catch (e) { console.warn(e); }
+    });
+    const pp = new maplibregl.Popup({ offset: 8, maxWidth: '320px' }).setLngLat(lngLat).setDOMContent(div).addTo(glMap);
+    _glWirePopupStop(pp);
+    pp.on('close', () => { if (_kmPopup === pp) { _kmPopup = null; _kmHighlightRows(null); } });
+    _kmPopup = pp;
+    _kmHighlightRows(info.keys, true);
+}
+/** 境界の辺を全部たどって環(外周+穴)を取る(段2の道具 extractRings と同じ規則: 内側を右に見て進み、分岐は左折優先=8連結)。
+ *  at(x,y)=1/0。戻り値は画素の角の整数座標の環の配列(閉じない。符号付き面積が正=外周・負=穴) */
+function _kmTraceRings(at, w, h) {
+    const hSeen = new Uint8Array(Math.ceil(w * (h + 1) / 8));
+    const hGet = (x, L) => { const i = L * w + x; return (hSeen[i >> 3] >> (i & 7)) & 1; };
+    const hSet = (x, L) => { const i = L * w + x; hSeen[i >> 3] |= 1 << (i & 7); };
+    const A = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? at(x, y) : 0;
+    const rightPix = (d, vx, vy) => d === 0 ? A(vx, vy) : d === 1 ? A(vx - 1, vy) : d === 2 ? A(vx - 1, vy - 1) : A(vx, vy - 1);
+    const leftPix = (d, vx, vy) => d === 0 ? A(vx, vy - 1) : d === 1 ? A(vx, vy) : d === 2 ? A(vx - 1, vy) : A(vx - 1, vy - 1);
+    const dxs = [1, 0, -1, 0], dys = [0, 1, 0, -1];
+    const rings = [];
+    const trace = (sx, sy, dir0) => {
+        const ring = [[sx, sy]]; let x = sx, y = sy, dir = dir0, guard = 0;
+        for (;;) {
+            if (dir === 0) hSet(x, y); else if (dir === 2) hSet(x - 1, y);
+            x += dxs[dir]; y += dys[dir];
+            if (x === sx && y === sy) break;
+            const dl = (dir + 3) % 4, dr = (dir + 1) % 4, prev = dir;
+            if (rightPix(dl, x, y) === 1 && leftPix(dl, x, y) === 0) dir = dl;
+            else if (rightPix(dir, x, y) === 1 && leftPix(dir, x, y) === 0) { /* 直進 */ }
+            else if (rightPix(dr, x, y) === 1 && leftPix(dr, x, y) === 0) dir = dr;
+            else dir = (dir + 2) % 4;
+            if (dir !== prev) ring.push([x, y]);
+            if (++guard > 8 * (w + 1) * (h + 1)) break;   // 万一の無限ループ止め
+        }
+        return ring;
+    };
+    for (let L = 0; L <= h; L++) for (let x = 0; x < w; x++) {
+        const below = A(x, L), above = A(x, L - 1);
+        if (below === above || hGet(x, L)) continue;
+        rings.push(below ? trace(x, L, 0) : trace(x + 1, L, 2));
+    }
+    return rings;
+}
+function _kmRingArea(r) { let a = 0; for (let i = 0, n = r.length; i < n; i++) { const p = r[i], q = r[(i + 1) % n]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; }
+/** 縞島: 選んだ山の島全体を覆う作業用の格子(最大2048画素四方)に各山の島を描いて、画素ごとの「見える山の組み合わせ」を求め、
+ *  同じ組み合わせのつながり(8近傍)を縞島にする(重複数2以上)。面積・代表点はこの格子での概算(第146・依頼者了承) */
+function _kmComputeStripes(list) {
+    _kmStripes = []; _kmStripeGrid = null;
+    if (list.length < 2) return;
+    const Z15 = 256 * Math.pow(2, 15);
+    let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+    for (const it of list) {
+        const a = it.asset, f = Math.pow(2, 15 - a.zoom);
+        bx0 = Math.min(bx0, a.x0 * f); by0 = Math.min(by0, a.y0 * f); bx1 = Math.max(bx1, (a.x0 + a.w) * f); by1 = Math.max(by1, (a.y0 + a.h) * f);
+    }
+    const S = Math.max(1, Math.ceil(Math.max(bx1 - bx0, by1 - by0) / 2048));
+    const gw = Math.ceil((bx1 - bx0) / S), gh = Math.ceil((by1 - by0) / S);
+    const n = list.length, words = Math.ceil(n / 32);
+    const mask = new Uint32Array(gw * gh * words);   // 画素ごとの見える山の組み合わせ(ビット)
+    const cnt = new Uint8Array(gw * gh);              // 重複数
+    // 各山の島(外周+穴)を走査線の偶奇則で格子に描く(canvasは使わない: 頂点100万の経路はcanvasだと端末によって極端に遅い)。
+    // 画素の中心が多角形の内側なら「見える」。1画素より小さい島は落ちる(縞島は格子での概算・第146)
+    list.forEach((it, bi) => {
+        const a = it.asset, f = Math.pow(2, 15 - a.zoom);
+        const rows = new Array(gh); for (let j = 0; j < gh; j++) rows[j] = [];
+        for (const p of a.polys) for (const ring of p.rings) {
+            const n = ring.length;
+            for (let i = 0; i < n; i++) {
+                const P = ring[i], Q = ring[(i + 1) % n];
+                let x0 = ((a.x0 + P[0]) * f - bx0) / S, y0 = ((a.y0 + P[1]) * f - by0) / S;
+                let x1 = ((a.x0 + Q[0]) * f - bx0) / S, y1 = ((a.y0 + Q[1]) * f - by0) / S;
+                if (y0 === y1) continue;
+                if (y0 > y1) { let t = x0; x0 = x1; x1 = t; t = y0; y0 = y1; y1 = t; }
+                // 走査線 j+0.5 ∈ [y0, y1) と交わる(半開区間で頂点の二重数えを防ぐ)
+                const j0 = Math.max(0, Math.ceil(y0 - 0.5)), j1 = Math.min(gh - 1, Math.ceil(y1 - 0.5) - 1);
+                const k = (x1 - x0) / (y1 - y0);
+                for (let j = j0; j <= j1; j++) rows[j].push(x0 + (j + 0.5 - y0) * k);
+            }
+        }
+        const wi = bi >> 5, bit = 1 << (bi & 31);
+        for (let j = 0; j < gh; j++) {
+            const xs = rows[j]; if (xs.length < 2) continue;
+            xs.sort((u, v) => u - v);
+            for (let q = 0; q + 1 < xs.length; q += 2) {
+                const xa = Math.max(0, Math.ceil(xs[q] - 0.5)), xb = Math.min(gw - 1, Math.ceil(xs[q + 1] - 0.5) - 1);
+                for (let x = xa; x <= xb; x++) { const i = j * gw + x; mask[i * words + wi] |= bit; cnt[i]++; }
+            }
+        }
+    });
+    const label = new Int32Array(gw * gh); const stack = new Int32Array(gw * gh); const comps = [];
+    const same = (i, j) => { for (let k = 0; k < words; k++) if (mask[i * words + k] !== mask[j * words + k]) return false; return true; };
+    for (let i = 0; i < gw * gh; i++) {
+        if (cnt[i] < 2 || label[i]) continue;
+        const id = comps.length + 1; let sp = 0; stack[sp++] = i; label[i] = id;
+        const c = { id, dup: cnt[i], px: 0, sx: 0, sy: 0, minx: gw, miny: gh, maxx: -1, maxy: -1, seed: i };
+        while (sp) {
+            const j = stack[--sp]; const x = j % gw, y = (j - x) / gw;
+            c.px++; c.sx += x; c.sy += y;
+            if (x < c.minx) c.minx = x; if (x > c.maxx) c.maxx = x; if (y < c.miny) c.miny = y; if (y > c.maxy) c.maxy = y;
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+                const k = ny * gw + nx; if (label[k] || cnt[k] < 2 || !same(i, k)) continue;
+                label[k] = id; stack[sp++] = k;
+            }
+        }
+        c.mids = list.filter((it, bi) => (mask[i * words + (bi >> 5)] >> (bi & 31)) & 1).map(it => it.id);
+        comps.push(c);
+    }
+    // 代表点=重心にいちばん近い成分の画素(必ず縞島の中)。面積は格子の画素の大きさ(中心緯度)から
+    const latC = Math.atan(Math.sinh(Math.PI * (1 - 2 * ((by0 + by1) / 2) / Z15))) * 180 / Math.PI;
+    const mppG = SORA.EARTH.EQUATOR_CIRCUMFERENCE_M * Math.cos(latC * Math.PI / 180) / Z15 * S;
+    const toLL = (X, Y) => [(bx0 + X * S) / Z15 * 360 - 180, Math.atan(Math.sinh(Math.PI * (1 - 2 * (by0 + Y * S) / Z15))) * 180 / Math.PI];
+    for (const c of comps) {
+        const cx = c.sx / c.px, cy = c.sy / c.px; let best = null, bd = Infinity;
+        for (let y = c.miny; y <= c.maxy; y++) for (let x = c.minx; x <= c.maxx; x++) {
+            if (label[y * gw + x] !== c.id) continue;
+            const d = (x - cx) * (x - cx) + (y - cy) * (y - cy); if (d < bd) { bd = d; best = [x, y]; }
+        }
+        const ll = toLL(best[0] + 0.5, best[1] + 0.5);
+        c.rep = [ll[1], ll[0]]; c.area_km2 = c.px * mppG * mppG / 1e6; c.px15 = c.px * S * S;
+        c.dists = c.mids.map(mid => { const m = _kmById.get(mid); return m ? _kmDistKm(c.rep[0], c.rep[1], m.lat, m.lon) : null; });
+    }
+    // 項番=代表点を北から南(同じなら東から西)に並べた固定番号。初期の並びは重複数の降順→面積の降順
+    comps.sort((a, b) => (b.rep[0] - a.rep[0]) || (b.rep[1] - a.rep[1]));
+    comps.forEach((c, i) => { c.no = i + 1; });
+    comps.sort((a, b) => (b.dup - a.dup) || (b.px - a.px));
+    _kmStripes = comps;
+    _kmStripeGrid = { bx0, by0, S, gw, gh, label, toLL };
+}
+function _kmDistKm(lat1, lon1, lat2, lon2) {
+    const t = Math.PI / 180, x = (lon2 - lon1) * t * Math.cos((lat1 + lat2) / 2 * t), y = (lat2 - lat1) * t;
+    return Math.sqrt(x * x + y * y) * 6371;
+}
+/** 縞島の多角形(作業用格子の連結成分の輪郭。初回に辿って保持) */
+function _kmStripeCoords(c) {
+    if (c.coords) return c.coords;
+    const G = _kmStripeGrid; if (!G) return null;
+    const w = c.maxx - c.minx + 1, h = c.maxy - c.miny + 1;
+    const rings = _kmTraceRings((x, y) => G.label[(y + c.miny) * G.gw + (x + c.minx)] === c.id ? 1 : 0, w, h);
+    rings.sort((a, b) => _kmRingArea(b) - _kmRingArea(a));   // 外周(面積が正で最大)を先頭に
+    c.coords = rings.map(r => { const cc = r.map(([x, y]) => G.toLL(x + c.minx, y + c.miny)); cc.push(cc[0]); return cc; });
+    return c.coords;
+}
+function _kmStripeNames(c) { return c.mids.map(mid => { const m = _kmById.get(mid); return m ? m.name : mid; }); }
+/** 地図に縞で塗る縞島(重複数が最大のもの。面積の大きい順にKM_STRIPE_MAXまで) */
+function _kmTopStripes() {
+    if (!_kmStripes.length) return [];
+    const maxDup = _kmStripes[0].dup;
+    return _kmStripes.filter(c => c.dup === maxDup).slice(0, KM_STRIPE_MAX);
+}
+function _kmTopStripeFeatures() {
+    return _kmTopStripes().map(c => ({ type: 'Feature', properties: { key: 'S:' + c.no, dup: c.dup, name: _kmStripeNames(c).join('・') },
+        geometry: { type: 'Polygon', coordinates: _kmStripeCoords(c) } }));
+}
+/** 全展望マーカー(重複数がいちばん多い縞島の代表点に1本ずつ・Q4) */
+function _kmUpdateZenMarkers() {
+    if (!glMap) return;
+    _glClearMarkerGroup('kashimap-zen');
+    if (!_kmActive || !_kmZenMk) return;
+    for (const c of _kmTopStripes()) {
+        _glAddMarker('kashimap-zen', c.rep[0], c.rep[1], '<div class="kashimap-zen">全</div>', {
+            w: 22, h: 22, anchor: 'center', className: 'kashimap-zen-marker', zIndex: 6, popupOffset: [0, -14],
+            popupHtml: `<b>全展望(重複数${c.dup})</b><br>${escapeHtml(_kmStripeNames(c).join('・'))}<br>縞島 ${c.no}: 面積 約${c.area_km2.toFixed(2)} km²<br>緯度: ${c.rep[0].toFixed(6)}°<br>経度: ${c.rep[1].toFixed(6)}°`,
+        });
+    }
+}
+/** 島リストの行(各山の島=重複数1・縞島=重複数2以上を一つに・第145) */
+function _kmBuildIslandRows(list) {
+    const rows = [];
+    for (const l of list) {
+        const m = _kmById.get(l.id) || {}; const a = l.asset;
+        for (const isl of a.islands) {
+            rows.push({ key: `${l.id}:${isl.no}`, stripe: false, mid: l.id, no: isl.no, dup: 1, names: [m.name || l.id], yomi: m.yomi || '',
+                lat: isl.rep[0], lon: isl.rep[1], area: isl.area_km2, px: isl.px, dists: [isl.dist_km], seat: l.seat });
+        }
+    }
+    for (const c of _kmStripes) {
+        rows.push({ key: 'S:' + c.no, stripe: true, mid: '', no: c.no, dup: c.dup, names: _kmStripeNames(c),
+            yomi: c.mids.map(mid => { const m = _kmById.get(mid); return m ? (m.yomi || '') : ''; }).join('/'),
+            lat: c.rep[0], lon: c.rep[1], area: c.area_km2, px: c.px15, dists: c.dists, seat: null, comp: c });
+    }
+    _kmIslandRows = rows;
+}
+function _kmRenderIslandRow(r) {
+    const tr = document.createElement('tr');
+    tr.className = 'td-data-row' + (r.stripe ? ' stripe' : '') + (_kmBlink.has(r.key) ? ' selected' : '');
+    tr.dataset.key = r.key;
+    const swatch = r.seat !== null && r.seat !== undefined ? `<span class="kashimap-swatch" style="background:${_kmSeatColor(r.seat)}"></span>` : '';
+    tr.innerHTML = `<td><input type="checkbox" class="body-checkbox kashimap-island-check" ${_kmBlink.has(r.key) ? 'checked' : ''}></td>` +
+        `<td>${escapeHtml(r.no)}</td><td>${r.stripe ? '縞' : ''}</td><td>${Number(r.dup)}</td><td>${escapeHtml(r.names.join('/'))}${swatch}</td><td>${escapeHtml(r.yomi)}</td>` +
+        `<td>${(+r.lat).toFixed(6)}</td><td>${(+r.lon).toFixed(6)}</td><td>${r.stripe ? '約' : ''}${(+r.area).toFixed(2)}</td><td>${r.stripe ? '約' : ''}${escapeHtml(r.px)}</td>` +
+        `<td>${r.dists.map(d => d === null ? '--' : (+d).toFixed(2)).join('/')}</td>`;
+    const chk = tr.querySelector('input.kashimap-island-check');
+    chk.addEventListener('click', ev => ev.stopPropagation());
+    chk.addEventListener('change', () => { if (chk.checked) _kmBlink.add(r.key); else _kmBlink.delete(r.key); tr.classList.toggle('selected', chk.checked); _kmUpdateBlink(); });
+    tr.addEventListener('click', () => { if (typeof recenterPointInView === 'function') recenterPointInView({ lat: +r.lat, lng: +r.lon }); });
+    return tr;
+}
+/** 島リストの描画(見出しソート。初期は重複数の降順→面積の降順。全件を表示する=第156・依頼者: 最西端・最北端を緯度経度の並べ替えで探すため。3,000件の上限を撤廃) */
+function _kmRenderIslandList() {
+    const body = document.getElementById('kashimap-detail-body');
+    const title = document.getElementById('kashimap-detail-title');
+    if (!body || !title) return;
+    body.innerHTML = '';
+    { const prog0 = document.getElementById('kashimap-progress'); if (prog0 && !_kmComputeBusy) prog0.classList.add('hidden'); }   // 前の表の分割描画が途中なら、その進捗バーを下ろす(表ごと作り直すので古い描画は止まる)
+    const rows = _kmIslandRows.filter(r => !_kmStripeOnly || r.stripe);
+    const nStripe = _kmIslandRows.filter(r => r.stripe).length;
+    const titleBase = `島リスト(${rows.length.toLocaleString()}件${_kmStripeOnly ? '・縞島のみ' : `・縞島${nStripe}`}`;
+    title.textContent = titleBase + ')';
+    document.getElementById('kashimap-detail-note').textContent = _kmDetailNote();
+    if (!rows.length) { body.innerHTML = '<div class="kashimap-note">島がありません</div>'; return; }
+    const byName = (a, b) => a.names.join('/').localeCompare(b.names.join('/'), 'ja');
+    const cols = [
+        { label: '選択', compare: (a, b) => (_kmBlink.has(b.key) ? 1 : 0) - (_kmBlink.has(a.key) ? 1 : 0) },
+        { label: '項番', compare: (a, b) => (a.stripe - b.stripe) || (a.mid || '').localeCompare(b.mid || '') || (a.no - b.no) },
+        { label: '縞', compare: (a, b) => (a.stripe ? 1 : 0) - (b.stripe ? 1 : 0) },
+        { label: '重複数', compare: (a, b) => (a.dup - b.dup) || (a.area - b.area) },
+        { label: '所属山', compare: byName },
+        { label: '読み', compare: (a, b) => a.yomi.localeCompare(b.yomi, 'ja') },
+        { label: '代表点の緯度', compare: (a, b) => a.lat - b.lat },
+        { label: '代表点の経度', compare: (a, b) => a.lon - b.lon },
+        { label: '面積(km²)', compare: (a, b) => a.area - b.area },
+        { label: '画素数', compare: (a, b) => a.px - b.px },
+        { label: '山頂からの距離(km)', compare: (a, b) => (a.dists[0] || 0) - (b.dists[0] || 0) },
+    ];
+    const table = document.createElement('table');
+    table.className = 'td-table';
+    table.innerHTML = '<thead><tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr></thead><tbody></tbody>';
+    body.appendChild(table);
+    // 行が多い時は KM_ISLAND_ROW_CHUNK 行ずつ描き、見出しと進捗バーに「描画中 n/N」を出す(第157・依頼者: 富士山700kmの4万行の並べ替えで待ち時間が分かるように)
+    const prog = document.getElementById('kashimap-progress'), fill = document.getElementById('kashimap-progress-fill');
+    setupTableSort(table, rows, cols, _kmRenderIslandRow, null, { initialColIdx: 3, initialAsc: false, chunk: KM_ISLAND_ROW_CHUNK, onProgress: (done, total) => {
+        if (done >= total) { title.textContent = titleBase + ')'; if (prog && !_kmComputeBusy) prog.classList.add('hidden'); return; }
+        title.textContent = `${titleBase}・描画中 ${done.toLocaleString()}/${total.toLocaleString()})`;
+        if (prog && fill && !_kmComputeBusy) { prog.classList.remove('hidden'); fill.style.width = `${Math.round(100 * done / total)}%`; }
+    } });
+}
+/** 島リスト見出し下の注記「表示中: 60km・樹冠なし」(Q6)。範囲が違う山があればその旨 */
+function _kmDetailNote() {
+    const shown = Array.from(_kmShown.values());
+    if (!shown.length) return '';
+    const diffs = shown.filter(l => l.range !== _kmRange).map(l => { const m = _kmById.get(l.id); return `${m ? m.name : l.id}は${l.range}km`; });
+    const dev = shown.filter(l => l.src === 'device').map(l => { const m = _kmById.get(l.id); return m ? m.name : l.id; });
+    if (dev.length) diffs.push(`端末の資産: ${dev.join('・')}`);
+    const nCanopy = shown.filter(l => String(l.kind).includes('canopy')).length, nBldg = shown.filter(l => String(l.kind).includes('building')).length;
+    const canopy = nCanopy === shown.length ? '樹冠あり' : (nCanopy === 0 ? '樹冠なし' : '樹冠あり(一部なし)');
+    const bldg = nBldg === shown.length ? '構造物あり' : (nBldg === 0 ? '構造物なし' : '構造物あり(一部なし)');
+    return `表示中: ${_kmRange}km${diffs.length ? '(' + diffs.join('・') + ')' : ''}・${canopy}・${bldg}。縞島の面積・画素数は作業用の格子での概算`;
+}
+/** 点滅(Q18・P5): 選んだ島の輪郭を0.5秒交互。選択0・パネルを閉じた・画面が裏に回った時は止める */
+function _kmUpdateBlink() {
+    if (!glMap || !glMap.getSource('km-blink')) return;
+    const feats = [];
+    for (const key of _kmBlink) {
+        if (key.startsWith('S:')) {
+            const c = _kmStripes.find(s => 'S:' + s.no === key); const coords = c && _kmStripeCoords(c);
+            if (coords) feats.push({ type: 'Feature', properties: { key }, geometry: { type: 'Polygon', coordinates: coords } });
+        } else {
+            const cut = key.lastIndexOf(':'); const mid = key.slice(0, cut), no = key.slice(cut + 1);   // 目的点の資産のidは「tgt:lat,lon」で「:」を含む(第156の不具合: split(':')で壊れて点滅しなかった)
+            const l = _kmShown.get(mid); const p = l && l.asset.polys.find(q => q.no === +no);
+            if (p) feats.push({ type: 'Feature', properties: { key }, geometry: { type: 'Polygon', coordinates: p.coords } });
+        }
+    }
+    _glSetSourceData('km-blink', feats);
+    if (feats.length && _kmActive && !document.hidden) {
+        if (!_kmBlinkTimer) { _kmBlinkOn = true; glMap.setLayoutProperty('km-blink', 'visibility', 'visible'); _kmBlinkTimer = setInterval(_kmBlinkTick, 500); }
+    } else _kmStopBlink();
+}
+function _kmBlinkTick() {
+    if (!glMap || !glMap.getLayer('km-blink')) return;
+    _kmBlinkOn = !_kmBlinkOn;
+    glMap.setLayoutProperty('km-blink', 'visibility', _kmBlinkOn ? 'visible' : 'none');
+}
+function _kmStopBlink() {
+    if (_kmBlinkTimer) { clearInterval(_kmBlinkTimer); _kmBlinkTimer = null; }
+    _kmBlinkOn = false;
+    if (glMap && glMap.getLayer('km-blink')) glMap.setLayoutProperty('km-blink', 'visibility', 'none');
+}
+/** 描画中でなくなった島・作り直した縞島の点滅指定を落とす */
+function _kmPruneBlink() {
+    for (const key of Array.from(_kmBlink)) {
+        if (key.startsWith('S:')) { if (!_kmStripes.some(s => 'S:' + s.no === key)) _kmBlink.delete(key); }
+        else if (!_kmShown.has(key.slice(0, key.lastIndexOf(':')))) _kmBlink.delete(key);
+    }
+}
+/** 範囲ラジオ: 計算済みの範囲だけ選べる(選んだ山があればその山の資産、無ければ索引の全部から) */
+function _kmUpdateRangeRadios() {
+    const ix = _kmIndex && _kmIndex.mountains ? _kmIndex.mountains : {};
+    const ids = _kmSelected.size ? Array.from(_kmSelected.keys()) : Array.from(new Set(Object.keys(ix).concat(Array.from(_kmDeviceIndex.values()).map(d => d.id))));
+    const avail = new Set();
+    for (const id of ids) {
+        const av = _kmAssetAvail(id);
+        for (const m of Object.values(av)) for (const r of m.keys()) { const k = KM_RANGES.find(v => v >= r); if (k !== undefined) avail.add(k); }
+    }
+    let firstOk = null;
+    document.querySelectorAll('input[name="kashimap-range"], input[name="kashimap-range-menu"]').forEach(el => {
+        const ok = avail.has(+el.value); el.disabled = !ok; el.parentElement.classList.toggle('disabled', !ok);
+        if (ok && firstOk === null) firstOk = +el.value;
+    });
+    if (!avail.has(_kmRange) && firstOk !== null) _kmRange = firstOk;
+    _kmSyncUi();
+}
+/** 可視マップ節(メニュー側)とコントロールの同名項目(範囲・可視タイル・樹冠あり・山頂マーカー・全展望マーカー)を状態に合わせる(第152・依頼者のデザイン=両方に置いて連動) */
+function _kmSyncUi() {
+    document.querySelectorAll('input[name="kashimap-range"], input[name="kashimap-range-menu"]').forEach(el => { el.checked = (+el.value === _kmRange); });
+    for (const [state, ids] of [[_kmTiles, ['chk-kashimap-tiles', 'chk-kashimap-menu-tiles']], [_kmCanopy, ['chk-kashimap-canopy', 'chk-kashimap-menu-canopy']], [_kmBuilding, ['chk-kashimap-building', 'chk-kashimap-menu-building']], [_kmSummitMk, ['chk-kashimap-summit', 'chk-kashimap-menu-summit']], [_kmZenMk, ['chk-kashimap-zen', 'chk-kashimap-menu-zen']]]) {
+        for (const id of ids) { const el = document.getElementById(id); if (el) el.checked = state; }
+    }
+}
+/** 選んだ山の資産を読み、地図(輪郭・塗り・縞島・マーカー)と島リストを作り直す(選び直し・範囲/樹冠の切替で) */
+async function _kmRefresh() {
+    const seq = ++_kmRefreshSeq;
+    if (!_kmActive || !glMap) return;
+    await _kmLoadIndex();
+    if (seq !== _kmRefreshSeq || !_kmActive) return;
+    _kmUpdateRangeRadios();
+    const wanted = [];
+    for (const [id, seat] of _kmSelected) { const ch = _kmAssetChoice(id); if (ch) wanted.push({ id, seat, kind: ch.kind, range: ch.range }); }
+    const prog = document.getElementById('kashimap-progress'), fill = document.getElementById('kashimap-progress-fill');
+    const nNew = wanted.filter(w => !_kmAssets.has(_kmAssetKey(w))).length;
+    if (nNew) { prog.classList.remove('hidden'); fill.style.width = '0%'; }
+    let done = 0; const loaded = [];
+    await Promise.all(wanted.map(async w => {
+        try { const asset = await _kmLoadAsset(w.id, w.kind, w.range); loaded.push({ ...w, asset, src: asset.src }); }
+        catch (e) { console.warn('可視マップ: 資産の読込に失敗', w, e); }
+        done++; fill.style.width = `${Math.round(done / wanted.length * 100)}%`;
+    }));
+    prog.classList.add('hidden');
+    if (seq !== _kmRefreshSeq || !_kmActive) return;
+    loaded.sort((a, b) => a.seat - b.seat);
+    _kmShown.clear(); loaded.forEach(l => _kmShown.set(l.id, l));
+    // 島の輪郭と塗り(山ごとに山色。塗りは同じ金を重ねる=重複数の濃淡)
+    const feats = [];
+    for (const l of loaded) {
+        const m = _kmById.get(l.id); const color = _kmSeatColor(l.seat);
+        for (const p of l.asset.polys) feats.push({ type: 'Feature', properties: { key: `${l.id}:${p.no}`, mid: l.id, name: m ? m.name : l.id, no: p.no, color }, geometry: { type: 'Polygon', coordinates: p.coords } });
+    }
+    _glSetSourceData('km-islands', feats);
+    _kmComputeStripes(loaded);
+    _glSetSourceData('km-stripes', _kmTopStripeFeatures());
+    _kmUpdateZenMarkers();
+    _kmBuildIslandRows(loaded);
+    _kmRenderIslandList();
+    _kmPruneBlink(); _kmUpdateBlink();
+    _kmApplyLayerVisibility(); _kmUpdateStatus();
+    document.getElementById('kashimap-panel').classList.toggle('with-detail', loaded.length > 0);
+    document.getElementById('kashimap-detail').classList.toggle('hidden', loaded.length === 0);
+}
+/** 検索語の正規化: 全角スペース→半角・小文字・カタカナ→ひらがな(読みと当たるように) */
+function _kmNorm(s) {
+    return String(s || '').replace(/　/g, ' ').trim().toLowerCase()
+        .replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+function _kmMatchTerm(m, term) {
+    const hay = [m.name, m.yomi, m.peak].concat(m.alias || [], m.pref || []).map(_kmNorm);
+    return hay.some(h => h && h.includes(term));
+}
+/** 可視マップ節の検索条件を読む */
+function _kmReadFilters() {
+    const terms = _kmNorm(document.getElementById('input-kashimap-query').value).split(/\s+/).filter(Boolean);
+    const or = document.getElementById('radio-kashimap-or').checked;
+    const lists = [];
+    for (const [id, key] of [['chk-kashimap-100', '100'], ['chk-kashimap-200', '200'], ['chk-kashimap-300', '300'], ['chk-kashimap-high', 'high']]) {
+        if (document.getElementById(id).checked) lists.push(key);
+    }
+    const dev = document.getElementById('chk-kashimap-device');
+    return { terms, or, lists, other: document.getElementById('chk-kashimap-other').checked, device: !!(dev && dev.checked) };
+}
+/** 山データを検索条件で絞る(リストの印→語。テキストが空ならチェックしたリストの山を全部=Q7) */
+function _kmFilter(all, f) {
+    return all.filter(m => {
+        const ls = m.lists || [];
+        const inList = ls.some(l => f.lists.includes(l)) || (f.other && ls.length === 0);
+        if (!inList) return false;
+        if (f.device && !_kmHasDeviceAsset(m.id)) return false;   // 「:端末保存」=端末に資産がある山だけ(第156・デッサン05)
+        if (!f.terms.length) return true;
+        return f.or ? f.terms.some(t => _kmMatchTerm(m, t)) : f.terms.every(t => _kmMatchTerm(m, t));
+    });
+}
+function _kmListsLabel(m) { const ls = (m.lists || []).map(l => KM_LIST_LABEL[l] || l); return ls.length ? ls.join('/') : '他'; }
+function _kmListsRank(m) { const ls = m.lists || []; return ls.includes('100') ? 0 : ls.includes('200') ? 1 : ls.includes('300') ? 2 : ls.includes('high') ? 3 : ls.includes('my') ? 4 : 5; }
+function _kmIdxCmp(a, b) {
+    const pa = String(a).split('-'), pb = String(b).split('-');
+    const na = parseInt(pa[0], 10), nb = parseInt(pb[0], 10);
+    if (isNaN(na) || isNaN(nb)) return String(a).localeCompare(String(b));
+    return (na - nb) || (parseInt(pa[1] || '0', 10) - parseInt(pb[1] || '0', 10));
+}
+/** 山色: 席番号→表示天体のスタイル設定の16色(17席目は1席目に戻る) */
+function _kmSeatColor(seat) { return COLOR_MAP[seat % COLOR_MAP.length].code; }
+function _kmSelect(id, on) {
+    if (on) {
+        for (const k of Array.from(_kmNoAutoSave)) if (k.startsWith(id + '/')) _kmNoAutoSave.delete(k);   // 選び直したら、また端末に保存してよい
+        if (!_kmSelected.has(id)) {
+            const used = new Set(_kmSelected.values());
+            let seat = 0; while (used.has(seat)) seat++;
+            _kmSelected.set(id, seat);
+        }
+        // 最大表示範囲より広い資産しか無い山(「300km▲」)を選んだら、範囲を繰り上げてから山リストを描き直す。席を決めた後に描く(描き直した行もチェック済み・色付きになる。第157のレビュー)
+        if (!_kmAssetChoice(id)) { const near = _kmNearestLargerAsset(id); if (near) { const bucket = _kmRangeBucket(near.range); if (_kmRange < bucket) { _kmRange = bucket; _kmSyncUi(); if (_kmActive) _kmRenderList(); } } }
+    } else {
+        _kmSelected.delete(id);
+    }
+}
+/** 選択が変わった時の一式(件数・山頂マーカー・地図と島リストの作り直し) */
+function _kmOnSelectionChanged() { _kmUpdateStatus(); _kmUpdateMarkers(); _kmRefresh(); }
+/** 選んだ山の山頂マーカー(山色のピン。選択順の席で色が決まり、解除しても他の山の色は動かない) */
+function _kmUpdateMarkers() {
+    if (!glMap) return;
+    _glClearMarkerGroup('kashimap');
+    if (!_kmActive || !_kmById || !_kmSummitMk) return;
+    for (const [id, seat] of _kmSelected) {
+        const m = _kmById.get(id);
+        if (!m) continue;
+        _glAddMarker('kashimap', m.lat, m.lon, null, {
+            pin: _kmSeatColor(seat), className: 'location-marker kashimap-summit', zIndex: 5,
+            popupHtml: `<b>${escapeHtml(m.name)}</b>${m.peak ? ' (' + escapeHtml(m.peak) + ')' : ''}<br>` +
+                       `読み: ${escapeHtml(m.yomi || '')}<br>標高: ${m.elev !== null && m.elev !== undefined ? m.elev : '--'} m<br>` +
+                       `${escapeHtml((m.pref || []).join(' '))}<br>緯度: ${m.lat}°<br>経度: ${m.lon}°<br>` +
+                       `所属: ${_kmListsLabel(m)}`,
+        });
+    }
+}
+function _kmUpdateStatus() {
+    const st = document.getElementById('kashimap-status');
+    if (st) st.textContent = `(山${_kmRows.length}件 / 選択${_kmSelected.size}${_kmIslandRows.length ? ` / 島${_kmIslandRows.length.toLocaleString()}` : ''})`;
+}
+function _kmRenderRow(m) {
+    const tr = document.createElement('tr');
+    tr.className = 'td-data-row' + (_kmSelected.has(m.id) ? ' selected' : '');
+    tr.dataset.id = m.id;
+    const sel = _kmSelected.has(m.id);
+    const swatch = sel ? `<span class="kashimap-swatch" style="background:${_kmSeatColor(_kmSelected.get(m.id))}"></span>` : '';
+    const info = _kmIndexInfo(m.id);
+    tr.innerHTML = `<td><input type="checkbox" class="body-checkbox kashimap-check" ${sel ? 'checked' : ''}>${swatch}</td>` +
+        `<td>${m.seq || ''}</td><td>${escapeHtml(m.id)}</td><td>${escapeHtml(m.name)}</td><td>${escapeHtml(m.yomi || '')}</td>` +
+        `<td>${_kmListsLabel(m)}</td><td>${escapeHtml((m.pref || []).join(' '))}</td>` +
+        `<td>${m.lat}</td><td>${m.lon}</td><td>${m.elev !== null && m.elev !== undefined ? m.elev : ''}</td><td>${escapeHtml(m.kind || '')}</td>` +
+        _kmInfoCells(info, m.lat).map(c => `<td${c.title ? ` title="${escapeHtml(c.title)}"` : ''}>${escapeHtml(c.text)}</td>`).join('');
+    const chk = tr.querySelector('input.kashimap-check');
+    chk.addEventListener('click', ev => ev.stopPropagation());
+    chk.addEventListener('change', () => {
+        _kmSelect(m.id, chk.checked);
+        tr.classList.toggle('selected', chk.checked);
+        const old = tr.querySelector('.kashimap-swatch'); if (old) old.remove();
+        if (chk.checked) chk.insertAdjacentHTML('afterend', `<span class="kashimap-swatch" style="background:${_kmSeatColor(_kmSelected.get(m.id))}"></span>`);
+        _kmOnSelectionChanged();
+    });
+    tr.addEventListener('click', () => { if (typeof recenterPointInView === 'function') recenterPointInView({ lat: m.lat, lng: m.lon }); });
+    return tr;
+}
+/** 山リストの描画(見出しソート=setupTableSort。初期は連番の昇順) */
+function _kmRenderList() {
+    const content = document.getElementById('kashimap-content');
+    content.innerHTML = '';
+    if (!_kmRows.length) { content.innerHTML = '<div class="kashimap-note">該当する山がありません</div>'; _kmUpdateStatus(); _kmUpdateMarkers(); return; }
+    const islandsOf = m => { const i = _kmIndexInfo(m.id); return i && i.islands !== null ? i.islands : -1; };
+    const cols = [
+        { label: '選択', compare: (a, b) => (_kmSelected.has(b.id) ? 1 : 0) - (_kmSelected.has(a.id) ? 1 : 0) },
+        { label: '連番', compare: (a, b) => (a.seq || 1e9) - (b.seq || 1e9) },
+        { label: '索引番号', compare: (a, b) => _kmIdxCmp(a.id, b.id) },
+        { label: '山名', compare: (a, b) => a.name.localeCompare(b.name, 'ja') },
+        { label: '読み', compare: (a, b) => (a.yomi || '').localeCompare(b.yomi || '', 'ja') },
+        { label: '所属', compare: (a, b) => _kmListsRank(a) - _kmListsRank(b) },
+        { label: '都道府県', compare: (a, b) => (((a.prefCode && a.prefCode[0]) || 99) - ((b.prefCode && b.prefCode[0]) || 99)) || (b.lat - a.lat) },
+        { label: '山頂の緯度', compare: (a, b) => a.lat - b.lat },
+        { label: '山頂の経度', compare: (a, b) => a.lon - b.lon },
+        { label: '標高(m)', compare: (a, b) => (a.elev || 0) - (b.elev || 0) },
+        { label: '種別', compare: (a, b) => (a.kind || '').localeCompare(b.kind || '', 'ja') },
+        { label: '島の数', compare: (a, b) => islandsOf(a) - islandsOf(b) },
+        { label: '静的/動的', compare: (a, b) => { const x = _kmIndexInfo(a.id), y = _kmIndexInfo(b.id); return (x ? x.rank : 0) - (y ? y.rank : 0); } },
+        { label: '範囲', compare: (a, b) => { const x = _kmIndexInfo(a.id), y = _kmIndexInfo(b.id); return (x ? x.range : 0) - (y ? y.range : 0); } },
+        { label: '樹冠', compare: (a, b) => { const x = _kmIndexInfo(a.id), y = _kmIndexInfo(b.id); return (x && x.canopy ? 1 : 0) - (y && y.canopy ? 1 : 0); } },
+        { label: '構造物', compare: (a, b) => { const x = _kmIndexInfo(a.id), y = _kmIndexInfo(b.id); return (x && x.building ? 1 : 0) - (y && y.building ? 1 : 0); } },
+        { label: 'ズーム', compare: (a, b) => { const x = _kmIndexInfo(a.id), y = _kmIndexInfo(b.id); return ((x && x.zoom) || 0) - ((y && y.zoom) || 0); } },
+        { label: 'サイズ', compare: (a, b) => { const x = _kmIndexInfo(a.id), y = _kmIndexInfo(b.id); return ((x && x.size) || 0) - ((y && y.size) || 0); } },
+    ];
+    const table = document.createElement('table');
+    table.className = 'td-table';
+    table.innerHTML = '<thead><tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr></thead><tbody></tbody>';
+    content.appendChild(table);
+    setupTableSort(table, _kmRows, cols, _kmRenderRow, null, { initialColIdx: 1, initialAsc: true });
+    _kmUpdateStatus(); _kmUpdateMarkers();
+}
+/** 検索を実行して結果パネルに出す(パネルが閉じていれば開く) */
+async function runKashimapSearch() {
+    if (!FEATURE_KASHIMAP_ENABLED) return;   // 封鎖中(リリース方針・第158)
+    openKashimapPanel();
+    const content = document.getElementById('kashimap-content');
+    content.innerHTML = '<div class="kashimap-note">読み込み中…</div>';
+    let all;
+    try { [all] = await Promise.all([_kmLoadData(), _kmLoadIndex(), _kmDeviceLoaded ? null : _kmLoadDeviceIndex()]); }
+    catch (e) {
+        console.error(e);
+        content.innerHTML = '<div class="kashimap-note">山データ(data/mountains.json)の取得に失敗しました</div>';
+        _kmRows = []; _kmUpdateStatus(); return;
+    }
+    if (!_kmActive) return;
+    _kmSyncPseudo();
+    const filters = _kmReadFilters();
+    _kmRows = _kmFilter(all, filters).concat(_kmPseudoRows(filters));   // その場で計算した目的点は所属「My」で末尾に並ぶ
+    _kmRenderList();
+    _kmUpdateRangeRadios();
+    _kmRefresh();
+}
+function openKashimapPanel() {
+    if (_kmActive) return;
+    if (appState.isTsujiMeshActive) closeTsujiMesh();
+    if (appState.isTsujiSearchActive) toggleTsujiSearch();
+    if (appState.isSoraSearchActive) closeSoraSearchPanel();
+    _kmActive = true;
+    document.getElementById('btn-kashimap').classList.add('active');
+    document.getElementById('kashimap-panel').classList.remove('hidden');
+    _kmApplyLayerVisibility();
+    syncBottomPanels();
+}
+/** 結果パネルを閉じる(選択は保つ=開き直すとマーカーと島が戻る。地図の描画・点滅・ポップアップは止める) */
+function closeKashimap() {
+    if (!_kmActive) return;
+    _kmActive = false;
+    document.getElementById('btn-kashimap').classList.remove('active');
+    document.getElementById('kashimap-panel').classList.add('hidden');
+    document.getElementById('btn-kashimap-max').classList.remove('active');
+    document.getElementById('kashimap-panel').classList.remove('maximized');
+    _kmStopBlink();
+    if (_kmPopup) { _kmPopup.remove(); _kmPopup = null; }
+    _glTmHideTip();
+    _kmApplyLayerVisibility();
+    _kmUpdateMarkers(); _kmUpdateZenMarkers();
+    syncBottomPanels();
+}
+// ---- その場計算(デッサン05 段4・「目的点で計算」「My目的点で計算」): 静的資産を作る道具と同じ計算をワーカー(kashimap-worker.js)で行い、
+//      資産(meta・islands・outline)を端末に保存(origin=compute)して、山リストに所属「My」の行(id=tgt:緯度,経度)で載せて選択する。
+//      標高タイルはワーカーが端末の店(IndexedDB tiles)に貯める。目的点側の除外はアプリの判定と同じ(山頂部の帯・基準の標高=DEMと目的点の標高の高い方) ----
+const KM_TGT_RANGES = [24, 36, 48, 60, 100, 300, 700];   // その場計算の範囲(km四方。デッサン05「計算範囲リスト」。初期値24。Q20: 辻メッシュ検索の最大[約24km四方]以上。第156: 500を外した=依頼者「範囲の大きい方を残す」)
+const KM_TGT_MAX_TILES = 9500;                 // 標高タイルの枚数の上限(700km四方の精細=z12で7,744〜8,100枚[槍ヶ岳で8,100]。安全弁。第156: 8,000→9,500=依頼者)
+const KM_TGT_MAX_TILES_FINEST = 45000;         // 「:最高精細」(700kmをz13)の時だけの上限(富士山で約31,000枚。枚数は緯度で増え、稚内で約42,000枚。PC向け・依頼者の明示の選択の時だけ)
+/** 範囲ごとの窓のズーム(解像度の段): 60kmまでz15(1画素≈4m・60kmで格子2.4億画素≒メモリ0.8GB) / 100km=z14(≈8m・2,500枚) / 300km・500km=z12(≈31m・1,444枚/3,969枚) / 700km=z11(≈62m・1,936枚)。
+ *  広い範囲は粗いDEM10B(dem_png)をそのズームで読む(タイルの枚数と格子の大きさを一定の範囲に収める=小→大の段階計算)。
+ *  fine(「:精細」第155・依頼者「速さより正確さ」)=300kmと700kmを1段細かく(300km=z13≈15m・5,776枚・格子3.8億画素≒1.1GB / 700km=z12≈31m・7,744枚・5.1億画素≒1.5GB。PC向け)。
+ *  500kmの1段上(z13=15,876枚・10億画素)と、700kmのz14(80億画素)はブラウザの格子に収まらない */
+function _kmZoomForRange(rangeKm, fine, finest) {
+    const z = rangeKm <= 60 ? 15 : rangeKm <= 100 ? 14 : rangeKm <= 500 ? 12 : 11;
+    if (finest && rangeKm > 500) return z + 2;   // 「:最高精細(700kmを2段細かく)」=z13(≈15m・約31,000枚・格子約20億画素。第156・依頼者の明示の選択)
+    return (fine && (rangeKm === 300 || rangeKm > 500)) ? z + 1 : z;
+}
+function _kmHasDeviceAsset(id) { for (const d of _kmDeviceIndex.values()) if (d.id === id) return true; return false; }
+/** 計算した範囲を含む表示範囲ラジオの値(24〜100→100・300→300・500〜700→700)。計算の後は表示範囲をここまで広げる(第155: 700kmを計算しても表示範囲が60kmのままで60kmの資産が選ばれていた) */
+function _kmRangeBucket(rangeKm) { return KM_RANGES.find(v => v >= rangeKm) || KM_RANGES[KM_RANGES.length - 1]; }
+/** 使う資産の種類の優先順(「:樹冠」「:構造物」のチェックから。両方→樹冠と構造物入り→樹冠→構造物→地形だけ。無い種類は飛ばす) */
+function _kmKindPrefs() { const p = []; if (_kmCanopy && _kmBuilding) p.push('canopy-building'); if (_kmCanopy) p.push('canopy'); if (_kmBuilding) p.push('building'); p.push('terrain'); return p; }
+/** 資産の計算条件(meta)から種類の名前 */
+function _kmKindOf(meta) { const c = !!(meta && meta.canopy), b = !!(meta && meta.buildings); return c && b ? 'canopy-building' : c ? 'canopy' : b ? 'building' : 'terrain'; }
+let _kmWorker = null, _kmWorkerReject = null, _kmComputeBusy = false, _kmComputeCancelled = false, _kmComputeLabel = '';
+/** 窓(ズームzoomの画素格子。既定z15)。ワーカーの windowGeom と同じ式(テスト用の合成標高の格子をここで作るため) */
+function _kmWindow(lat, lon, rangeKm, zoom) {
+    const Z = zoom || 15, WORLD = 256 * Math.pow(2, Z);
+    const lonToX = (ln) => (ln + 180) / 360 * WORLD;
+    const latToY = (lt) => (1 - Math.log(Math.tan(lt * Math.PI / 180) + 1 / Math.cos(lt * Math.PI / 180)) / Math.PI) / 2 * WORLD;
+    const MPP = SORA.metersPerPixel(lat, Z);
+    const halfPx = Math.ceil(rangeKm * 1000 / 2 / MPP);
+    const X0 = Math.floor(lonToX(lon)) - halfPx, Y0 = Math.floor(latToY(lat)) - halfPx;
+    const W = 2 * halfPx + 1;
+    return { Z, X0, Y0, W, H: W, CX: halfPx, CY: halfPx, MPP };
+}
+// 計算中の経過表示(ワーカーの preview=見える画素の数をセルごとに数えた縮小格子)を地図の画像ソースに描く。終わったら消す
+let _kmPreviewCanvas = null, _kmPreviewN = 0;
+function _kmPreviewDraw(m) {
+    if (!glMap || !glMap.getLayer || !glMap.getLayer('km-fill') || !m || !m.data) return;
+    _kmPreviewN++;
+    if (!_kmPreviewCanvas) _kmPreviewCanvas = document.createElement('canvas');
+    const cv = _kmPreviewCanvas; cv.width = m.pw; cv.height = m.ph;
+    const ctx = cv.getContext('2d'); const img = ctx.createImageData(m.pw, m.ph); const d = img.data;
+    for (let i = 0; i < m.data.length; i++) { const a = m.data[i]; if (!a) continue; const o = i * 4; d[o] = 255; d[o + 1] = 215; d[o + 2] = 0; d[o + 3] = Math.min(255, Math.round(a * 0.9)); }
+    ctx.putImageData(img, 0, 0);
+    const WORLD = 256 * Math.pow(2, m.zoom);
+    const ll = (x, y) => [x / WORLD * 360 - 180, Math.atan(Math.sinh(Math.PI * (1 - 2 * y / WORLD))) * 180 / Math.PI];
+    const coords = [ll(m.x0, m.y0), ll(m.x0 + m.w, m.y0), ll(m.x0 + m.w, m.y0 + m.h), ll(m.x0, m.y0 + m.h)];
+    const url = cv.toDataURL('image/png');
+    try {
+        const src = glMap.getSource('km-preview');
+        if (src) src.updateImage({ url, coordinates: coords });
+        else {
+            glMap.addSource('km-preview', { type: 'image', url, coordinates: coords });
+            glMap.addLayer({ id: 'km-preview-layer', type: 'raster', source: 'km-preview', paint: { 'raster-opacity': 0.6, 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } }, 'km-fill');
+        }
+    } catch (e) { console.warn('可視マップ: 経過表示', e); }
+}
+function _kmPreviewClear() {
+    if (!glMap || !glMap.getLayer) return;
+    try { if (glMap.getLayer('km-preview-layer')) glMap.removeLayer('km-preview-layer'); if (glMap.getSource('km-preview')) glMap.removeSource('km-preview'); } catch (_) { /* 無視 */ }
+}
+function _kmTgtId(lat, lng) { return `tgt:${(+lat).toFixed(6)},${(+lng).toFixed(6)}`; }
+/** 本体地図のラスタ(地図タイル)のソースを読み直す。その場計算の標高タイルの取得と競合して取れなかった地図タイルは、MapLibreが親タイルを拡大したまま
+ *  (縮尺がまちまちの「マダラ」)にして再試行しないため、計算の後にタイルのURLを設定し直して読み直させる(第155・依頼者の報告) */
+function _glRefreshRasterTiles() {
+    if (!glMap || !glMap.getStyle) return;
+    try {
+        const st = glMap.getStyle();
+        for (const [id, src] of Object.entries((st && st.sources) || {})) {
+            if (!src || src.type !== 'raster') continue;
+            const live = glMap.getSource(id); if (!live) continue;
+            if (Array.isArray(src.tiles) && typeof live.setTiles === 'function') live.setTiles(src.tiles.slice());
+            else if (src.url && typeof live.setUrl === 'function') live.setUrl(src.url);
+        }
+    } catch (e) { console.warn('地図タイルの読み直し', e); }
+}
+/** 端末の資産のうち目的点の計算(id が tgt:…)を、山リストの擬似の山(所属「My」・種別「目的点」)として _kmById に載せる/外す(端末の索引の読み直しと検索のたびに) */
+function _kmSyncPseudo() {
+    if (!_kmById) return;
+    const want = new Map();
+    for (const d of _kmDeviceIndex.values()) {
+        if (!String(d.id).startsWith('tgt:') || !isFinite(+d.lat) || !isFinite(+d.lon)) continue;
+        const cur = want.get(d.id);
+        if (!cur || String(d.savedAt || '') > String(cur.savedAt || '')) want.set(d.id, d);
+    }
+    for (const [id, m] of Array.from(_kmById.entries())) {
+        if (!m.pseudo || want.has(id)) continue;
+        _kmById.delete(id); _kmSelected.delete(id); _kmRows = _kmRows.filter(r => r.id !== id);   // 資産を消したら行も選択も消える
+    }
+    for (const [id, d] of want) {
+        const m = _kmById.get(id) || { id, pseudo: true, seq: null, yomi: '', peak: null, alias: [], pref: [], prefCode: [], lists: ['my'], kind: '目的点', state: '', src: 'compute' };
+        m.name = d.name || id; m.lat = +d.lat; m.lon = +d.lon; m.elev = _kmNum(d.elev) === undefined ? null : +d.elev; m.height = _kmNum(d.height) || 0;
+        _kmById.set(id, m);
+    }
+}
+/** 検索結果に載せる擬似の山(推し山の語があれば山名に部分一致。リストの印では絞らない) */
+function _kmPseudoRows(f) {
+    return Array.from(_kmById ? _kmById.values() : []).filter(m => m.pseudo && (!f.terms.length || (f.or ? f.terms.some(t => _kmMatchTerm(m, t)) : f.terms.every(t => _kmMatchTerm(m, t)))));
+}
+function _kmSetComputeUi(busy, label) {
+    _kmComputeBusy = busy;
+    const b = document.getElementById('btn-kashimap-compute');
+    if (b) { b.textContent = busy ? '計算を中止' : '範囲を計算'; b.classList.toggle('active', busy); }
+    for (const id of ['sel-kashimap-tgt-range', 'chk-kashimap-fine', 'chk-kashimap-finest', 'radio-kashimap-tgt', 'radio-kashimap-mytgt']) { const el = document.getElementById(id); if (el) el.disabled = busy; }
+    const st = document.getElementById('kashimap-status'); if (st && label !== undefined) st.textContent = label;
+    const prog = document.getElementById('kashimap-progress'), fill = document.getElementById('kashimap-progress-fill');
+    if (prog && fill) { prog.classList.toggle('hidden', !busy); fill.style.width = '0%'; }
+}
+function _kmComputeCancel() {
+    _kmComputeCancelled = true; _kmPreviewClear();
+    if (_kmWorker) { try { _kmWorker.terminate(); } catch (_) { /* 無視 */ } _kmWorker = null; }
+    if (_kmWorkerReject) { const rj = _kmWorkerReject; _kmWorkerReject = null; rj(new Error('中止しました')); }
+}
+/** 進捗(タイル0〜70%・山頂部72%・視域72〜90%・島91%・輪郭91〜97%・符号化98%)を進捗バーと件数欄へ */
+function _kmComputeProgress(m) {
+    const fill = document.getElementById('kashimap-progress-fill'), st = document.getElementById('kashimap-status');
+    const frac = m.total ? Math.min(1, m.done / m.total) : 0;
+    let pct = 0, text = '';
+    if (m.phase === 'tiles') { pct = 70 * frac; text = `標高タイル ${m.done.toLocaleString()}/${m.total.toLocaleString()}`; }   // 取得は目的点に近い順(地図の経過表示は視域計算の段から)
+    else if (m.phase === 'summit') { pct = 72; text = '山頂部'; }
+    else if (m.phase === 'rays') { pct = 72 + 18 * frac; text = `視域計算 ${Math.round(100 * frac)}%`; }
+    else if (m.phase === 'islands') { pct = 91; text = '島'; }
+    else if (m.phase === 'outline') { pct = 91 + 6 * frac; text = `輪郭 ${Math.round(100 * frac)}%`; }
+    else if (m.phase === 'encode') { pct = 98; text = '符号化'; }
+    if (fill) fill.style.width = `${Math.round(pct)}%`;
+    if (st) st.textContent = `(計算中${_kmComputeLabel ? ' ' + _kmComputeLabel : ''}: ${text})`;
+}
+/** 目的点1つをその場で計算して端末に保存し、山リストに「My」の行で載せて選択する。target={id?,name,lat,lng,elev(目的点の標高),height(構造物の高さ)}。
+ *  opts.rangeKm=範囲(既定は選択欄)・opts.returnBits=見える/見えないの1bit列も受け取る(テスト用) */
+async function _kmComputeOne(target, opts) {
+    opts = opts || {};
+    const sel = document.getElementById('sel-kashimap-tgt-range');
+    const rangeKm = +opts.rangeKm || +(sel && sel.value) || 60;
+    const fineEl = document.getElementById('chk-kashimap-fine'), finestEl = document.getElementById('chk-kashimap-finest');
+    const fine = opts.fine !== undefined ? !!opts.fine : !!(fineEl && fineEl.checked), finest = opts.finest !== undefined ? !!opts.finest : !!(finestEl && finestEl.checked);
+    const zoom = +opts.zoom || _kmZoomForRange(rangeKm, fine, finest);   // 窓のズーム(解像度の段。「:精細」で1段・「:最高精細」で700kmを2段細かく)。opts.zoomはテスト用
+    const maxTiles = (finest && rangeKm > 500) ? KM_TGT_MAX_TILES_FINEST : KM_TGT_MAX_TILES;
+    const lat = +target.lat, lon = +target.lng;
+    if (!isFinite(lat) || !isFinite(lon)) throw new Error('目的点の位置がありません');
+    if (!_pointInsideJapan(lat, lon)) throw new Error('目的点が日本域の外です(国土地理院の標高タイルがありません)');
+    const id = target.id || _kmTgtId(lat, lon);
+    const name = String(target.name || '').trim() || `目的点(${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+    const ex = elevExcludeRadii();
+    const list = await _kmLoadData();
+    if (_kmComputeCancelled) throw new Error('中止しました');
+    const peaks = list.filter(m => isFinite(+m.lat) && isFinite(+m.lon)).map(m => ({ id: String(m.id), name: m.name, elev: m.elev, lat: +m.lat, lon: +m.lon, d: _geoDistM(lat, lon, +m.lat, +m.lon) })).filter(p => p.d <= SB_SEARCH_M + 100);
+    const hasElev = target.elev !== null && target.elev !== undefined && target.elev !== '' && isFinite(+target.elev);   // 標高が無い(null)時はDEMを基準にする(+null=0にしない)
+    const job = { id, name, lat, lon, elevGround: hasElev ? +target.elev : null, heightM: +target.height || 0, rangeKm, zoom, preview: opts.preview !== false,
+        inv2R: _visInv2Reff(lat, lat), k: refractionKInUse(),   // 丸み+気差の実効半径。kは設定に表示されている値(オフ=0)=標高グラフ・辻検索と同じ1つの関数(第157)
+        obsH: SORA.OBSERVER.EYE_HEIGHT_M, exclTgtM: ex.tgt, exclObsM: ex.obs, bandM: ex.band, searchM: SB_SEARCH_M, upM: SB_UP_M, peaks, maxTiles, returnBits: !!opts.returnBits };
+    const transfer = [];
+    if (typeof window._tmSyntheticElev15 === 'function') {   // テスト用の合成標高: 窓の格子をここで作ってワーカーへ渡す(標高タイルは取らない)
+        const G = _kmWindow(lat, lon, rangeKm, zoom); const grid = new Uint16Array(G.W * G.H); const fz = Math.pow(2, 15 - zoom);   // 合成標高はz15の画素で定義(粗い窓はその倍率で参照)
+        for (let y = 0; y < G.H; y++) for (let x = 0; x < G.W; x++) {
+            const e = window._tmSyntheticElev15((G.X0 + x) * fz, (G.Y0 + y) * fz);
+            const c = (e === null || e === undefined || !isFinite(e)) ? 65535 : Math.round((e + 100) * 10);
+            grid[y * G.W + x] = (c < 0 || c >= 65535) ? 65535 : c;
+        }
+        job.grid = grid; transfer.push(grid.buffer);
+    }
+    const w = new Worker('kashimap-worker.js'); _kmWorker = w;
+    const res = await new Promise((ok, ng) => {
+        _kmWorkerReject = ng;
+        w.onmessage = (ev) => {
+            const m = ev.data || {};
+            if (m.type === 'progress') _kmComputeProgress(m);
+            else if (m.type === 'preview') _kmPreviewDraw(m);
+            else if (m.type === 'done') ok(m);
+            else if (m.type === 'error') ng(new Error(m.message || '計算に失敗しました'));
+        };
+        w.onerror = (e) => ng(new Error(e && e.message ? e.message : 'ワーカーの読み込みに失敗しました'));
+        w.postMessage({ type: 'compute', job }, transfer);
+    }).finally(() => { if (_kmWorker === w) _kmWorker = null; _kmWorkerReject = null; try { w.terminate(); } catch (_) { /* 無視 */ } _kmPreviewClear(); });
+    const st = document.getElementById('kashimap-status'); if (st) st.textContent = '(計算中: 保存)';
+    const d = await _kmStoreSave(res.meta, res.islands, res.outline, 'compute');
+    _kmAssets.delete(d.key);   // 前に読んだ同じ鍵の資産があれば作り直す
+    _kmSyncPseudo();
+    if (_kmActive && !_kmRows.some(r => r.id === id)) { const m = _kmById.get(id); if (m) _kmRows.push(m); }
+    const bucket = _kmRangeBucket(rangeKm);
+    if (_kmRange < bucket) { _kmRange = bucket; _kmSyncUi(); }   // 計算した範囲が今の表示範囲より広ければ表示範囲を広げる(第155: 700kmを計算しても60kmの資産が表示されていた)
+    _kmSelect(id, true);
+    return { ...d, id, bits: res.bits || null, meta: res.meta };
+}
+/** 目的点(位置情報メニューの今の目的点。標高+構造物の高さ)をその場で計算する。計算中に呼ぶと中止 */
+async function _kmComputeTarget(opts) {
+    if (_kmComputeBusy) { _kmComputeCancel(); return null; }
+    const end = appState.end; if (!end) return null;
+    const nameEl = document.getElementById('input-end-name');
+    const target = { lat: end.lat, lng: end.lng, elev: appState.endApiElev, height: appState.endHeight, name: (opts && opts.name) || (nameEl && nameEl.value.trim()) || '' };
+    return _kmComputeRun([target], opts);
+}
+/** 今のMyセットのMy目的点を順にその場で計算する(地元の複数の山向け)。計算中に呼ぶと中止 */
+async function _kmComputeMyTargets(opts) {
+    if (_kmComputeBusy) { _kmComputeCancel(); return null; }
+    const list = (appState.myTargets || []).filter(t => isFinite(+t.lat) && isFinite(+t.lng));
+    if (!list.length) { alert('今のMyセットにMy目的点がありません'); return null; }
+    return _kmComputeRun(list.map(t => ({ lat: t.lat, lng: t.lng, elev: t.elev, height: t.height, name: t.name })), opts);
+}
+async function _kmComputeRun(targets, opts) {
+    if (!FEATURE_KASHIMAP_ENABLED) return;   // 封鎖中(リリース方針・第158)
+    if (!_kmActive) await runKashimapSearch();
+    _kmComputeCancelled = false; _kmSetComputeUi(true, '(計算の準備…)');
+    const done = [], errs = [];
+    try {
+        const sel = document.getElementById('sel-kashimap-tgt-range');
+        const rangeKm = +(opts && opts.rangeKm) || +(sel && sel.value) || 60;
+        for (let i = 0; i < targets.length; i++) {
+            if (_kmComputeCancelled) break;
+            const t = targets[i]; _kmComputeLabel = targets.length > 1 ? `${i + 1}/${targets.length} ${t.name || ''}` : (t.name || '');
+            // 先に端末(IndexedDB)の資産を探す(第156・依頼者: 構造物など山リストに無い目的点は資産が無いので、あれば使い、無ければ標高タイルの取得から計算する)。あれば確認してそれを使う(キャンセル=計算し直す)
+            const tid = t.id || (isFinite(+t.lat) && isFinite(+t.lng) ? _kmTgtId(+t.lat, +t.lng) : null);
+            const kNow = refractionKInUse();
+            const have0 = tid && !(opts && opts.force) ? _kmDeviceIndex.get(`${tid}/terrain/${rangeKm}`) : null;
+            const have = (have0 && (!isFinite(+have0.k) || Math.abs(+have0.k - kNow) < 1e-4)) ? have0 : null;   // 気差係数が違う資産は別の計算なので候補にしない(kの無い古い資産は候補にする)。第157のレビュー
+            if (have && confirm(`「${have.name || tid}」の${rangeKm}kmの可視タイル(島${(have.islands || 0).toLocaleString()}・${_kmMB(have.size || 0)}・気差係数k=${kNow.toFixed(3)})が端末にあります。\nOK=その資産を使う / キャンセル=計算し直す`)) {
+                _kmSyncPseudo();
+                if (_kmActive && _kmById && !_kmRows.some(r => r.id === tid)) { const m = _kmById.get(tid); if (m) _kmRows.push(m); }   // 山データが読めていない時(_kmById=null)も落ちない(第156のレビュー)
+                const bucket = _kmRangeBucket(rangeKm); if (_kmRange < bucket) { _kmRange = bucket; _kmSyncUi(); }
+                _kmSelect(tid, true); done.push({ key: have.key, id: tid, name: have.name, range: have.range, kind: have.kind, islands: have.islands, size: have.size, reused: true });
+                continue;
+            }
+            try { done.push(await _kmComputeOne(t, opts)); }
+            catch (e) { if (_kmComputeCancelled) break; console.warn('可視マップ: その場計算に失敗', t, e); errs.push(`${t.name || ''}: ${e.message}`); }
+        }
+    } finally {
+        _kmComputeLabel = ''; _kmSetComputeUi(false); _kmUpdateStatus();
+    }
+    if (_kmActive) { _kmRenderList(); await _kmRefresh(); }
+    _glRefreshRasterTiles();   // 計算中に取りこぼした地図タイル(縮尺違いのまま残る)を読み直す(第155・依頼者の報告「マダラ」)
+    if (errs.length && !(opts && opts.quiet)) alert('その場計算:\n' + errs.join('\n'));
+    return { done, errs, cancelled: _kmComputeCancelled };
+}
+/** 位置情報メニューの「可視マップ」ボタン=検索実行+結果パネル表示(辻メッシュと同じ・Q11) */
+function toggleKashimap() { if (!FEATURE_KASHIMAP_ENABLED) return; if (_kmActive) closeKashimap(); else runKashimapSearch(); }   // 封鎖中は何もしない(第158)
+function setupKashimapControls() {
+    document.getElementById('btn-kashimap').onclick = toggleKashimap;
+    document.getElementById('btn-kashimap-search').onclick = () => runKashimapSearch();
+    document.getElementById('input-kashimap-query').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); runKashimapSearch(); } });
+    document.getElementById('btn-kashimap-max').addEventListener('click', () => {
+        const pnl = document.getElementById('kashimap-panel');
+        const on = pnl.classList.toggle('maximized');
+        document.getElementById('btn-kashimap-max').classList.toggle('active', on);
+        syncBottomPanels();
+    });
+    document.getElementById('btn-kashimap-close').addEventListener('click', () => closeKashimap());
+    document.getElementById('btn-kashimap-select-all').addEventListener('click', () => {
+        _kmRows.forEach(m => _kmSelect(m.id, true));
+        _kmRenderList(); _kmRefresh();
+    });
+    document.getElementById('btn-kashimap-select-none').addEventListener('click', () => {
+        _kmSelected.clear();
+        _kmRenderList(); _kmRefresh();
+    });
+    // 島リスト
+    document.getElementById('chk-kashimap-stripe-only').addEventListener('change', ev => { _kmStripeOnly = ev.target.checked; _kmRenderIslandList(); });
+    document.getElementById('btn-kashimap-island-all').addEventListener('click', () => {
+        _kmIslandRows.filter(r => !_kmStripeOnly || r.stripe).forEach(r => _kmBlink.add(r.key));
+        _kmRenderIslandList(); _kmUpdateBlink();
+    });
+    document.getElementById('btn-kashimap-island-none').addEventListener('click', () => { _kmBlink.clear(); _kmRenderIslandList(); _kmUpdateBlink(); });
+    // コントロールメニュー(辻メッシュと同じ開閉)
+    document.getElementById('kashimap-ctrl-header').addEventListener('click', () => {
+        const body = document.getElementById('kashimap-ctrl-body');
+        const open = body.classList.toggle('hidden') === false;
+        document.getElementById('kashimap-ctrl-arrow').textContent = open ? '▲' : '▼';
+        document.getElementById('kashimap-ctrl').classList.toggle('open', open);
+    });
+    // 範囲・可視タイル・樹冠あり・山頂マーカー・全展望マーカー: メニュー側とコントロールの両方に置き、どちらを操作しても連動(第152)
+    document.querySelectorAll('input[name="kashimap-range"], input[name="kashimap-range-menu"]').forEach(el => el.addEventListener('change', () => {
+        if (!el.checked) return;
+        _kmRange = +el.value; _kmSyncUi(); if (_kmActive) { _kmRenderList(); _kmRefresh(); }
+    }));
+    for (const id of ['chk-kashimap-tiles', 'chk-kashimap-menu-tiles']) document.getElementById(id).addEventListener('change', ev => { _kmTiles = ev.target.checked; _kmSyncUi(); _kmApplyLayerVisibility(); });
+    for (const id of ['chk-kashimap-canopy', 'chk-kashimap-menu-canopy']) document.getElementById(id).addEventListener('change', ev => { _kmCanopy = ev.target.checked; _kmSyncUi(); if (_kmActive) { _kmRenderList(); _kmRefresh(); } });
+    for (const id of ['chk-kashimap-building', 'chk-kashimap-menu-building']) document.getElementById(id).addEventListener('change', ev => { _kmBuilding = ev.target.checked; _kmSyncUi(); if (_kmActive) { _kmRenderList(); _kmRefresh(); } });
+    for (const id of ['chk-kashimap-summit', 'chk-kashimap-menu-summit']) document.getElementById(id).addEventListener('change', ev => { _kmSummitMk = ev.target.checked; _kmSyncUi(); _kmUpdateMarkers(); });
+    for (const id of ['chk-kashimap-zen', 'chk-kashimap-menu-zen']) document.getElementById(id).addEventListener('change', ev => { _kmZenMk = ev.target.checked; _kmSyncUi(); _kmUpdateZenMarkers(); });
+    _kmSyncUi();
+    document.getElementById('btn-kashimap-export').addEventListener('click', () => _kmExportAssets());
+    document.getElementById('btn-kashimap-import').addEventListener('click', () => document.getElementById('input-kashimap-import').click());
+    document.getElementById('input-kashimap-import').addEventListener('change', async (ev) => {
+        const files = Array.from(ev.target.files || []); ev.target.value = '';
+        const msgs = [];
+        for (const f of files) {
+            try { const done = await _kmImportText(await f.text()); msgs.push(...done.map(d => `${d.name} ${d.range}km(樹冠${d.kind === 'canopy' ? 'あり' : 'なし'}・島${d.islands.toLocaleString()}・${_kmMB(d.size)})`)); }
+            catch (e) { msgs.push(`${f.name}: 読み込めません(${e.message})`); }
+        }
+        if (msgs.length) alert('File読込:\n' + msgs.join('\n'));
+    });
+    document.getElementById('btn-kashimap-tiles-clear').addEventListener('click', async () => {
+        if (!confirm('端末に貯めた標高タイルを全て削除しますか？(可視タイル=資産は残ります)')) return;
+        await _kmTilesClear(); _kmRenderStoreList();
+    });
+    // 可視タイル(資産)の一覧: 一括選択(全てチェック/全て外す)・⬇DL・削除・全て登録(目的点名の変更の反映)
+    document.getElementById('btn-kashimap-store-selall').addEventListener('click', () => {
+        const all = _kmStoreChecked.size > 0 && _kmStoreChecked.size === _kmDeviceIndex.size;
+        _kmStoreChecked.clear(); if (!all) for (const k of _kmDeviceIndex.keys()) _kmStoreChecked.add(k);
+        document.querySelectorAll('#kashimap-store-table .kashimap-store-check').forEach(c => { c.checked = _kmStoreChecked.has(c.closest('tr').dataset.key); });
+        _kmStoreUpdateButtons();
+    });
+    document.getElementById('btn-kashimap-store-dl').addEventListener('click', () => _kmStoreExportChecked().catch(e => console.warn(e)));
+    document.getElementById('btn-kashimap-store-del').addEventListener('click', () => _kmStoreDeleteChecked().catch(e => console.warn(e)));
+    document.getElementById('btn-kashimap-store-apply').addEventListener('click', async () => {
+        if (!_kmStoreDirty.size) { alert('目的点名の変更はありません'); return; }
+        const items = Array.from(_kmStoreDirty.entries()); let n = 0;
+        for (const [k, name] of items) { try { if (await _kmStoreRename(k, name.trim())) n++; _kmStoreDirty.delete(k); } catch (e) { console.warn('可視マップ: 目的点名の登録', e); } }
+        await _kmLoadDeviceIndex();
+        if (_kmActive) { _kmRenderList(); _kmRefresh(); }
+        alert(`目的点名を${n}件登録しました`);
+    });
+    // その場計算(「:目的点」「:My目的点」ラジオ+「範囲を計算」。計算中は「計算を中止」。デッサン05・第156)
+    const cmpBtn = document.getElementById('btn-kashimap-compute');
+    if (cmpBtn) cmpBtn.addEventListener('click', () => {
+        const my = document.getElementById('radio-kashimap-mytgt'); const fn = (my && my.checked) ? _kmComputeMyTargets : _kmComputeTarget;
+        fn().catch(e => console.warn('可視マップ: 範囲を計算', e));
+    });
+    const finestEl = document.getElementById('chk-kashimap-finest');
+    if (finestEl) finestEl.addEventListener('change', () => {
+        if (finestEl.checked && !confirm('「:最高精細」は700kmの範囲をz13(1画素約15m)で計算します。\n標高タイル約31,000枚(取得に5分前後)・格子約20億画素・メモリ6GB以上を使い、計算に1〜3分、島の数と輪郭も数倍になります。\n16GB以上のPC向けで、ブラウザが落ちることがあります。オンにしますか？')) finestEl.checked = false;
+    });
+    // 起動時に端末の資産の一覧(可視マップ節)を出しておく
+    _kmLoadDeviceIndex().catch(() => {});
+    // 画面が裏に回ったら点滅を止め、戻ったら再開(P5)
+    document.addEventListener('visibilitychange', () => { if (document.hidden) _kmStopBlink(); else if (_kmBlink.size) _kmUpdateBlink(); });
+}
+
 function toggleTsujiMesh() {
     appState.isTsujiMeshActive = !appState.isTsujiMeshActive;
     const btn = document.getElementById('btn-tsujimesh');
@@ -11105,6 +12791,7 @@ function toggleTsujiMesh() {
     if (appState.isTsujiMeshActive) {
         if (appState.isTsujiSearchActive) toggleTsujiSearch();   // 辻検索とは同時表示不可
         if (appState.isSoraSearchActive) closeSoraSearchPanel();   // 宙検索結果とは同時表示不可
+        if (_kmActive) closeKashimap();                           // 可視マップとは同時表示不可(第148)
         btn.classList.add('active');
         pnl.classList.remove('hidden');
         startTsujiMeshSearch();
@@ -11237,6 +12924,7 @@ function _tmSyncAreaRadios() {
 }
 
 function syncBottomPanels() {
+    _smSyncSearchButtons();   // 宙の窓コントロールの「辻検索」「辻メッシュ」の押下状態(第158)
     const tdPnl = document.getElementById('tsujisearch-panel');
     // 辻検索パネルは、標高グラフ/天体儀が下にあるとき1段上へ押し上げる
     tdPnl.classList.toggle('with-elevation', appState.isTsujiSearchActive && appState.isElevationActive);
@@ -11258,13 +12946,20 @@ function syncBottomPanels() {
         ssPnl.classList.toggle('with-milkyway', appState.isSoraSearchActive && appState.isMilkyWayActive);
         ssPnl.classList.toggle('with-soramado', appState.isSoraSearchActive && appState.isSoramadoActive);
     }
+    // 可視マップの結果パネル(第148: 辻メッシュと同じ積み上げ規則。辻検索/辻メッシュ/宙検索とは排他)
+    const kmPnl = document.getElementById('kashimap-panel');
+    if (kmPnl) {
+        kmPnl.classList.toggle('with-elevation', _kmActive && appState.isElevationActive);
+        kmPnl.classList.toggle('with-milkyway', _kmActive && appState.isMilkyWayActive);
+        kmPnl.classList.toggle('with-soramado', _kmActive && appState.isSoramadoActive);
+    }
     // 宙断面パネル(天体儀と同じ規則: 結果パネル併用時は1/3、最大化100%⇄併用66.67%)
     const sdPnl = document.getElementById('soradanmen-panel');
     if (sdPnl) {
-        const anyResult = appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive;
+        const anyResult = appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive || _kmActive;
         sdPnl.classList.toggle('with-tsuji', appState.isSoradanmenActive && anyResult);
         const sdMax = sdPnl.classList.contains('maximized');
-        for (const [pnl, active] of [[tdPnl, appState.isTsujiSearchActive], [tmPnl, appState.isTsujiMeshActive], [ssPnl, appState.isSoraSearchActive]]) {
+        for (const [pnl, active] of [[tdPnl, appState.isTsujiSearchActive], [tmPnl, appState.isTsujiMeshActive], [ssPnl, appState.isSoraSearchActive], [kmPnl, _kmActive]]) {
             if (!pnl) continue;
             pnl.classList.toggle('with-soradanmen', active && appState.isSoradanmenActive);
             pnl.classList.toggle('with-soradanmen-max', active && appState.isSoradanmenActive && sdMax);
@@ -11273,25 +12968,29 @@ function syncBottomPanels() {
     }
     const smPnl = document.getElementById('soramado-panel');
     if (smPnl) {
-        smPnl.classList.toggle('with-tsuji', appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive);
+        smPnl.classList.toggle('with-tsuji', appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive || _kmActive);
         tdPnl.classList.toggle('with-soramado-max',
             appState.isTsujiSearchActive && appState.isSoramadoActive && smPnl.classList.contains('maximized'));
         if (tmPnl) tmPnl.classList.toggle('with-soramado-max',
             appState.isTsujiMeshActive && appState.isSoramadoActive && smPnl.classList.contains('maximized'));
         if (ssPnl) ssPnl.classList.toggle('with-soramado-max',
             appState.isSoraSearchActive && appState.isSoramadoActive && smPnl.classList.contains('maximized'));
+        if (kmPnl) kmPnl.classList.toggle('with-soramado-max',
+            _kmActive && appState.isSoramadoActive && smPnl.classList.contains('maximized'));
         resizeSoramado();   // 高さ変更に合わせてプレビューを再描画
     }
     // 天体儀領域(宙の窓と同じ規則: 通常2/3⇄辻検索と併用1/3、最大化100%⇄辻検索と併用66.67%)
     const mwPnl = document.getElementById('milkyway-panel');
     if (mwPnl) {
-        mwPnl.classList.toggle('with-tsuji', appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive);
+        mwPnl.classList.toggle('with-tsuji', appState.isTsujiSearchActive || appState.isTsujiMeshActive || appState.isSoraSearchActive || _kmActive);
         tdPnl.classList.toggle('with-milkyway-max',
             appState.isTsujiSearchActive && appState.isMilkyWayActive && mwPnl.classList.contains('maximized'));
         if (tmPnl) tmPnl.classList.toggle('with-milkyway-max',
             appState.isTsujiMeshActive && appState.isMilkyWayActive && mwPnl.classList.contains('maximized'));
         if (ssPnl) ssPnl.classList.toggle('with-milkyway-max',
             appState.isSoraSearchActive && appState.isMilkyWayActive && mwPnl.classList.contains('maximized'));
+        if (kmPnl) kmPnl.classList.toggle('with-milkyway-max',
+            _kmActive && appState.isMilkyWayActive && mwPnl.classList.contains('maximized'));
         resizeMilkyWayGlobe();   // 高さ変更に合わせて天体儀を再描画
     }
     // 下部パネルのトグルで隠れる領域が変わるので、観測点を可視領域の中央へ移動
@@ -11308,7 +13007,7 @@ function recenterPointInView(p, animate = true) {
     // パネルは画面下から積み上がる(各1/3)。他パネル排他＋辻検索は併用可(最大2/3)。
     // 実際に表示中の下部パネルの上端から、隠れている高さを実測する(プレビュー領域2/3・最大化にも対応)
     let coveredPx = 0;
-    for (const id of ['elevation-panel', 'milkyway-panel', 'soramado-panel', 'tsujisearch-panel', 'tsujimesh-panel', 'sorasearch-panel', 'soradanmen-panel']) {
+    for (const id of ['elevation-panel', 'milkyway-panel', 'soramado-panel', 'tsujisearch-panel', 'tsujimesh-panel', 'sorasearch-panel', 'soradanmen-panel', 'kashimap-panel']) {
         const el = document.getElementById(id);
         if (!el || el.classList.contains('hidden')) continue;
         coveredPx = Math.max(coveredPx, window.innerHeight - el.getBoundingClientRect().top);
@@ -11338,6 +13037,28 @@ function setupTableSort(table, rowData, columns, renderRowFn, extraRows, opts) {
     let sortColIdx = -1;
     let sortAsc = true;
 
+    // 行が多い時(島リストの数万行)は chunk 行ずつ描く: 最初の塊はその場で、残りは画面を止めずに続け、進みを onProgress(done, total) で知らせる(第157)。
+    // 並べ替え中に次の並べ替えが来たら古い描画は捨てる(世代)
+    let renderGen = 0;
+    const renderRows = (gen) => {
+        const chunk = (opts && opts.chunk) || Infinity;
+        const total = rowData.length;
+        const appendRange = (from, to) => { const frag = document.createDocumentFragment(); for (let i = from; i < to; i++) frag.appendChild(renderRowFn(rowData[i])); tbody.appendChild(frag); };
+        const finish = () => { if (extraRows) extraRows.forEach(r => tbody.appendChild(r)); if (opts && opts.onProgress) opts.onProgress(total, total); };
+        const first = Math.min(total, chunk);
+        appendRange(0, first);
+        if (first >= total) { finish(); return; }
+        if (opts && opts.onProgress) opts.onProgress(first, total);
+        let done = first;
+        const step = () => {
+            if (gen !== renderGen || !tbody.isConnected) return;   // 古い描画、または表ごと差し替えられた(島リストの作り直し)。続けると外れた表に行を足し、古い見出し/進捗を書いてしまう(第157のレビュー)
+            const to = Math.min(total, done + chunk);
+            appendRange(done, to); done = to;
+            if (done < total) { if (opts && opts.onProgress) opts.onProgress(done, total); setTimeout(step, 0); }
+            else finish();
+        };
+        setTimeout(step, 0);
+    };
     const apply = () => {
         ths.forEach((h, i) => {
             h.textContent = columns[i].label + (i === sortColIdx ? (sortAsc ? '▲' : '▼') : '');
@@ -11347,8 +13068,7 @@ function setupTableSort(table, rowData, columns, renderRowFn, extraRows, opts) {
             return sortAsc ? cmp : -cmp;
         });
         tbody.innerHTML = '';
-        rowData.forEach(d => tbody.appendChild(renderRowFn(d)));
-        if (extraRows) extraRows.forEach(r => tbody.appendChild(r));
+        renderRows(++renderGen);
         if (opts && opts.onSort) opts.onSort(sortColIdx, sortAsc);
     };
     ths.forEach((th, idx) => {
@@ -11424,7 +13144,7 @@ const tsujiPool = (() => {
  *  bodyMsg/共通パラメータと days を渡すと、365日単位でプールに投入し、
  *  完了したチャンクごとに onChunkDone() を呼びつつ全結果をマージして返す。 */
 async function runTsujiChunks({
-    bodyMsg, observerData, refractionEnabled,
+    bodyMsg, observerData, astroRefraction,
     targetAz, targetAlt, toleranceAz, toleranceAlt,
     centerMode, centerAz0, centerAlt0,
     searchStartMs, days, maxResults, onChunkDone
@@ -11435,7 +13155,7 @@ async function runTsujiChunks({
         const dayStart = c * TSUJI_CHUNK_DAYS;
         const dayEnd = Math.min(dayStart + TSUJI_CHUNK_DAYS, days);
         const p = tsujiPool.runTask({
-            body: bodyMsg, observerData, refractionEnabled,
+            body: bodyMsg, observerData, astroRefraction,
             targetAz, targetAlt, toleranceAz, toleranceAlt,
             centerMode: centerMode || 'point', centerAz0: centerAz0 || 0, centerAlt0: centerAlt0 || 0,
             searchStartMs, dayStart, dayEnd, maxResults
@@ -11487,7 +13207,7 @@ async function startTsujiSearch() {
         return;
     }
 
-    const refractionEnabled = appState.refractionEnabled;
+    const astroRefraction = appState.astroRefraction;   // 天体の見かけ高度の大気差(気差オプション)
     const visibleBodies = appState.bodies.filter(b => b.visible);
     const searchStart = new Date(appState.currentDate);
     searchStart.setHours(0, 0, 0, 0);
@@ -11516,7 +13236,7 @@ async function startTsujiSearch() {
             bodyMsg = { id: body.id, fixed: false };
         }
         return runTsujiChunks({
-            bodyMsg, observerData, refractionEnabled,
+            bodyMsg, observerData, astroRefraction,
             targetAz, targetAlt, toleranceAz, toleranceAlt,
             centerMode: appState.tsujiCenterMode, centerAz0: (baseAz + 360) % 360, centerAlt0: baseAlt,   // 検索中心オプション(線=基準点→オフセット点)
             searchStartMs, days: searchDays,
@@ -11568,7 +13288,7 @@ async function startTsujiSearch() {
         statusEl.textContent = '(標高判定中…)';
         const vis = await computePathVisibility(
             appState.start.lat, appState.start.lng, appState.startApiElev + appState.startHeight,
-            appState.end.lat, appState.end.lng, appState.endApiElev + appState.endHeight);
+            appState.end.lat, appState.end.lng, appState.endApiElev + appState.endHeight, appState.endApiElev);
         if (generation !== appState.tsujiSearchGeneration) return;
         elevStatus = vis.visible ? 'OK' : 'NG';
     }
@@ -11762,12 +13482,14 @@ async function startElevationFetch() {
     const steps = 2000;
     const intervalM = dist / steps;
     appState.elevationData.intervalM = intervalM; // グラフ表示用に保持
+    const path = SORA.greatCirclePath(s.lat, s.lng, e.lat, e.lng);   // 標本点も可視判定と同じ大円の上に(第157)
 
     for(let i=0; i<=steps; i++) {
         const r = i/steps;
+        const q = path.at(r);
         appState.elevationData.points.push({
-            lat: s.lat + (e.lat - s.lat)*r,
-            lng: s.lng + (e.lng - s.lng)*r,
+            lat: q.lat,
+            lng: q.lng,
             dist: (dist * r) / 1000, // km単位
             elev: null,
             fetched: false
@@ -11909,18 +13631,169 @@ function drawProfileGraph() {
 
 /** 除外範囲の実効値(m)。チェックボックスがオフの時は両側とも0(=一切無視しない) */
 function elevExcludeRadii() {
-    if (appState.elevExcludeEnabled === false) return { tgt: 0, obs: 0 };
-    return { tgt: Number(appState.elevExcludeRadius) || 0, obs: Number(appState.elevExcludeObsRadius) || 0 };
+    if (appState.elevExcludeEnabled === false) return { tgt: 0, obs: 0, band: 0 };
+    return { tgt: Number(appState.elevExcludeRadius) || 0, obs: Number(appState.elevExcludeObsRadius) || 0,
+             band: appState.elevSummitBandEnabled === false ? 0 : (Number(appState.elevSummitBandM) || 0) };   // 山頂部の帯(m)。0=使わない
+}
+
+// ---- 山頂部(帯)の除外(第152・デッサン05 Q24/Q25): 目的点の「山頂部」=目的点の標高から帯の高さ以内で目的点につながる画素(8近傍・探索半径3km)。
+//      別の山(山リスト data/mountains.json の山頂)の山頂を含む時は含まない高さまで縮める。判定では山頂部の画素の遮蔽を無視する
+//      (可視マップの道具 tools/kashimap/viewshed.js の --summit-mode region と同じ規則)。目的点ごとに1回計算して保持する ----
+const SB_SEARCH_M = SORA.VISIBILITY.SUMMIT_SEARCH_M;   // 山頂部を探す半径(値は sora-constants.js)
+const SB_UP_M = SORA.VISIBILITY.SUMMIT_UP_M;   // 目的点より100mを超えて高い地形が帯につながる時は「目的点は山頂ではない」=山頂部なし(谷の神社・山腹の地点で周りの山を透明にしない)
+const _sbCache = new Map();   // 'lat,lng,band' -> Promise<band|null>。band={x0,y0,w,h,bits,hT,dropUsed,px,farM,others}
+function _sbHas(band, gx, gy) {
+    const bx = gx - band.x0, by = gy - band.y0;
+    if (bx < 0 || by < 0 || bx >= band.w || by >= band.h) return false;
+    const i = by * band.w + bx;
+    return ((band.bits[i >> 3] >> (i & 7)) & 1) === 1;
+}
+/** 今の設定で目的点(lat,lng)の山頂部(生の結果。帯なしの時は {none:true, reason})。除外範囲オフ/山頂部オフ/帯0なら null。失敗時も null。
+ *  groundElev=目的点の標高(位置情報の目的点標高。構造物の高さは含めない)。DEMの目的点の画素より高い時はこちらを山頂部の基準にする(第153) */
+async function _visSummitBandRaw(lat, lng, groundElev) {
+    const bandM = elevExcludeRadii().band;
+    if (!bandM || !isFinite(lat) || !isFinite(lng)) return null;
+    const gElev = (groundElev !== null && groundElev !== undefined && isFinite(+groundElev)) ? +groundElev : null;
+    const key = `${(+lat).toFixed(6)},${(+lng).toFixed(6)},${bandM},${gElev === null ? '' : gElev.toFixed(1)}`;
+    if (!_sbCache.has(key)) {
+        if (_sbCache.size >= 32) _sbCache.delete(_sbCache.keys().next().value);   // My辻の標高フィルタは目的点ごとに1回(目的点が多くても持てる数)
+        const pr = _visSummitBand(lat, lng, bandM, SB_SEARCH_M, gElev).catch(e => { console.warn('山頂部の計算に失敗(帯なしで判定)', e); return null; })
+            .then(b => { if (!b) _sbCache.delete(key); return b; });   // 標高データが取れなかった時(圏外・障害)は覚えず、次の判定で取り直す
+        _sbCache.set(key, pr);
+    }
+    return _sbCache.get(key);
+}
+/** 判定に渡す山頂部(帯なしの時は null=従来どおり目的点側の除外半径だけ) */
+async function _visSummitBandFor(lat, lng, groundElev) {
+    const b = await _visSummitBandRaw(lat, lng, groundElev);
+    return (b && !b.none) ? b : null;
+}
+/** 山頂部の計算本体。DEMは標高グラフと同じチェーン(DEM5A→5B→5C→10B。テストの合成標高があればそれ)。
+ *  groundElev(目的点の標高)が目的点のDEM標高(3×3画素の最大)より高い時はgroundElevを山頂部の基準(hT)にする(第153・依頼者の報告):
+ *  初期値の富士山の目的点は火口の中心(座標は山頂の代表点・標高は剣ヶ峯の3776m)で、DEMは火口の底(約3540m)。
+ *  DEMだけを基準にすると山リストの剣ヶ峯(3776m)が「目的点より226m高い別の山」になり山頂部なし(=帯が効かない)になってしまう */
+async function _visSummitBand(lat, lng, bandM, searchM, groundElev) {
+    const scale15 = Math.pow(2, 15), R128 = 128 / Math.PI;
+    const gx0 = Math.floor(128 * (lng / 180 + 1) * scale15);
+    const gy0 = Math.floor((128 - R128 * Math.atanh(Math.sin(lat * Math.PI / 180))) * scale15);
+    const mpp = SORA.metersPerPixel(lat, 15);
+    const rPx = Math.ceil(searchM / mpp);
+    const w = 2 * rPx + 1, h = w, x0 = gx0 - rPx, y0 = gy0 - rPx;
+    let elevAtPix15;
+    if (typeof window._tmSyntheticElev === 'function') {
+        elevAtPix15 = _syntheticElevAtPix15;
+    } else {
+        const keys15 = new Set();
+        for (let ty = y0 >> 8; ty <= (y0 + h - 1) >> 8; ty++) for (let tx = x0 >> 8; tx <= (x0 + w - 1) >> 8; tx++) keys15.add(tx * 32768 + ty);
+        const z15Sources = GSI_DEM_SOURCES.filter(d => d.zoom === 15 && !d.global);
+        const dem14 = GSI_DEM_SOURCES.find(d => d.zoom === TSUJIMESH_ZOOM);
+        const maps15 = z15Sources.map(() => new Map()), map14 = new Map(), mapT = new Map();
+        // 同時8本まで(辻メッシュの先取りと同じ。タイルの共有キャッシュに当たる分は取りに行かない)
+        const fetchAll = async (keys, dem, map) => { let qi = 0; const loop = async () => { while (qi < keys.length) { const key = keys[qi++]; const tx = Math.floor(key / 32768), ty = key % 32768; let img = null; try { img = await _getTileImageData(_makeTileUrl(dem, tx, ty)); } catch (_) {} map.set(key, img); } }; await Promise.all(Array.from({ length: 8 }, loop)); };
+        let pend = [...keys15];
+        for (let si = 0; si < z15Sources.length && pend.length; si++) {
+            await fetchAll(pend, z15Sources[si], maps15[si]);
+            pend = pend.filter(key => !maps15[si].get(key));
+        }
+        await fetchAll([...new Set([...keys15].map(key => { const tx = Math.floor(key / 32768), ty = key % 32768; return (tx >> 1) * 32768 + (ty >> 1); }))], dem14, map14);
+        elevAtPix15 = _makeElevAtPix15(maps15, map14, mapT);
+    }
+    const elev = new Float32Array(w * h).fill(NaN);
+    const r2 = (searchM / mpp) * (searchM / mpp);
+    const yieldUI = () => new Promise(r => setTimeout(r, 0));   // 数百msの計算を細切れにして描画と進捗の更新に制御を返す(第152の検品の指摘)
+    for (let by = 0; by < h; by++) { const dy = by - rPx; const half = Math.floor(Math.sqrt(Math.max(0, r2 - dy * dy)));
+        for (let bx = Math.max(0, rPx - half); bx <= Math.min(w - 1, rPx + half); bx++) {
+            const e = elevAtPix15(x0 + bx, y0 + by);
+            if (e !== null && e !== undefined) elev[by * w + bx] = e;
+        }
+        if ((by & 255) === 255) await yieldUI();
+    }
+    // 目的点の標高=3×3画素の最大(道具と同じ)。データが無ければ山頂部なし
+    let hDem = -Infinity;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const e = elevAtPix15(gx0 + dx, gy0 + dy); if (e !== null && e !== undefined && e > hDem) hDem = e; }
+    if (hDem === -Infinity) return null;   // hDemはDEMの値そのまま(Float32の格子ではなく元の値から。丸めると目的点の画素自身が帯から外れうる)
+    // 基準の標高hT=DEMと目的点の標高の高い方。帯はhT−帯の高さより高くて目的点につながる画素(目的点の画素自身は帯の高さに関わらず含む)
+    const hT = (groundElev !== null && groundElev !== undefined && isFinite(groundElev) && groundElev > hDem) ? groundElev : hDem;
+    // 別の山(山リスト)の山頂。目的点自身(60m以内の山頂)と同じ山の別峰(索引番号の親番号が同じ)は除く
+    let others = [];
+    try {
+        const list = await _kmLoadData();
+        const inBox = list.filter(m => { const bx = Math.floor(128 * (m.lon / 180 + 1) * scale15) - x0, by = Math.floor((128 - R128 * Math.atanh(Math.sin(m.lat * Math.PI / 180))) * scale15) - y0; return bx >= 0 && by >= 0 && bx < w && by < h && Math.hypot(bx - rPx, by - rPx) * mpp <= searchM; })
+            .map(m => ({ name: m.name, id: String(m.id), elev: m.elev, bx: Math.floor(128 * (m.lon / 180 + 1) * scale15) - x0, by: Math.floor((128 - R128 * Math.atanh(Math.sin(m.lat * Math.PI / 180))) * scale15) - y0, d: _geoDistM(lat, lng, m.lat, m.lon) }));
+        // 目的点自身の山=60m以内の山頂、または500m以内で山頂の標高が目的点の標高+100m以内(火口の縁や山頂部の中に置いた目的点)。同じ索引番号の親番号の峰も自身
+        const self = inBox.filter(m => m.d <= 60 || (m.d <= 500 && (m.elev === null || m.elev === undefined || m.elev - hT <= 100))).sort((a, b) => a.d - b.d)[0];
+        const selfBase = self ? self.id.split('-')[0] : null;
+        others = inBox.filter(m => !(self && m.id === self.id) && !(selfBase && m.id.split('-')[0] === selfBase));
+    } catch (_) { /* 山リストが取れない時は別の山の規則なし */ }
+    // 帯(目的点の標高−dropより高くて目的点につながる画素)。作業用の配列は使い回す(二分探索で何度も呼ぶ)
+    const keepBuf = new Uint8Array(w * h), stackBuf = new Int32Array(w * h);
+    let bandMax = -Infinity;   // 直近の帯の中の最高標高(目的点より高い地形が続いていないかの検査用)
+    const bandOf = (drop) => {
+        const keep = keepBuf; keep.fill(0); let sp = 0; stackBuf[sp++] = rPx * w + rPx; keep[rPx * w + rPx] = 1; bandMax = hT;
+        const thr = hT - drop;
+        while (sp) {
+            const i = stackBuf[--sp]; const x = i % w, y = (i - x) / w;
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+                const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                const j = ny * w + nx; const e = elev[j];
+                if (!keep[j] && e >= thr) { keep[j] = 1; stackBuf[sp++] = j; if (e > bandMax) bandMax = e; }
+            }
+        }
+        return keep;
+    };
+    const hasOther = (keep) => others.find(o => keep[o.by * w + o.bx] === 1) || null;
+    let drop = bandM, keep = bandOf(drop); const blocker = hasOther(keep);
+    if (blocker) {
+        // 帯0(目的点の標高以上でつながる画素)でも別の山の山頂を含む=目的点がその山の山腹・肩にある(山小屋・駅・展望台など)。
+        // その時は山頂部なし(帯なし=従来の目的点側の除外だけ)。上の山体を透明にしてしまうのを防ぐ(第152の検品の指摘)
+        await yieldUI();
+        if (hasOther(bandOf(0))) return { none: true, reason: `山頂部なし(別の山「${blocker.name}」が目的点より高くつながっている=目的点はその山の山腹)`, hT, hDem, lat, lng };
+        let lo = 0, hi = drop;
+        while (hi - lo >= 1) { const mid = (lo + hi) / 2; await yieldUI(); if (hasOther(bandOf(mid))) hi = mid; else lo = mid; }   // 1mの精度で止める(帯300mなら最大9回)
+        drop = Math.floor(lo); await yieldUI(); keep = bandOf(drop);
+        if (hasOther(keep)) return { none: true, reason: `山頂部なし(別の山「${blocker.name}」を含まない帯が取れない)`, hT, hDem, lat, lng };
+    }
+    // 目的点が山頂でない(帯の中に目的点より SB_UP_M を超えて高い地形が続く=谷・山腹・裾の地点)時も山頂部なし。周りの山を透明にしない
+    if (bandMax > hT + SB_UP_M) return { none: true, reason: `山頂部なし(目的点より${Math.round(bandMax - hT)}m高い地形がつながっている=目的点は山頂ではない)`, hT, hDem, lat, lng };
+    const bits = new Uint8Array(Math.ceil(w * h / 8)); let px = 0, far2 = 0;
+    for (let i = 0; i < w * h; i++) { if (!keep[i]) continue; bits[i >> 3] |= 1 << (i & 7); px++; const x = i % w, y = (i - x) / w; const d2 = (x - rPx) * (x - rPx) + (y - rPx) * (y - rPx); if (d2 > far2) far2 = d2; }
+    const far = Math.sqrt(far2) * mpp;
+    return { x0, y0, w, h, bits, hT, hDem, dropUsed: drop, dropRequested: bandM, px, farM: Math.round(far), others: others.map(o => o.name), shrunkBy: blocker ? blocker.name : null, lat, lng };
+}
+// 山頂部のプレビュー(基本オプション「:プレビュー」。目的点の山頂部の範囲を地図に描く。目的点が変わると描き直す)
+let _sbPreviewOn = false, _sbPreviewKey = null, _sbPreviewSeq = 0;
+async function _sbUpdatePreview(force) {
+    if (!glMap || !glMap.getSource || !glMap.getSource('summit-band')) return;
+    const end = appState.end;
+    const bandM = elevExcludeRadii().band;
+    const gElev = isFinite(+appState.endApiElev) ? +appState.endApiElev : null;   // 目的点の標高(構造物の高さは含めない)。DEMより高ければ山頂部の基準(第153)
+    const key = (_sbPreviewOn && end && bandM) ? `${(+end.lat).toFixed(6)},${(+end.lng).toFixed(6)},${bandM},${gElev === null ? '' : gElev.toFixed(1)}` : null;
+    if (!force && key === _sbPreviewKey) return;
+    _sbPreviewKey = key;
+    const seq = ++_sbPreviewSeq;
+    const infoEl = document.getElementById('baseopt-summit-preview-info');
+    if (!key) { _glSetSourceData('summit-band', []); if (infoEl) infoEl.textContent = ''; return; }
+    const band = await _visSummitBandRaw(end.lat, end.lng, gElev);
+    if (seq !== _sbPreviewSeq) return;
+    if (!band || band.none) { _glSetSourceData('summit-band', []); const el0 = document.getElementById('baseopt-summit-preview-info'); if (el0) el0.textContent = band && band.none ? band.reason : ''; return; }
+    const WORLD = 256 * Math.pow(2, 15);
+    const toLL = (x, y) => [(band.x0 + x) / WORLD * 360 - 180, Math.atan(Math.sinh(Math.PI * (1 - 2 * (band.y0 + y) / WORLD))) * 180 / Math.PI];
+    const rings = _kmTraceRings((x, y) => _sbHas(band, band.x0 + x, band.y0 + y) ? 1 : 0, band.w, band.h);
+    rings.sort((a, b) => _kmRingArea(b) - _kmRingArea(a));
+    const coords = rings.map(r => { const c = r.map(([x, y]) => toLL(x, y)); c.push(c[0]); return c; });
+    const label = `山頂部: 帯${band.dropUsed}m${band.shrunkBy ? `(別の山「${band.shrunkBy}」を含まないよう縮小)` : ''} 広がり${band.farM}m 画素${band.px.toLocaleString()} 基準の標高${band.hT.toFixed(1)}m${band.hT > band.hDem + 0.05 ? `(目的点の標高。DEMは${band.hDem.toFixed(1)}m)` : '(DEM)'}`;
+    _glSetSourceData('summit-band', coords.length ? [{ type: 'Feature', properties: { label }, geometry: { type: 'Polygon', coordinates: coords } }] : []);
+    const el = document.getElementById('baseopt-summit-preview-info'); if (el) el.textContent = label;
 }
 
 /** 可視判定の実効地球の逆数 1/(2·Reff) (第116ラウンド)。視高度計算(calculateApparentAltitude)と
  *  同じ基盤: WGS84の局所半径(両端の緯度の平均)を、大気差の係数kで1/(1-k)倍した実効半径。
- *  大気差オフの時はk=0(幾何学的な地球の丸みのみ) */
-function _visInv2Reff(latA, latB) {
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
-    const Reff = ((getLocalEarthRadius(latA) + getLocalEarthRadius(latB)) / 2) / (1 - k);
-    return 1 / (2 * Reff);
-}
+ *  k=設定に表示されている値(大気差補正オン=気象条件から算出・オフ=0=丸みだけ。第158)。可視マップ・静的資産と同じ基準 */
+function _visInv2Reff(latA, latB) { return SORA.inv2ReffFor(latA, latB, refractionKInUse()); }
+/** 基準方位角/視高度の自動算出の「位置の鍵」。観測点・目的点と、いま使う気差係数K(視高度はKで変わる)。鍵が同じ間は手動入力を守る(第157のレビュー: Kを切り替えても再計算されなかった) */
+function _basePosKey() {
+    return `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}|K${refractionKInUse().toFixed(6)}`;
+}   // k=設定に表示されている値(オフ=0)。式は sora-constants.js
 
 /** 統一可視判定のコア(標高グラフ・辻検索/My辻検索・辻メッシュ検索の標高フィルタ共通)。
  *  観測点(sLat,sLng, 標高+高さ=startTotal)→目的点(endLat,endLng, endTotal)への見通しを、
@@ -11935,31 +13808,36 @@ function _visInv2Reff(latA, latB) {
  *  メルカトルYは64サンプル毎に厳密再計算して区間内は線形補間する(誤差はサブピクセル)。
  *  inv2ReffOptは辞メッシュのワーカー並列判定とのビット一致用(省略時は_visInv2Reffで算出)。
  *  返り値のlineElevAtBlockingは遮蔽点での「見通し光線の海抜高さ」(沈み込みを戻した値) */
-function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, obsExclM, elevAtPix15, inv2ReffOpt) {
+function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, obsExclM, elevAtPix15, inv2ReffOpt, bandOpt) {
     const scale15 = Math.pow(2, 15);
     const R128 = 128 / Math.PI;
     const gpy15At = (lat) => (128 - R128 * Math.atanh(Math.sin(lat * Math.PI / 180))) * scale15;
+    const gpx15At = (lng) => 128 * (lng / 180 + 1) * scale15;
     const distM = _geoDistM(sLat, sLng, endLat, endLng);
-    const stepM = 40075016.686 * Math.cos(sLat * Math.PI / 180) / (scale15 * 256) / 2;   // z15の半画素(≒2m)
+    const stepM = SORA.metersPerPixel(sLat, 15) / 2;   // z15の半画素(≒2m)
     const steps = Math.max(2, Math.ceil(distM / stepM));
-    const sx15 = 128 * (sLng / 180 + 1) * scale15;
-    const dx = (128 * (endLng / 180 + 1) * scale15 - sx15) / steps;
-    const dLat = endLat - sLat;
+    // 経路は観測点と目的点を結ぶ大円(視線が通る鉛直面。第157: 可視マップと同じ)。区間(SEG標本=約128m)の両端を球面補間で求め、中は画素座標の直線で近似する
+    const path = SORA.greatCirclePath(sLat, sLng, endLat, endLng);
+    const seaAsZero = _pointInsideJapan(sLat, sLng) && _pointInsideJapan(endLat, endLng);   // 日本域: 標高タイルの無い所=海→海面0mとして遮る(第157: 可視マップと同じ)
     const inv2R = (inv2ReffOpt !== undefined) ? inv2ReffOpt : _visInv2Reff(sLat, endLat);
     const endDrop = distM * distM * inv2R;
-    const SEG = 64;
+    const SEG = SORA.VISIBILITY.PATH_CHUNK;
     for (let j0 = 1; j0 < steps; j0 += SEG) {
         const j1 = Math.min(j0 + SEG - 1, steps - 1);
-        const gyA = gpy15At(sLat + dLat * (j0 / steps));
-        const dgy = (j1 > j0) ? (gpy15At(sLat + dLat * (j1 / steps)) - gyA) / (j1 - j0) : 0;
+        const pA = path.at(j0 / steps), pB = (j1 > j0) ? path.at(j1 / steps) : pA;
+        const gxA = gpx15At(pA.lng), gyA = gpy15At(pA.lat);
+        const dgx = (j1 > j0) ? (gpx15At(pB.lng) - gxA) / (j1 - j0) : 0;
+        const dgy = (j1 > j0) ? (gpy15At(pB.lat) - gyA) / (j1 - j0) : 0;
         for (let j = j0; j <= j1; j++) {
-            const e = elevAtPix15((sx15 + dx * j) | 0, (gyA + dgy * (j - j0)) | 0);
-            if (e === null || e === undefined) continue;   // データ無し点は判定対象外
+            const gx = (gxA + dgx * (j - j0)) | 0, gy = (gyA + dgy * (j - j0)) | 0;
+            let e = elevAtPix15(gx, gy);
+            if (e === null || e === undefined) { if (!seaAsZero) continue; e = 0; }   // データ無し: 日本域なら海面0m・それ以外は判定対象外
             const r = j / steps;
             const d = distM * r;
             const lineElev = startTotal + (endTotal - endDrop - startTotal) * r;
             if (e - d * d * inv2R > lineElev) {
                 if (distM * (1 - r) <= exclM) continue;   // 除外範囲(目的点側)のNGは無視
+                if (bandOpt && _sbHas(bandOpt, gx, gy)) continue;   // 山頂部(目的点につながる帯)の地形は遮蔽に数えない(第152)
                 if (d <= obsExclM) continue;              // 除外範囲(観測点側)のNGは無視
                 return { visible: false, blockingDist: d / 1000, blockingElev: e, lineElevAtBlocking: lineElev + d * d * inv2R };
             }
@@ -11974,7 +13852,7 @@ function _visJudgeCore(sLat, sLng, startTotal, endLat, endLng, endTotal, exclM, 
  *  経路上のタイルだけを取得し(_getTileImageDataの共有キャッシュを再利用)、5B/5Cは前段で
  *  取得できなかったタイルのみ取得する。startTotalElev/endTotalElev は (API標高+高さ)[m]。
  *  返り値: { visible, blockingDist?(観測点からkm), blockingElev?, lineElevAtBlocking? } */
-async function computePathVisibility(startLat, startLng, startTotalElev, endLat, endLng, endTotalElev) {
+async function computePathVisibility(startLat, startLng, startTotalElev, endLat, endLng, endTotalElev, endGroundElev) {
     const { tgt: exclM, obs: obsExclM } = elevExcludeRadii();
     const synthetic = (typeof window._tmSyntheticElev === 'function');
     const scale15 = Math.pow(2, 15);
@@ -11984,21 +13862,22 @@ async function computePathVisibility(startLat, startLng, startTotalElev, endLat,
     if (synthetic) {
         elevAtPix15 = _syntheticElevAtPix15;   // テスト用合成(共通)
     } else {
-        // 経路が通るタイル座標を判定と同じ歩きで列挙し、必要なタイルだけ取得する
+        // 経路が通るタイル座標を判定と同じ歩き(大円)で列挙し、必要なタイルだけ取得する
         const distM = _geoDistM(startLat, startLng, endLat, endLng);
-        const stepM = 40075016.686 * Math.cos(startLat * Math.PI / 180) / (scale15 * 256) / 2;
+        const stepM = SORA.metersPerPixel(startLat, 15) / 2;
         const steps = Math.max(2, Math.ceil(distM / stepM));
-        const sx15 = 128 * (startLng / 180 + 1) * scale15;
-        const dx = (128 * (endLng / 180 + 1) * scale15 - sx15) / steps;
-        const dLat = endLat - startLat;
+        const gpx15At = (lng) => 128 * (lng / 180 + 1) * scale15;
+        const path = SORA.greatCirclePath(startLat, startLng, endLat, endLng);
         const keys15 = new Set();
-        const SEG = 64;
+        const SEG = SORA.VISIBILITY.PATH_CHUNK;
         for (let j0 = 0; j0 <= steps; j0 += SEG) {
             const j1 = Math.min(j0 + SEG - 1, steps);
-            const gyA = gpy15At(startLat + dLat * (j0 / steps));
-            const dgy = (j1 > j0) ? (gpy15At(startLat + dLat * (j1 / steps)) - gyA) / (j1 - j0) : 0;
+            const pA = path.at(j0 / steps), pB = (j1 > j0) ? path.at(j1 / steps) : pA;
+            const gxA = gpx15At(pA.lng), gyA = gpy15At(pA.lat);
+            const dgx = (j1 > j0) ? (gpx15At(pB.lng) - gxA) / (j1 - j0) : 0;
+            const dgy = (j1 > j0) ? (gpy15At(pB.lat) - gyA) / (j1 - j0) : 0;
             for (let j = j0; j <= j1; j++) {
-                const gx = (sx15 + dx * j) | 0, gy = (gyA + dgy * (j - j0)) | 0;
+                const gx = (gxA + dgx * (j - j0)) | 0, gy = (gyA + dgy * (j - j0)) | 0;
                 keys15.add((gx >> 8) * 32768 + (gy >> 8));
             }
         }
@@ -12044,7 +13923,8 @@ async function computePathVisibility(startLat, startLng, startTotalElev, endLat,
         }
         elevAtPix15 = _makeElevAtPix15(maps15, map14, mapT);
     }
-    return _visJudgeCore(startLat, startLng, startTotalElev, endLat, endLng, endTotalElev, exclM, obsExclM, elevAtPix15);
+    const band = await _visSummitBandFor(endLat, endLng, endGroundElev);   // 山頂部(第152)。設定オフ/失敗時はnull=従来どおり。endGroundElev=目的点の標高(第153)
+    return _visJudgeCore(startLat, startLng, startTotalElev, endLat, endLng, endTotalElev, exclM, obsExclM, elevAtPix15, undefined, band);
 }
 
 /** テスト用合成標高のz15画素参照(リファクタリングB第2弾③: 辻メッシュ/統一可視判定の
@@ -12134,9 +14014,11 @@ function _makeRiseSetForDay(observer) {
 async function showVisibilityResult(generation) {
     const r = await computePathVisibility(
         appState.start.lat, appState.start.lng, appState.startApiElev + appState.startHeight,
-        appState.end.lat, appState.end.lng, appState.endApiElev + appState.endHeight);
+        appState.end.lat, appState.end.lng, appState.endApiElev + appState.endHeight, appState.endApiElev);
     if (generation !== undefined && generation !== _elevFetchGeneration) return;
-    const note = '\n\n※ 地球の丸みと大気差(:大気差設定・気象値に連動)を考慮した判定です';
+    // 海の扱いは判定と同じ条件で書く(日本域=両端が地理院の標高タイルの範囲にある時だけ海面0m。第157のレビュー)
+    const seaRule = (_pointInsideJapan(appState.start.lat, appState.start.lng) && _pointInsideJapan(appState.end.lat, appState.end.lng)) ? '海は海面0mとして遮る判定です' : '標高データの無い所は判定しません(日本域の外)';
+    const note = `\n\n※ 地球の丸み(大円に沿う経路)と大気差(気差係数K=${refractionKInUse().toFixed(3)}。設定メニューの値)を考慮し、${seaRule}`;
     if (r.visible) {
         alert('可視判定: OK\n観測点から目的点が見通せます' + note);
     } else {
@@ -12158,12 +14040,13 @@ function initVisitorCounter() {
     fetchVisitorData(action, todayStr);
 }
 
-function fetchVisitorData(action, todayStr) {
-    fetch(`${GAS_API_URL}?action=${action}`).then(r=>r.json()).then(d => {
+function fetchVisitorData(action, todayStr, attempt = 1) {
+    fetch(`${GAS_API_URL}?action=${encodeURIComponent(action)}`).then(r=>r.json()).then(d => {
         if (d.error === 'lock_busy') {
-            // ロック解除待ち表示 → 3秒後リトライ
+            // ロック解除待ち表示 → 間を空けて試し直す(合計3回まで=再試行2回。混雑時に全ての画面が叩き続けないように。第159のレビュー)
             setCounterDisplay('- -', '- -', '- -', '- -');
-            setTimeout(() => fetchVisitorData(action, todayStr), 2700);
+            if (attempt < 3) setTimeout(() => fetchVisitorData(action, todayStr, attempt + 1), 2700 * attempt);
+            else setCounterDisplay('- - -', '- - -', '- - -', '- - -');
             return;
         }
         if (d.error === 'no_sheet') {
@@ -12269,7 +14152,9 @@ function togglePanel() {
 }
 
 function toggleSection(id) {
-    document.getElementById(id).classList.toggle('closed');
+    const el = document.getElementById(id);
+    el.classList.toggle('closed');
+    if (id === 'sec-backup' && !el.classList.contains('closed') && typeof _mtRefreshBackupRows === 'function') _mtRefreshBackupRows();   // バックアップを開いた時に地理タイル/標高タイルの件数を数え直す(第158)
 }
 
 function toggleHelp() {
@@ -12310,7 +14195,7 @@ function loadGisScript() {
 async function googleLogin() {
     const clientId = getGoogleClientId();
     if (!clientId) {
-        alert('GoogleログインのクライアントIDが未設定です。\nGoogle CloudコンソールでOAuthクライアントIDを作成し、script.js冒頭のGOOGLE_CONFIGに設定してください。\n(手順: docs/order.md 2026-07-15の回答を参照)');
+        alert('Google連携(ログイン・ドライブ・Myセット)は現在ご利用いただけません。\n再開までお待ちください。\n(開発者向け: script.js 冒頭の GOOGLE_CONFIG.clientId が空です。非常停止の案内文=デッサン34の7c)');
         return false;
     }
     try { await loadGisScript(); } catch (e) { alert(e.message); return false; }
@@ -12373,7 +14258,7 @@ async function driveApiFetch(path, options = {}) {
 /** Googleログアウト (トークンの取り消し) */
 function googleLogout() {
     if (googleToken && window.google && window.google.accounts && window.google.accounts.oauth2 && google.accounts.oauth2.revoke) {
-        try { google.accounts.oauth2.revoke(googleToken.accessToken, () => {}); } catch (e) { console.error(e); }
+        try { google.accounts.oauth2.revoke(googleToken.accessToken, (r) => { if (!r || !r.successful) console.warn('Googleのトークンの取り消しに失敗しました(有効期限で自然に切れます)', r && r.error); }); } catch (e) { console.error(e); }
     }
     googleToken = null;
     googleSyncState = 'none';
@@ -12382,7 +14267,7 @@ function googleLogout() {
 
 /** ファイルのメタデータ取得 (見つからない場合はnull) */
 async function driveGetMeta(fileId) {
-    try { return await driveApiFetch(`files/${fileId}?fields=id,name,trashed,modifiedTime,size,parents`); }
+    try { return await driveApiFetch(`files/${encodeURIComponent(fileId)}?fields=id,name,trashed,modifiedTime,size,parents`); }
     catch (e) { return null; }
 }
 
@@ -12405,7 +14290,7 @@ async function driveUploadJson(fileId, name, parents, contentString, appProps) {
     const boundary = 'soranotsuji_multipart_boundary';
     const meta = fileId ? {} : { name, parents, appProperties: appProps || {}, mimeType: 'application/json' };
     const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${contentString}\r\n--${boundary}--`;
-    const url = 'https://www.googleapis.com/upload/drive/v3/files' + (fileId ? '/' + fileId : '') + '?uploadType=multipart&fields=id,size,modifiedTime';
+    const url = 'https://www.googleapis.com/upload/drive/v3/files' + (fileId ? '/' + encodeURIComponent(fileId) : '') + '?uploadType=multipart&fields=id,size,modifiedTime';
     const resp = await fetch(url, {
         method: fileId ? 'PATCH' : 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'multipart/related; boundary=' + boundary },
@@ -12459,8 +14344,11 @@ function collectLocalStorageAll() {
  *  Drive読込とバックアップインポートの両方が使う共通実装(第39ラウンド) */
 function _writeSoranotsujiKeys(obj) {
     let n = 0;
+    const total = Object.keys(obj).reduce((a, k) => a + ((k.startsWith('soranotsuji_') && typeof obj[k] === 'string') ? obj[k].length : 0), 0);
+    if (total > STORE_WRITE_MAX_CHARS) throw new Error(`取り込むデータが大きすぎます(${(total / 1048576).toFixed(1)}M文字。上限 ${STORE_WRITE_MAX_CHARS / 1048576}M文字)`);   // 端末の保存枠を使い切って以後の保存が全部失敗するのを防ぐ(第159)
     for (const k of Object.keys(obj)) {
-        if (k.startsWith('soranotsuji_') && typeof obj[k] === 'string') {
+        if (k === STORAGE_KEY && typeof obj[k] === 'string') {   // 書き戻すのは唯一の保存キーだけ(知らない soranotsuji_* の鍵を植え付けられて永久に持ち回らない。第159)
+            JSON.parse(obj[k]);   // 壊れたJSONは例外で止める
             localStorage.setItem(k, obj[k]);
             n++;
         }
@@ -12606,7 +14494,7 @@ async function loadAppFromDrive() {
         if (!meta) return alert(`Googleドライブに ${SORA_APP_FILENAME} がありません。`);
         const token = await ensureGoogleToken();
         if (!token) return;
-        const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${gd.appFileId}?alt=media`, {
+        const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(gd.appFileId)}?alt=media`, {
             headers: { 'Authorization': 'Bearer ' + token }
         });
         if (!resp.ok) throw new Error('Drive APIエラー(ダウンロード): ' + resp.status);
@@ -12798,6 +14686,7 @@ function updateBackupDriveUI() {
         gd.lastDriveModifiedTime ? formatGdriveDateTime(gd.lastDriveModifiedTime) : '-';
     document.getElementById('gdrive-size').textContent =
         'ローカルストレージ: ' + (gd.lastDriveSize ? `${Math.round(gd.lastDriveSize / 1024).toLocaleString('ja-JP')}KB` : '-');
+    _mtRefreshBackupRows();   // 地理タイル/標高タイルの件数・容量・最終更新(第158)
 }
 
 /** ドライブ日時の表示 (例: 2026年02月09日(木) 19:32:16。デッサン16に合わせMyセットの日時表示と同形式) */
@@ -12817,7 +14706,7 @@ async function registerSoraFolderName() {
     updateBackupDriveUI();
     if (isGoogleLoggedIn() && appState.googleDrive.rootFolderId) {
         try {
-            await driveApiJson(`files/${appState.googleDrive.rootFolderId}?fields=id,name`, 'PATCH', { name: real });
+            await driveApiJson(`files/${encodeURIComponent(appState.googleDrive.rootFolderId)}?fields=id,name`, 'PATCH', { name: real });
             alert(`Googleドライブのフォルダ名を「${real}」に変更しました。\n(中のファイルはそのまま追従します)`);
         } catch (e) {
             console.error(e);
@@ -12937,6 +14826,7 @@ async function sheetsApiFetch(path, method, bodyObj) {
     return resp.json();
 }
 
+const MYSET_SHEET_MAX_ROWS = 1100;   // シートから読む行数の上限(IDは1〜1000+見出し/コメント行。これより下は読まない=取り込み口の大きさの上限。第159)
 const MYSET_SHEET_NAMES = FEATURE_FORECAST_ENABLED
     ? ['My辻検索', 'My観測点', 'My目的点', 'My天体', 'My宙検索']
     : ['My辻検索', 'My観測点', 'My目的点', 'My天体'];   // 封鎖中はMy宙検索タブを作成/読み書きしない(既存タブには触れない)
@@ -12980,16 +14870,16 @@ function _mySetSheetRows(data, commentsBySheet) {
  *  【方針】既定名(MYSET_SHEET_NAMES)の5シート以外には一切触らない: ユーザーが独自に作成した
  *  タブ(名前を問わず)は列挙するだけで、作成・改名・削除・書き込みの対象にしない */
 async function _mySetEnsureSheets(s, writeInitial) {
-    const meta = await sheetsApiFetch(`spreadsheets/${s.sheetId}?fields=sheets.properties.title`, 'GET');
+    const meta = await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}?fields=sheets.properties.title`, 'GET');
     const titles = new Set((meta.sheets || []).map(sh => sh.properties && sh.properties.title));
     const missing = MYSET_SHEET_NAMES.filter(n => !titles.has(n));
     if (!missing.length) return;
-    await sheetsApiFetch(`spreadsheets/${s.sheetId}:batchUpdate`, 'POST', {
+    await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}:batchUpdate`, 'POST', {
         requests: missing.map(n => ({ addSheet: { properties: { title: n } } }))
     });
     if (writeInitial) {
         const empty = _mySetSheetRows({ myTsujiSearches: [], myObservations: [], myTargets: [], myStars: [], mySoraSearches: [] });
-        await sheetsApiFetch(`spreadsheets/${s.sheetId}/values:batchUpdate`, 'POST', {
+        await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}/values:batchUpdate`, 'POST', {
             valueInputOption: 'RAW',
             data: missing.map(n => ({ range: `'${n}'!A1`, values: empty[n] }))
         });
@@ -13001,8 +14891,8 @@ async function _mySetEnsureSheets(s, writeInitial) {
 async function _mySetFetchCommentRows(s) {
     const commentsBySheet = {};
     try {
-        const ranges = MYSET_SHEET_NAMES.map(n => 'ranges=' + encodeURIComponent(`'${n}'`)).join('&');
-        const res = await sheetsApiFetch(`spreadsheets/${s.sheetId}/values:batchGet?majorDimension=ROWS&${ranges}`, 'GET');
+        const ranges = MYSET_SHEET_NAMES.map(n => 'ranges=' + encodeURIComponent(`'${n}'!1:${MYSET_SHEET_MAX_ROWS}`)).join('&');   // 行数に上限(他人の巨大なシートを丸ごと取らない。第159)
+        const res = await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}/values:batchGet?majorDimension=ROWS&${ranges}`, 'GET');
         (res.valueRanges || []).forEach((vr, i) => {
             const block = [];
             for (const r of (vr.values || [])) {
@@ -13037,13 +14927,13 @@ function _mySetParsePoints(rows, sheetName) {
         const cols = dataRows[i];
         if (cols.length < 6) throw new Error(`${sheetName}: ${i + 1}件目の列数が不足しています(6列必要)`);
         const id = parseInt(toHalfWidth(cols[0].trim()));
-        const name = cols[1].trim();
+        const name = csvUnprefix(cols[1].trim()).slice(0, 150);   // 画面の入力欄と同じ上限(他人のシートの巨大なセルで端末の保存枠を使い切らせない。第159)
         const lat = parseFloat(toHalfWidth(cols[2].trim()));
         const lng = parseFloat(toHalfWidth(cols[3].trim()));
         let elev = cols[4].trim() === '' ? 0 : parseFloat(toHalfWidth(cols[4].trim()));
         if (isNaN(elev)) elev = 0;
         const height = parseFloat(toHalfWidth(cols[5].trim())) || 0;
-        const memo = (cols[6] ?? '').trim();
+        const memo = csvUnprefix((cols[6] ?? '').trim().slice(0, 150));
         if (isNaN(id) || id < 1 || id > 1000) throw new Error(`${sheetName}: ${i + 1}件目のIDが無効です(1〜1000)`);
         if (ids.has(id)) throw new Error(`${sheetName}: ID ${id} が重複しています`);
         if (isNaN(lat) || isNaN(lng)) throw new Error(`${sheetName}: ${i + 1}件目の緯度/経度が無効です`);
@@ -13061,7 +14951,7 @@ function _mySetParseStars(rows) {
         const cols = dataRows[i];
         if (cols.length < 4) throw new Error(`My天体: ${i + 1}件目の列数が不足しています(4列必要)`);
         const id = parseInt(toHalfWidth(cols[0].trim()));
-        const name = cols[1].trim();
+        const name = csvUnprefix(cols[1].trim()).slice(0, 150);   // 画面の入力欄と同じ上限(他人のシートの巨大なセルで端末の保存枠を使い切らせない。第159)
         const ra = parseFloat(toHalfWidth(cols[2].trim()));
         const dec = parseFloat(toHalfWidth(cols[3].trim()));
         if (isNaN(id) || id < 1 || id > 1000) throw new Error(`My天体: ${i + 1}件目のIDが無効です(1〜1000)`);
@@ -13098,7 +14988,7 @@ async function mySetCreateSheet(s) {
         appProperties: { soranotsuji: 'myset' }
     });
     s.sheetId = res.id;
-    await sheetsApiFetch(`spreadsheets/${s.sheetId}:batchUpdate`, 'POST', {
+    await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}:batchUpdate`, 'POST', {
         requests: [
             { updateSheetProperties: { properties: { sheetId: 0, title: MYSET_SHEET_NAMES[0] }, fields: 'title' } },
             ...MYSET_SHEET_NAMES.slice(1).map(n => ({ addSheet: { properties: { title: n } } }))
@@ -13125,8 +15015,8 @@ function _mySetParseMySora(rows) {
 
 /** シートから5メニュー分の内容を取得して解析する (適用はしない) */
 async function _mySetFetchSheetData(s) {
-    const ranges = MYSET_SHEET_NAMES.map(n => 'ranges=' + encodeURIComponent(`'${n}'`)).join('&');
-    const res = await sheetsApiFetch(`spreadsheets/${s.sheetId}/values:batchGet?majorDimension=ROWS&${ranges}`, 'GET');
+    const ranges = MYSET_SHEET_NAMES.map(n => 'ranges=' + encodeURIComponent(`'${n}'!1:${MYSET_SHEET_MAX_ROWS}`)).join('&');   // 行数に上限(第159)
+    const res = await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}/values:batchGet?majorDimension=ROWS&${ranges}`, 'GET');
     const vr = res.valueRanges || [];
     const byIdx = i => (vr[i] && vr[i].values) || [];
     const data = {
@@ -13167,10 +15057,14 @@ function mySetDataOf(s) {
 
 /** 読み込んだ内容をセットへ反映する (保持ルール込み) */
 function mySetSetData(s, data) {
+    // 端末に保持する前に大きさを見る(他人の巨大なシートで localStorage を使い切ると、以後の保存が全部失敗する。第159のレビュー)。
+    // 上限は書き戻しと同じ4M文字(アプリ自身の上限=各リスト1,000行でも約1MB台なので、正当なセットは通る)。超えたら false を返し、呼び元は「読込失敗」として扱う
+    try { const n = JSON.stringify(data).length; if (n > STORE_WRITE_MAX_CHARS) { alert(`Myセット「${s.name}」の内容が大きすぎるため(${(n / 1048576).toFixed(1)}M文字。上限 ${STORE_WRITE_MAX_CHARS / 1048576}M文字)、端末には保持しません。`); return false; } } catch (_) {}
     if (s.id === appState.mySetCurrentId) applyMySetData(data);
     else if (s.id === 0) appState.mySetHomeData = data;   // 既定のセットは常に端末保持
     else if (s.offline) s.data = data;
     else s.data = null;   // 保持ルール(オフライン指定なしは端末に保持しない)
+    return true;
 }
 
 /** 端末の内容をスプレッドシートへ保存 (無ければ作成。保存時にファイル名もMyセット名に揃える) */
@@ -13181,10 +15075,10 @@ async function mySetSaveToSheet(s, opts = {}) {
         renderMySetList();
         // データ消失ガード(第36ラウンドの整合性調査): 同期済み・非オフラインの非表示セットは端末の
         // 内容をpurge済み(s.data=null)のため、そのまま保存するとシートを空で全面上書きしてしまう。
-        // この状態での保存は中止して「読み込み」を促す(表示中セット/既定セット/オフラインセットの
-        // 「空にして保存」は従来どおり可能)
+        // この状態での保存は中止する(表示中セット/既定セット/オフラインセットの「空にして保存」は従来どおり可能)。
+        // 案内は「切り替え表示で表示中にしてから保存」(第164: 以前の「先に読込を」は、読込しても保持ルールで端末に残らないので解決しなかった)
         if (s.id !== appState.mySetCurrentId && s.id !== 0 && !s.offline && !s.data && s.lastSyncSheetTime) {
-            alert(`「${s.name}」の内容は端末に保持されていません(同期済みのためシート側が正)。\n保存する前に、一度「読み込み」でシートの内容を取得してください。`);
+            alert(`「${s.name}」は端末に内容を持っていません(同期済みで、表示中でもオフライン指定でもないセットは、シート側を正として端末には保持しない決まり)。\nこのセットを保存するには、「切り替え表示」で表示中にしてから保存してください(「オフライン」をチェックして端末に保持する形でも可)。\nシートと同期済みなら、保存の必要はありません。`);
             mySetSheetStates[s.id] = 'stale';
             renderMySetList();
             return false;
@@ -13208,14 +15102,14 @@ async function mySetSaveToSheet(s, opts = {}) {
         }
         const data = mySetDataOf(s);
         const sheets = _mySetSheetRows(data, commentsBySheet);
-        await sheetsApiFetch(`spreadsheets/${s.sheetId}/values:batchClear`, 'POST', { ranges: MYSET_SHEET_NAMES.map(n => `'${n}'`) });
-        await sheetsApiFetch(`spreadsheets/${s.sheetId}/values:batchUpdate`, 'POST', {
+        await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}/values:batchClear`, 'POST', { ranges: MYSET_SHEET_NAMES.map(n => `'${n}'`) });
+        await sheetsApiFetch(`spreadsheets/${encodeURIComponent(s.sheetId)}/values:batchUpdate`, 'POST', {
             valueInputOption: 'RAW',
             data: MYSET_SHEET_NAMES.map(n => ({ range: `'${n}'!A1`, values: sheets[n] }))
         });
         let meta = await driveGetMeta(s.sheetId);
         if (meta && meta.name !== s.name) {
-            meta = await driveApiJson(`files/${s.sheetId}?fields=id,name,modifiedTime,size`, 'PATCH', { name: s.name });   // 名前をMyセット名に揃える
+            meta = await driveApiJson(`files/${encodeURIComponent(s.sheetId)}?fields=id,name,modifiedTime,size`, 'PATCH', { name: s.name });   // 名前をMyセット名に揃える
         }
         s.updatedAt = meta ? new Date(meta.modifiedTime).getTime() : Date.now();
         s.lastSyncSheetTime = meta ? meta.modifiedTime : null;
@@ -13252,7 +15146,7 @@ async function mySetLoadFromSheet(s, opts = {}) {
         renderMySetList();
         await _mySetEnsureSheets(s, true);   // タブ削除/改名されていても、初期状態で作成してから読み込む
         const { data, meta } = await _mySetFetchSheetData(s);
-        mySetSetData(s, data);
+        if (!mySetSetData(s, data)) throw new Error('内容が大きすぎるため読み込みませんでした');   // 端末の状態は変えず、読込失敗として扱う(同期済みの印を付けない)
         s.updatedAt = meta ? new Date(meta.modifiedTime).getTime() : Date.now();
         s.lastSyncSheetTime = meta ? meta.modifiedTime : null;
         s.localEdit = false;   // 読込成功=シートの内容が端末に揃った(未保存変更の印を消す: 第68ラウンド)
@@ -13372,7 +15266,8 @@ function openMySetSheet() {
     if (!s) return;
     if (!s.sheetId) return alert('このMyセットにはスプレッドシートが紐付いていません。');
     if (!confirm('チェックされたMyセットのGoogleスプレッドシートを開きますか？')) return;
-    window.open(`https://docs.google.com/spreadsheets/d/${s.sheetId}/edit`, '_blank');
+    if (!/^[A-Za-z0-9_-]+$/.test(String(s.sheetId))) return alert('スプレッドシートIDの形が正しくありません。');   // IDの文字種を限る(URLに他の物を差し込ませない)
+    window.open(`https://docs.google.com/spreadsheets/d/${encodeURIComponent(s.sheetId)}/edit`, '_blank', 'noopener,noreferrer');   // 開いた先から元の画面を触れないように(noopener)
 }
 
 // Google Picker (追加ボタン用)
@@ -13559,26 +15454,26 @@ function renderMySetList() {
         row.innerHTML = `
             <hr class="tsujisearch-separator">
             <div class="mypoint-row-header">
-                <input type="radio" name="myset-select" value="${s.id}" class="mystars-radio">
-                <input type="checkbox" class="body-checkbox myset-check" data-id="${s.id}" ${s.checked ? 'checked' : ''} title="更新ボタンの対象の選択">
-                <span class="mypoint-id">ID:${String(s.id).padStart(4, ' ')}</span><button type="button" class="myset-fav" data-id="${s.id}" title="お気に入り(タップで切り替え。⭐️のMyセットはリストの上位に表示)">${s.favorite ? '⭐️' : '☆'}</button>
+                <input type="radio" name="myset-select" value="${Number(s.id)}" class="mystars-radio">
+                <input type="checkbox" class="body-checkbox myset-check" data-id="${Number(s.id)}" ${s.checked ? 'checked' : ''} title="更新ボタンの対象の選択">
+                <span class="mypoint-id">ID:${String(s.id).padStart(4, ' ')}</span><button type="button" class="myset-fav" data-id="${Number(s.id)}" title="お気に入り(タップで切り替え。⭐️のMyセットはリストの上位に表示)">${s.favorite ? '⭐️' : '☆'}</button>
                 ${cur === s.id ? '<span>🔛</span>' : ''}
             </div>
             <div class="control-row">
-                <button class="nav-btn myset-status${rowIcon === '🕛' ? ' clock-anim' : ''}" data-id="${s.id}" title="${escapeHtml(rowIconTitle)}">${rowIcon}</button>
-                <input type="text" class="myset-name" value="${escapeHtml(s.name)}" placeholder="Myセット名" maxlength="150" data-id="${s.id}" autocomplete="off" title="${escapeHtml(s.name)}">
+                <button class="nav-btn myset-status${rowIcon === '🕛' ? ' clock-anim' : ''}" data-id="${Number(s.id)}" title="${escapeHtml(rowIconTitle)}">${rowIcon}</button>
+                <input type="text" class="myset-name" value="${escapeHtml(s.name)}" placeholder="Myセット名" maxlength="150" data-id="${Number(s.id)}" autocomplete="off" title="${escapeHtml(s.name)}">
             </div>
             <div class="control-row">
-                <label class="baseopt-radio" title="更新時に、端末の内容をGoogleドライブに保存します"><input type="radio" name="myset-sl-${s.id}" value="save" ${s.saveMode !== 'load' ? 'checked' : ''} class="myset-slmode" data-id="${s.id}">:保存</label>
-                <label class="baseopt-radio" title="更新時に、Googleドライブの内容を端末に読み込みます"><input type="radio" name="myset-sl-${s.id}" value="load" ${s.saveMode === 'load' ? 'checked' : ''} class="myset-slmode" data-id="${s.id}">:読込</label>
-                <label class="baseopt-radio" title="ログインしていなくても切り替え表示できるように、内容を端末に保持します"><input type="checkbox" class="myset-offline" data-id="${s.id}" ${s.offline ? 'checked' : ''}>:オフライン</label>
+                <label class="baseopt-radio" title="更新時に、端末の内容をGoogleドライブに保存します"><input type="radio" name="myset-sl-${Number(s.id)}" value="save" ${s.saveMode !== 'load' ? 'checked' : ''} class="myset-slmode" data-id="${Number(s.id)}">:保存</label>
+                <label class="baseopt-radio" title="更新時に、Googleドライブの内容を端末に読み込みます"><input type="radio" name="myset-sl-${Number(s.id)}" value="load" ${s.saveMode === 'load' ? 'checked' : ''} class="myset-slmode" data-id="${Number(s.id)}">:読込</label>
+                <label class="baseopt-radio" title="ログインしていなくても切り替え表示できるように、内容を端末に保持します"><input type="checkbox" class="myset-offline" data-id="${Number(s.id)}" ${s.offline ? 'checked' : ''}>:オフライン</label>
             </div>
             <div class="control-row">
                 <span class="mypoint-label">${mySetUpdatedHtml(s)}</span>
             </div>
             <div class="control-row">
                 <label class="mypoint-label">メモ:</label>
-                <input type="text" class="myset-memo" value="${escapeHtml(s.memo || '')}" placeholder="メモ(150文字)" maxlength="150" data-id="${s.id}" autocomplete="off">
+                <input type="text" class="myset-memo" value="${escapeHtml(s.memo || '')}" placeholder="メモ(150文字)" maxlength="150" data-id="${Number(s.id)}" autocomplete="off">
             </div>`;
         const nameInput = row.querySelector('.myset-name');
         nameInput.addEventListener('input', () => setMySetDirty(true));
@@ -13641,7 +15536,7 @@ function registerDirtyMyMenus() {
         for (const pt of cfg.list()) {
             if (!pt.name || pt.lat === null || pt.lat === undefined || pt.lng === null || pt.lng === undefined) {
                 document.getElementById(`${cfg.prefix}-error`).innerHTML =
-                    `<span class="mypoint-error-text">${cfg.label}ID:${pt.id}に未入力のものがあります。入力するか、行削除してください。</span>`;
+                    `<span class="mypoint-error-text">${cfg.label}ID:${escapeHtml(pt.id)}に未入力のものがあります。入力するか、行削除してください。</span>`;
                 alert(`${cfg.labelFull}に未入力があるため保存できませんでした。切り替えを中止します。\n${cfg.labelFull}メニューのエラーメッセージをご確認ください。`);
                 return false;
             }
@@ -13660,7 +15555,7 @@ function registerDirtyMyMenus() {
         for (const t of appState.myTsujiSearches) {
             if (!t.name || t.days == null || !t.bodyIds || t.obsId == null || t.tgtId == null || t.baseAz == null || t.baseAlt == null) {
                 document.getElementById('mytsuji-error').innerHTML =
-                    `<span class="mypoint-error-text">辻検索ID:${t.id}に未入力のものがあります。入力するか、行削除してください。</span>`;
+                    `<span class="mypoint-error-text">辻検索ID:${escapeHtml(t.id)}に未入力のものがあります。入力するか、行削除してください。</span>`;
                 alert('My辻検索に未入力があるため保存できませんでした。切り替えを中止します。\nMy辻検索メニューのエラーメッセージをご確認ください。');
                 return false;
             }
@@ -13730,7 +15625,7 @@ function registerAllMySets() {
     for (const s of appState.mySets) {
         if (!s.name || !s.name.trim()) {
             document.getElementById('myset-error').innerHTML =
-                `<span class="mypoint-error-text">MyセットID:${s.id}に未入力のものがあります。入力するか、行削除してください。</span>`;
+                `<span class="mypoint-error-text">MyセットID:${escapeHtml(s.id)}に未入力のものがあります。入力するか、行削除してください。</span>`;
             return;
         }
     }
@@ -13789,7 +15684,7 @@ async function copyMySet() {
     if (src.sheetId && isGoogleLoggedIn()) {
         try {
             await ensureSoraFolders();
-            const res = await driveApiJson(`files/${src.sheetId}/copy?fields=id,modifiedTime`, 'POST', {
+            const res = await driveApiJson(`files/${encodeURIComponent(src.sheetId)}/copy?fields=id,modifiedTime`, 'POST', {
                 name: newSet.name,
                 parents: [appState.googleDrive.mySetsFolderId],
                 appProperties: { soranotsuji: 'myset' }
@@ -14088,7 +15983,9 @@ const _QP_SEEDS_V20 = _QP_SEEDS_V19.concat(['&soraPhotoTex=false', '&soraPhotoTe
 // v21(第128): 辻メッシュ精度フィルタの新既定「○」の既定値ペア(初期値がx1→o1に変わり、
 // 既定のままのURLに&tsujiMeshAccuracy=o1が乗るため)
 const _QP_SEEDS_V21 = _QP_SEEDS_V20.concat(['&tsujiMeshAccuracy=o1']);
-const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19, _QP_SEEDS_V20, _QP_SEEDS_V21];   // 添字+1=版数。最新版でエンコードする
+// v22(第158): 大気差補正の既定がオンに(「&refractionEnabled=true」)+気差オプション astroRefraction。v16の種は凍結のまま
+const _QP_SEEDS_V22 = _QP_SEEDS_V21.concat(['&refractionEnabled=true', '&astroRefraction=true', '&astroRefraction=false', '&astroRefraction=']);
+const _QP_SEED_VERSIONS = [_QP_SEEDS, _QP_SEEDS_V2, _QP_SEEDS_V3, _QP_SEEDS_V4, _QP_SEEDS_V5, _QP_SEEDS_V6, _QP_SEEDS_V7, _QP_SEEDS_V8, _QP_SEEDS_V9, _QP_SEEDS_V10, _QP_SEEDS_V11, _QP_SEEDS_V12, _QP_SEEDS_V13, _QP_SEEDS_V14, _QP_SEEDS_V15, _QP_SEEDS_V16, _QP_SEEDS_V17, _QP_SEEDS_V18, _QP_SEEDS_V19, _QP_SEEDS_V20, _QP_SEEDS_V21, _QP_SEEDS_V22];   // 添字+1=版数。最新版でエンコードする
 const _QP_PRIME_FROM = 12;   // この版以降は「仮想の先頭&」を足して圧縮する(先頭キーも「&キー名=」の辞書に乗せるため)
 
 function encodeQueryParam(str) {
@@ -14369,6 +16266,7 @@ function buildCommonUrlParams(dateTimeMode = 'fixed', profile = 'full') {
     // 天体儀の表示チェック=full/宙の窓(星座線等は窓にも映る)・:除外範囲と:辻オフセット=full/辻検索系)
     if (inc.atmo) {
     params.set('refractionEnabled', appState.refractionEnabled ? 'true' : 'false');
+    params.set('astroRefraction', appState.astroRefraction ? 'true' : 'false');
     params.set('meteoP', String(appState.meteo.p));
     params.set('meteoT', String(appState.meteo.t));
     params.set('meteoL', String(appState.meteo.l));
@@ -14453,7 +16351,7 @@ function deliverShareUrl(url, subject) {
  *  URLが入り切らない長さならLへ落として再試行する(それでも入らなければ短いURLを案内) */
 async function copyShareQr(url, subject) {
     if (typeof qrcode !== 'function') {
-        alert('QRコード部品(CDN)が読み込めていません。ネットワーク接続を確認してページを再読み込みしてください。');
+        alert('QRコード部品(vendor/qrcode.js)が読み込めていません。ネットワーク接続を確認してページを再読み込みしてください。');
         return;
     }
     let qr = null;
@@ -14757,7 +16655,7 @@ function restoreFromUrl() {
         _MONTH_DEFS.forEach(([suf]) => { if (params.has('tsujiMonth' + suf)) appState['tsujiMonth' + suf] = params.get('tsujiMonth' + suf) === 'true'; });
         // URLの基準方位角/視高度を自動再計算で上書きしない(第36ラウンドの保護。第108でmode問わずへ)
         if (params.has('tsujiAz') || params.has('tsujiAlt')) {
-            appState._lastTsujiPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+            appState._lastTsujiPosKey = _basePosKey();
         }
     }
 
@@ -14790,7 +16688,7 @@ function restoreFromUrl() {
         });
         // URLの基準方位角/視高度を自動再計算で上書きしない(第108でmode問わずへ)
         if (params.has('tsujiMeshAz') || params.has('tsujiMeshAlt')) {
-            appState._lastTsujiMeshPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+            appState._lastTsujiMeshPosKey = _basePosKey();
         }
     }
 
@@ -14825,11 +16723,14 @@ function restoreFromUrl() {
     });
 
     // 大気差・気象・基本オプション(第88ラウンド・v16第1弾。気象はLS復元と同じくNaNガードのみ)
-    soraBool('refractionEnabled');
+    soraBool('refractionEnabled'); soraBool('astroRefraction');
     ['p', 't', 'l'].forEach(mk => {
         const key = 'meteo' + mk.toUpperCase();
         if (params.has(key)) { const v = parseFloat(params.get(key)); if (!isNaN(v)) appState.meteo[mk] = v; }
     });
+    // 位置の鍵には気差係数も入る(第157)ので、気象値を復元した後に鍵を取り直す(URLの基準方位角/視高度を自動再計算で上書きしない保護を保つ)
+    if (params.has('tsujiAz') || params.has('tsujiAlt')) appState._lastTsujiPosKey = _basePosKey();
+    if (params.has('tsujiMeshAz') || params.has('tsujiMeshAlt')) appState._lastTsujiMeshPosKey = _basePosKey();
     soraStr('baseOptMwBase'); soraStr('mwConstNameSort');
     ['mwOffsetAngle', 'elevExcludeRadius', 'elevExcludeObsRadius'].forEach(soraNum);
     ['mwShowBodies', 'mwShowBodyNames', 'mwShowConstFig', 'mwShowConstBounds', 'mwShowConstNames',
@@ -14854,7 +16755,7 @@ function restoreFromUrl() {
 
     // 宙の窓の基準方位角/視高度/視界範囲をURL値のまま使う(位置起点の自動再計算で上書きしない)
     if (params.has('soraBaseAz') || params.has('soraBaseAlt')) {
-        appState._soraLastPosKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+        appState._soraLastPosKey = _basePosKey();
     }
 
     // mode=tsujisearchの場合は辻検索を自動実行（UIが準備できた後に。パネルキーを乗せない絞りURL用+
@@ -16112,7 +18013,7 @@ function soraSyncUI() {
 
 /** 観測点・目的点から 基準方位角/視高度・視界範囲既定 を算出 (辻検索とは非連動)。位置変化時のみ */
 function soraUpdateBaseFromPoints() {
-    const posKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}|${appState.end.lat},${appState.end.lng},${appState.end.elev}`;
+    const posKey = _basePosKey();
     if (posKey === appState._soraLastPosKey) return;
     appState._soraLastPosKey = posKey;
     const dist = getDistanceWGS84(appState.start.lat, appState.start.lng, appState.end.lat, appState.end.lng);
@@ -16291,7 +18192,7 @@ function soraMovTogglePlay() {
     for (let off = 0; off < n; off += CH) {
         const frames = [];
         for (let f = off; f < Math.min(n, off + CH); f++) frames.push(startMs + shotIdx[f] * iv * 1000);
-        _smMovPoolRun({ reqId: `${gen}_${off}`, off, frames, bodies: wBodies, observer: obs, refraction: appState.refractionEnabled })
+        _smMovPoolRun({ reqId: `${gen}_${off}`, off, frames, bodies: wBodies, observer: obs, refraction: appState.astroRefraction })
             .then(res => {
                 if (gen !== _movGen) return;   // 停止済みの世代は破棄
                 (res.frames || []).forEach((fr, i) => { _movQueue[res.off + i] = fr; });
@@ -16795,13 +18696,20 @@ function syncBaseOptionUI() {
     });
     set('input-baseopt-elev-exclude', appState.elevExcludeRadius);
     set('input-baseopt-elev-exclude-obs', appState.elevExcludeObsRadius);
+    set('input-baseopt-summit-band', appState.elevSummitBandM);
     const exclChk = document.getElementById('chk-baseopt-elev-exclude');
     if (exclChk) exclChk.checked = appState.elevExcludeEnabled !== false;
-    // チェックボックスがオフの間は目的点側/観測点側の入力を無効化(値は保持)
+    const sbChk = document.getElementById('chk-baseopt-summit-band');
+    if (sbChk) { sbChk.checked = appState.elevSummitBandEnabled !== false; sbChk.disabled = appState.elevExcludeEnabled === false; }
+    // チェックボックスがオフの間は目的点側/観測点側/山頂部の入力を無効化(値は保持)
     for (const eid of ['input-baseopt-elev-exclude', 'input-baseopt-elev-exclude-obs']) {
         const el = document.getElementById(eid);
         if (el) el.disabled = appState.elevExcludeEnabled === false;
     }
+    const sbIn = document.getElementById('input-baseopt-summit-band');
+    if (sbIn) sbIn.disabled = appState.elevExcludeEnabled === false || appState.elevSummitBandEnabled === false;
+    const sbPvChk = document.getElementById('chk-baseopt-summit-preview');
+    if (sbPvChk) sbPvChk.checked = _sbPreviewOn;   // プレビューは保存しない(ブラウザのフォーム復元とずれないよう状態から描く)
     const chk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
     chk('chk-baseopt-mw-bodies', appState.mwShowBodies);
     chk('chk-baseopt-mw-body-names', appState.mwShowBodyNames);
@@ -16984,6 +18892,23 @@ function setupBaseOptionControls() {
         appState.elevExcludeEnabled = exclChk2.checked;
         saveAppState();
         syncBaseOptionUI();
+        _sbUpdatePreview(false);
+    });
+    // 山頂部(第152・Q25): 帯の高さ・オン/オフ・プレビュー・リセット
+    const sbIn = document.getElementById('input-baseopt-summit-band');
+    if (sbIn) sbIn.addEventListener('change', () => {
+        let v = parseFloat(sbIn.value); if (isNaN(v)) v = 0;
+        appState.elevSummitBandM = Math.max(0, Math.min(2000, Math.round(v)));
+        saveAppState(); syncBaseOptionUI(); _sbUpdatePreview(false);
+    });
+    const sbChk = document.getElementById('chk-baseopt-summit-band');
+    if (sbChk) sbChk.addEventListener('change', () => { appState.elevSummitBandEnabled = sbChk.checked; saveAppState(); syncBaseOptionUI(); _sbUpdatePreview(false); });
+    const sbPv = document.getElementById('chk-baseopt-summit-preview');
+    if (sbPv) sbPv.addEventListener('change', () => { _sbPreviewOn = sbPv.checked; _sbUpdatePreview(true); });
+    const sbReset = document.getElementById('btn-baseopt-excl-reset');
+    if (sbReset) sbReset.addEventListener('click', () => {
+        for (const k of ['elevExcludeEnabled', 'elevExcludeRadius', 'elevExcludeObsRadius', 'elevSummitBandEnabled', 'elevSummitBandM']) appState[k] = APP_DEFAULTS[k].def;
+        saveAppState(); syncBaseOptionUI(); _sbUpdatePreview(false);
     });
     syncBaseOptionUI();
 }
@@ -17315,6 +19240,20 @@ function _smAttachDrag(cv) {
         // px→角度: ファインダー実寸と画角から換算。内容が指に追従(右へドラッグ=視線は左へ=Az減、下へドラッグ=視線は上へ=Alt増)
         const o = soraComputeOptics();
         const hAov = appState.soraPanorama ? soraPanoEffAov(o) : o.aovH;   // パノラマ中は画面幅=パノラマ水平画角
+        if (_smDragTsuji) {
+            // 辻オフセット点(検索中心×)だけを指に追従させる: 右へドラッグ=×は右へ=方位角増、上へドラッグ=視高度増(辻検索メニューと連動)。第158
+            const dAz = dx * hAov / _smFinderW;
+            const dAlt = -dy * o.aovV / _smFinderH;
+            const r4 = v => Math.round(v * 1e4) / 1e4;   // 欄・URL・My辻に載る値なので4桁に丸める(カメラオフセットの表示と同じ桁)
+            appState.tsujiSearchOffsetAz = r4(Math.max(-360, Math.min(360, (Number(appState.tsujiSearchOffsetAz) || 0) + dAz)));
+            appState.tsujiSearchOffsetAlt = r4(Math.max(-360, Math.min(360, (Number(appState.tsujiSearchOffsetAlt) || 0) + dAlt)));
+            _tsujiLinkPropagate('tsuji', false);   // 辻メッシュ側のオフセットにも写す(ctrlの「辻メッシュ」が×の位置で検索するように。保存はドラッグ終了時に1回)
+            updateOffsetDistances();
+            _dpOffsetEdited();
+            drawSoramado();
+            return;
+        }
+        if (!_smDragFrame) return;   // 構図のドラッグがオフ(どちらも動かさない)
         const dAz = -dx * hAov / _smFinderW;
         const dAlt = dy * o.aovV / _smFinderH;
         appState.soraOffsetAz = Math.max(-360, Math.min(360, Number(appState.soraOffsetAz) + dAz));
@@ -17329,6 +19268,49 @@ function _smAttachDrag(cv) {
     };
     cv.addEventListener('pointerup', end);
     cv.addEventListener('pointercancel', end);
+    _smSetupSearchCtrl();
+}
+
+/** コントロールの「:構図をドラッグ」「:辻オフセット点をドラッグ」と「辻検索」「辻メッシュ」(デッサン05 4.1/4.2段目。第158) */
+function _smSetupSearchCtrl() {
+    const chkFrame = document.getElementById('chk-sora-ctrl-drag-frame'), chkTsuji = document.getElementById('chk-sora-ctrl-drag-tsuji');
+    if (chkFrame) {
+        chkFrame.checked = _smDragFrame;
+        chkFrame.addEventListener('change', (e) => {
+            _smDragFrame = e.target.checked;
+            if (!_smDragFrame) {   // オフ: カメラオフセット方位角/視高度を0に戻す(デッサン)
+                appState.soraOffsetAz = 0; appState.soraOffsetAlt = 0;
+                soraSyncUI(); saveAppState();
+                if (appState.isSoramadoActive && !_smFailed) drawSoramado();
+            }
+        });
+    }
+    if (chkTsuji) {
+        chkTsuji.checked = _smDragTsuji;
+        chkTsuji.addEventListener('change', (e) => {
+            _smDragTsuji = e.target.checked;
+            if (_smDragTsuji) {
+                _smTsujiDragBase = { az: Number(appState.tsujiSearchOffsetAz) || 0, alt: Number(appState.tsujiSearchOffsetAlt) || 0 };   // 戻り先を覚える
+            } else if (_smTsujiDragBase) {   // オフ: 動かす前の辻オフセットに戻す(デッサン)
+                appState.tsujiSearchOffsetAz = _smTsujiDragBase.az; appState.tsujiSearchOffsetAlt = _smTsujiDragBase.alt; _smTsujiDragBase = null;
+                _tsujiLinkPropagate('tsuji', false);   // 辻メッシュ側も戻す
+                updateOffsetDistances(); _dpOffsetEdited(); saveAppState();
+                if (appState.isSoramadoActive && !_smFailed) drawSoramado();
+            }
+        });
+    }
+    const b1 = document.getElementById('btn-sora-ctrl-tsuji-search'), b2 = document.getElementById('btn-sora-ctrl-tsujimesh');
+    if (b1) b1.addEventListener('click', toggleTsujiSearch);
+    if (b2) b2.addEventListener('click', toggleTsujiMesh);
+    _smSyncSearchButtons();
+}
+/** コントロールの「辻検索」「辻メッシュ」の押下状態を位置情報メニューのボタンと揃える */
+function _smSyncSearchButtons() {
+    const pairs = [['btn-tsuji-search', 'btn-sora-ctrl-tsuji-search'], ['btn-tsujimesh', 'btn-sora-ctrl-tsujimesh']];
+    for (const [mainId, ctrlId] of pairs) {
+        const m = document.getElementById(mainId), c = document.getElementById(ctrlId);
+        if (m && c) c.classList.toggle('active', m.classList.contains('active'));
+    }
 }
 
 /** 方位az・視高度alt(度) → ワールド単位ベクトル(右手系 ENU: X=東, Y=北, Z=上) */
@@ -17344,6 +19326,9 @@ let _smObsNudge = { e: 0, n: 0, u: 0 };
 // どちらも「基準方位角+カメラオフセット方位角」で、回転ボタンはオフセット方位角を±1°回す
 // (=カメラ向きボタンの方位側と同じ動き。値も入力欄も変わり、画面も前後左右の歩く向きも一緒に回る)
 let _smCamNudgeBase = null;   // カメラ向き/回転ボタンの戻り先 {az, alt}(null=未操作。「カメラ反映」で忘れて確定)
+// プレビューのドラッグの対象(コントロールの2つのチェック。第158・デッサン05 4.1段目): 構図=カメラオフセット / 辻オフセット点=検索中心(×)。保存しない(セッション内)
+let _smDragFrame = true, _smDragTsuji = false;
+let _smTsujiDragBase = null;   // 「:辻オフセット点をドラッグ」をオンにした時の辻オフセット {az, alt}(オフで戻す)
 
 /** 観測点移動の合計を体の向き(=カメラの向き)基準(前/右/上)の読みで表示。全て0なら空欄 */
 function _smObsNudgeReadout() {
@@ -17886,7 +19871,7 @@ function _fwEnu(elevTotal) {
     const d = getDistanceWGS84(oLat, oLng, p.lat, p.lng);
     const az = calculateBearing(oLat, oLng, p.lat, p.lng) * Math.PI / 180;
     const E = d * Math.sin(az), N = d * Math.cos(az);
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const k = refractionKInUse();   // 気差係数(設定に表示されている値。オフ=0)
     const Reff1 = getLocalEarthRadius(oLat) / (1 - k), Reff2 = getLocalEarthRadius(p.lat) / (1 - k);
     const r1 = Reff1 + (Number(appState.start.elev) || 0), r2 = Reff2 + elevTotal;
     const c = d / ((Reff1 + Reff2) / 2);
@@ -18698,7 +20683,7 @@ function ssRenderResults(view) {
         const v = ssRowValues(r);
         const scoreColor = r.score >= 70 ? '#ffd700' : (r.score >= 40 ? '#eee' : '#888');
         const confColor = r.conf === '高' ? '#8f8' : (r.conf === '中' ? '#ff8' : (r.conf === '統計' ? '#c9f' : '#f88'));
-        const head = view.batch ? `<td>${r._entry ? r._entry.id : '-'}</td><td>${escapeHtml(r._entry ? (r._entry.name || '') : '')}</td>` : '';
+        const head = view.batch ? `<td>${escapeHtml(r._entry ? r._entry.id : '-')}</td><td>${escapeHtml(r._entry ? (r._entry.name || '') : '')}</td>` : '';
         tr.innerHTML = head + `<td>${v[0]}</td><td>${r.isStat ? '-' : '(' + v[1] + ')'}</td><td>${v[2]}</td><td>${escapeHtml(v[3])}</td>` +
             `<td style="color:${scoreColor};font-weight:bold;">${v[4]}</td><td>${v[5]}</td>` +
             `<td>${v[6]}</td><td>${v[7]}</td><td>${v[8]}</td><td>${v[9]}</td><td>${v[10]}</td>` +
@@ -18840,6 +20825,7 @@ function ssClearMapOverlay() {
 function openSoraSearchPanel() {
     if (appState.isTsujiMeshActive) closeTsujiMesh();
     if (appState.isTsujiSearchActive) toggleTsujiSearch();
+    if (_kmActive) closeKashimap();   // 可視マップとは排他(第148)
     if (!appState.isSoraSearchActive) {
         appState.isSoraSearchActive = true;
         document.getElementById('sorasearch-panel').classList.remove('hidden');
@@ -18900,7 +20886,7 @@ async function ssDownloadCsv(snap) {
         '対象', '対象重み', '時間帯フィルタ', '検索期間(日)', '間隔(時間)', '扇角(°)', '範囲(km)', '標本格子数',
     ]);
     const esc = v => {
-        const s = String(v ?? '');
+        const s = csvText(v);   // 式の先頭文字はアポストロフィで文字に(第159)
         if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
         return s;
     };
@@ -19151,9 +21137,9 @@ function _sdInitMap() {
             sources: {
                 gsi: {
                     type: 'raster',
-                    tiles: ['https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'],
+                    tiles: [_mtUrl('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png')],
                     tileSize: 256, maxzoom: 18,
-                    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>,<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles (Mapzen/AWS)</a> | 雲: <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a> (CC BY 4.0)',
+                    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">国土地理院</a>,<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener noreferrer">Terrain Tiles (Mapzen/AWS)</a> | 雲: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (CC BY 4.0)',
                 },
                 gsidem: {
                     type: 'raster-dem',
@@ -19530,15 +21516,15 @@ function registerAllMySora() {
     const errEl = document.getElementById('mysora-error');
     for (const t of appState.mySoraSearches) {
         if (!t.name || t.obsId == null || t.tgtId == null) {
-            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${t.id}に未入力のものがあります。入力するか、行削除してください。</span>`;
+            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${escapeHtml(t.id)}に未入力のものがあります。入力するか、行削除してください。</span>`;
             return;
         }
         if (!appState.myObservations.some(o => o.id === t.obsId)) {
-            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${t.id}の観測点ID:${t.obsId}はMy観測点リストに存在しません。</span>`;
+            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${escapeHtml(t.id)}の観測点ID:${escapeHtml(t.obsId)}はMy観測点リストに存在しません。</span>`;
             return;
         }
         if (!appState.myTargets.some(g => g.id === t.tgtId)) {
-            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${t.id}の目的点ID:${t.tgtId}はMy目的点リストに存在しません。</span>`;
+            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${escapeHtml(t.id)}の目的点ID:${escapeHtml(t.tgtId)}はMy目的点リストに存在しません。</span>`;
             return;
         }
     }
@@ -19642,7 +21628,7 @@ async function runMySoraBatch(fileMode) {
         const obs = appState.myObservations.find(o => o.id === t.obsId);
         const tgt = appState.myTargets.find(g => g.id === t.tgtId);
         if (!obs || !tgt) {
-            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${t.id}の${!obs ? `観測点ID:${t.obsId}` : `目的点ID:${t.tgtId}`}がMyリストに存在しません。</span>`;
+            if (errEl) errEl.innerHTML = `<span class="mypoint-error-text">宙検索ID:${escapeHtml(t.id)}の${!obs ? `観測点ID:${escapeHtml(t.obsId)}` : `目的点ID:${escapeHtml(t.tgtId)}`}がMyリストに存在しません。</span>`;
             return;
         }
     }
@@ -19700,7 +21686,7 @@ async function mySoraDownloadCsv(rows) {
         '狙い', '雲低重み', '雲中重み', '雲高重み', '月モード', '月重み', '雲海モード', '雲海重み', '光害重み', '透明度重み',
         '対象', '対象重み', '時間帯フィルタ', '検索期間(日)', '間隔(時間)', '扇角(°)', '範囲(km)', '標本格子数']);
     const esc = v => {
-        const s = String(v ?? '');
+        const s = csvText(v);   // 式の先頭文字はアポストロフィで文字に(第159)
         if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
         return s;
     };
@@ -19756,7 +21742,7 @@ function parseMySoraCsvLine(cols, lineNum) {
     if (cols.length < 22) { alert(`${lineNum}行目: 列が不足しています(22列必要)`); return null; }
     const id = parseInt(toHalfWidth(cols[0].trim()));
     if (isNaN(id) || id < 1 || id > 1000) { alert(`${lineNum}行目: 宙検索IDが無効です(1〜1000)`); return null; }
-    const name = cols[1].trim();
+    const name = csvUnprefix(cols[1].trim());
     const obsId = cols[2].trim() === '' ? null : parseInt(toHalfWidth(cols[2].trim()));
     const tgtId = cols[3].trim() === '' ? null : parseInt(toHalfWidth(cols[3].trim()));
     if (obsId !== null && (isNaN(obsId) || obsId < 1 || obsId > 1000)) { alert(`${lineNum}行目: 観測点IDが無効です(1〜1000)`); return null; }
@@ -19787,7 +21773,7 @@ function parseMySoraCsvLine(cols, lineNum) {
     const fan = Math.max(1, Math.min(180, parseFloat(toHalfWidth(cols[19].trim())) || 24));
     const rv = parseFloat(toHalfWidth(cols[20].trim()));
     const range = isFinite(rv) && rv > 0 ? Math.max(1, Math.min(300, rv)) : null;
-    const memo = cols[21].trim();
+    const memo = csvUnprefix(cols[21].trim());
     return { id, name, obsId, tgtId, preset, weights, days, interval, fan, range, checked: false, memo };
 }
 function importMySoraCsv() {
@@ -19927,7 +21913,7 @@ function _smBuildBodies() {
     let observer;
     try { observer = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev); } catch (e) { return; }
     const date = appState.currentDate;
-    const refr = appState.refractionEnabled ? 'normal' : null;
+    const refr = appState.astroRefraction ? 'normal' : null;
     appState.bodies.forEach(body => {
         if (!body.visible) return;
         if (body.id === 'MilkyWay') {
@@ -19990,7 +21976,7 @@ function _smBuildTraj(dateOverride) {
     const centerMs = Math.round((dateOverride || appState.currentDate).getTime() / 3600000) * 3600000;
     const posKey = `${appState.start.lat},${appState.start.lng},${appState.start.elev}`;
     const visibleIds = appState.bodies.filter(b => b.visible).map(b => b.id).join(',');
-    const key = `${centerMs}|${posKey}|${visibleIds}|${appState.soraTraj}|${appState.baseOptMwBase}:${appState.mwOffsetAngle}|${appState.refractionEnabled}`;
+    const key = `${centerMs}|${posKey}|${visibleIds}|${appState.soraTraj}|${appState.baseOptMwBase}:${appState.mwOffsetAngle}|${appState.astroRefraction}`;
     if (key === _smTrajKey) return;
     _smTrajKey = key;
     while (_smTrajGrp.children.length) { const c = _smTrajGrp.children.pop(); if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); }
@@ -19998,7 +21984,7 @@ function _smBuildTraj(dateOverride) {
     let observer;
     try { observer = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev); } catch (e) { return; }
     const spanMs = 36 * 3600000, N = 288;   // ±36時間を15分刻み(=旧実装の1日96点と同密度)
-    const refr = appState.refractionEnabled ? 'normal' : null;   // 軌跡にも天体マーカーと同じ大気差(第116。従来は無しで地平線際にずれがあった)
+    const refr = appState.astroRefraction ? 'normal' : null;   // 軌跡にも天体マーカーと同じ大気差(第116。従来は無しで地平線際にずれがあった)
     appState.bodies.forEach(body => {
         if (!body.visible) return;
         // 天の川は「基準点(中心座標/オフセット点=基本オプション)」を固定点として軌跡を描く。それ以外は通常天体。
@@ -20039,7 +22025,7 @@ function _smUpdateMilkyWayRing() {
     let observer;
     try { observer = new Astronomy.Observer(appState.start.lat, appState.start.lng, appState.start.elev); } catch (e) { return; }
     const date = appState.currentDate;
-    const refr = appState.refractionEnabled ? 'normal' : null;
+    const refr = appState.astroRefraction ? 'normal' : null;
     const pts = [];
     for (let l = 0; l <= 360; l += 4) {   // 銀河赤道を約91点で大円描画
         const eq = galacticToEquatorial(l, 0);
@@ -20377,7 +22363,7 @@ function _smApplyShading() {
     const sun = _smSunDir();
     // 太陽方位/高度を量子化して鍵に含める→日時変化で陰影を再計算
     const sunKey = `${Math.round(sun.az)}_${Math.round(sun.alt)}`;
-    const shadeKey = `${_smGeomKey}|${appState.soraGrayscale}|${appState.soraPeaking}|${focusNear.toFixed(0)}|${focusFar === Infinity ? 'inf' : focusFar.toFixed(0)}|${sunKey}|${appState.soraElevShade}|${appState.soraSunShade}|${appState.soraPhotoTex ? 'P' : ''}`;
+    const shadeKey = `${_smGeomKey}|${appState.soraGrayscale}|${appState.soraPeaking}|${focusNear.toFixed(0)}|${focusFar === Infinity ? 'inf' : focusFar.toFixed(0)}|${sunKey}|${appState.soraElevShade}|${appState.soraSunShade}|${appState.soraPhotoTex ? 'P' : ''}|K${refractionKInUse().toFixed(5)}`;   // Kも鍵に(地形の網は実効半径で沈める。建物の扇と同じKで描き直す。第157のレビュー)
     if (shadeKey === _smShadeKey && _smTerrainMesh) return;
     _smShadeKey = shadeKey;
     _smBuildTerrainMesh(_smHeightfield, focusNear, focusFar, sun.vec);
@@ -20389,7 +22375,7 @@ function _smBuildTerrainMesh(hf, focusNear, focusFar, sunVec) {
     const { nA, nR, samples } = hf;
     const row = nA + 1;
     const obsElev = Number(appState.start.elev) || 0;
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const k = refractionKInUse();   // 気差係数(設定に表示されている値。オフ=0)
     const Reff1 = getLocalEarthRadius(appState.start.lat) / (1 - k);
     const r1 = Reff1 + obsElev;
     // 標高レンジ
@@ -20477,7 +22463,7 @@ function _smBuildTerrainMesh(hf, focusNear, focusFar, sunVec) {
 // 実測の目安: LOD2texタイル≈1.8MB/1.1万頂点。スマホは端末性能に合わせて控えめに。
 const SM_BLDG_CACHE_MAX = 520;        // b3dm/幾何/テクスチャのLRU上限(タイル数。スライダー最大500より大きく=表示中タイルを追い出さない)
 const SM_BLDG_RANGE_CAP_KM = 200;     // 建物を取りに行く距離の上限(km。視界範囲とのmin。霞ヶ浦からのダイヤモンド富士+都心ビル群のような遠景シルエット用: 第52ラウンド・依頼者指定)
-const SM_BLDG_DRACO_BASE = 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/';   // three同梱のGoogle Draco(既存CDN系列。テストはvendorへ書き換え)
+const SM_BLDG_DRACO_BASE = 'vendor/draco/';   // three同梱のGoogle Draco。自前配信(vendor/。指紋は vendor/MANIFEST.json)
 // 全国対応表(tools/plateau/make-bldg-cities.jsでカタログAPIから生成。448都市ファミリ=306市区町村)
 // 各エントリ: {code, name, bbox[西,南,東,北 度]=tileset root実測, lod1/lod2NoTex/lod2Tex=base相対URL}
 const SM_BLDG_CITIES_URL = 'data/plateau-bldg-cities.json';
@@ -20695,7 +22681,7 @@ function _smBldgUpdate() {
     const aovH = appState.soraPanorama ? soraPanoEffAov(o) : o.aovH;
     const centerAz = Number(appState.soraBaseAz) + Number(appState.soraOffsetAz);
     const rangeKm = Math.min(Math.max(1, Number(appState.soraViewRange) || 1), SM_BLDG_RANGE_CAP_KM);
-    const k = appState.refractionEnabled ? calculateKFromMeteo(appState.meteo.p, appState.meteo.t, appState.meteo.l) : 0;
+    const k = refractionKInUse();   // 気差係数(設定に表示されている値。オフ=0)
     const budget = Math.max(1, Math.min(APP_DEFAULTS.smBldgTiles.max, Math.round(Number(appState.smBldgTiles) || 30)));   // 上限は既定値表を参照して一元化(第64ラウンド: 旧上限150の残置でスライダー151以上が頭打ちになっていたため二重定義をやめた)
     const geoKey = `${oLat.toFixed(6)},${oLng.toFixed(6)},${obsElev.toFixed(1)}|${k.toFixed(5)}|${appState.smBldgTex ? 'T' : 'N'}`;
     const fanKey = `${geoKey}|${centerAz.toFixed(2)}|${aovH.toFixed(1)}|${rangeKm}|${budget}`;

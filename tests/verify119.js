@@ -102,7 +102,7 @@ const SETUP=fs.readFileSync(path.join(__dirname,'verify113.js'),'utf8').match(/c
     });
     check('Y4 クレジット表示がⓘアイコン(compact)', r.compact&&r.btn, JSON.stringify({compact:r.compact,btn:r.btn}));
     check('Y4 クレジットの重複なし(ベース=地理院タイル1回+custom=標高/Open-Meteoのみ)',
-      r.gsiOnce&&r.txt.includes('国土地理院(標高)')&&r.txt.includes('Open-Meteo'), r.txt);
+      r.gsiOnce&&r.txt.includes('国土地理院(標高・写真)')&&r.txt.includes('Open-Meteo'), r.txt);
   }
 
   // Y5: setDataのバッチ化 — updateCalculationで方位線1回・updateDPLinesで辻ライン1回

@@ -29,7 +29,7 @@ GNU General Public License for more details.
 // このWorkerはプール内で再利用される設計のため、起動時のオーバーヘッドを
 // 1度だけ負担して、以降のメッセージは postMessage のみで処理する。
 
-importScripts('https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js');
+importScripts('vendor/astronomy.browser.min.js');   // 自前配信(vendor/。版は固定・指紋は vendor/MANIFEST.json)
 
 const A = (typeof Astronomy !== 'undefined') ? Astronomy
         : (typeof self !== 'undefined' && self.Astronomy) ? self.Astronomy
@@ -39,25 +39,15 @@ if (!A) {
     self.postMessage({ error: 'Astronomy engine failed to load in DP line worker.' });
 }
 
-// WGS84 楕円体パラメータ
-const WGS84_A = 6378137;          // 赤道半径 (semi-major)
-const WGS84_B = 6356752.3142;     // 極半径 (semi-minor)
-const WGS84_F = 1 / 298.257223563; // 扁平率
+importScripts('sora-constants.js');   // 数の単一情報源(WGS84・局所半径)。本体と同じ値・同じ式
+// WGS84 楕円体パラメータ(値は sora-constants.js)
+const WGS84_A = SORA.EARTH.WGS84_SEMI_MAJOR_M;   // 赤道半径 (semi-major)
+const WGS84_B = SORA.EARTH.WGS84_SEMI_MINOR_M;   // 極半径 (semi-minor)
+const WGS84_F = SORA.EARTH.WGS84_FLATTENING;     // 扁平率
 
 /** 観測点緯度における WGS84 楕円体上の地心距離 (geocentric radius)
  *  ρ(φ) = sqrt[((a²cosφ)² + (b²sinφ)²) / ((a cosφ)² + (b sinφ)²)] */
-function getLocalEarthRadius(latDeg) {
-    const lat = latDeg * Math.PI / 180;
-    const cosLat = Math.cos(lat), sinLat = Math.sin(lat);
-    const a2cos = WGS84_A * WGS84_A * cosLat;
-    const b2sin = WGS84_B * WGS84_B * sinLat;
-    const acos = WGS84_A * cosLat;
-    const bsin = WGS84_B * sinLat;
-    return Math.sqrt(
-        (a2cos * a2cos + b2sin * b2sin) /
-        (acos * acos + bsin * bsin)
-    );
-}
+function getLocalEarthRadius(latDeg) { return SORA.getLocalEarthRadius(latDeg); }   // 式は sora-constants.js(本体と同じ関数)
 
 /** 観測者高 hObs / ターゲット高 hTarget のとき、観測高度 altObs に見える距離。
  *  有効地球半径モデル: 気差で光路が曲がる効果を「Reff = R/(1-k) に膨らんだ地球」
@@ -179,7 +169,7 @@ self.onmessage = (e) => {
     }
 
     const {
-        body, observerData, targetData, refractionEnabled, k,
+        body, observerData, targetData, astroRefraction, k,
         startOfDayMs, hourStart, hourEnd,
         valElev, targetElev, limit, distLimit,
         taskId,
@@ -188,7 +178,7 @@ self.onmessage = (e) => {
     } = e.data;
     const altOff = Number(altOffset) || 0;
 
-    const refr = refractionEnabled ? 'normal' : null;
+    const refr = astroRefraction ? 'normal' : null;
     const points = [];
     const stepSec = (stepSeconds && stepSeconds > 0) ? stepSeconds : 1;
     const startSec = hourStart * 3600;
@@ -198,8 +188,9 @@ self.onmessage = (e) => {
     // 初期観測点 (反復のスタート地点)
     const initObs = new A.Observer(observerData.lat, observerData.lng, observerData.elev);
 
-    for (let s = startSec; s < endSec; s += stepSec) {
-        const time = new Date(startOfDayMs + s * 1000);
+    // 1時刻ぶんの評価(反復補正つき)。有効なら点、無効(見かけ高度が下限以下・距離が上限以上)なら null
+    const evalAt = (timeMs) => {
+        const time = new Date(timeMs);
 
         // 反復補正: 観測点位置を更新しながら az/alt を再計算 (月の視差等を吸収)
         let curObs = initObs;
@@ -258,8 +249,31 @@ self.onmessage = (e) => {
         if (!limitReached && lastAz != null && lastDist != null) {
             const point = { dist: lastDist, az: lastAz, timeMs: time.getTime() };
             if (dest) { point.lat = dest.lat; point.lng = dest.lng; }
-            points.push(point);
+            return point;
         }
+        return null;
+    };
+    // 線の端を境界の時刻へ詰める(第156・依頼者: 辻ライン365で線の長さがまちまち=1分刻みでは「見かけ高度の下限」や「距離の上限」を跨ぐ直前の標本が
+    // 270〜365kmのどこにでも落ちていた)。有効↔無効が切り替わる2つの標本の間を1秒まで二分し、境界ぎわの点を足す。端は下限の見かけ高度の距離か距離の上限に揃う
+    const bisect = (okMs, ngMs) => {
+        let lo = okMs, hi = ngMs, best = null;
+        for (let it = 0; it < 12 && Math.abs(hi - lo) > 1000; it++) {
+            const mid = Math.round((lo + hi) / 2); const pt = evalAt(mid);
+            if (pt) { lo = mid; best = pt; } else hi = mid;
+        }
+        return best || evalAt(lo);
+    };
+    const prevMs = startOfDayMs + (startSec - stepSec) * 1000;   // 1つ前の標本(前の時間帯の最後)。時間帯の境目でも端を詰められるように
+    let lastMs = prevMs, lastOk = !!evalAt(prevMs);
+    for (let s = startSec; s < endSec; s += stepSec) {
+        const timeMs = startOfDayMs + s * 1000;
+        const pt = evalAt(timeMs);
+        if (pt && !lastOk) { const b = bisect(timeMs, lastMs); if (b && b.timeMs !== timeMs) points.push(b); }   // 弧の始まり: 境界ぎわの点を先に
+        if (pt) points.push(pt);
+        else if (lastOk && s > startSec) { const b = bisect(lastMs, timeMs); if (b && b.timeMs !== lastMs) points.push(b); }   // 弧の終わり: 境界ぎわの点を後に
+        lastMs = timeMs; lastOk = !!pt;
     }
+    // 時間帯の終わりで有効のまま終わった時は、次の時間帯の最初の標本が無効なら(次の時間帯が担当しない)ここで端を詰める
+    if (lastOk) { const nextMs = startOfDayMs + endSec * 1000; if (!evalAt(nextMs)) { const b = bisect(lastMs, nextMs); if (b && b.timeMs !== lastMs) points.push(b); } }
     self.postMessage({ points, hourStart, taskId });
 };

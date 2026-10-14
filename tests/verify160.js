@@ -23,7 +23,7 @@ check('V0 Version Historyに1.77.0の行がある', src.includes('Version 1.77.0
 
 (async()=>{
   const b=await chromium.launch({executablePath:EXE,headless:true,args:ARGS});
-  const ctx=await b.newContext({viewport:{width:900,height:900},timezoneId:'Asia/Tokyo'});
+  const ctx=await b.newContext({viewport:{width:900,height:900},timezoneId:'Asia/Tokyo',bypassCSP:true});   // 第159: Q1 で復号器(jsQR)をインラインで注入するため、この文脈だけCSPを外す(アプリ側の検査ではない。CSPそのものは verify184)
   await ctx.route('**/*', route => { route.request().url().startsWith(BASE) ? route.continue() : route.abort(); });
   const p=await ctx.newPage();
   const errs=[]; p.on('pageerror',e=>errs.push(e.message));

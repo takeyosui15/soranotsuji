@@ -1,0 +1,85 @@
+{
+ "tool": "tools/kashimap/viewshed.js",
+ "version": 2,
+ "generated": "2026-09-23T09:56:29.687Z",
+ "mountain": {
+  "id": "370",
+  "name": "毛無山",
+  "peak": "",
+  "elev_list": 1964,
+  "elev_dem": 1962.1,
+  "lat": 35.415833,
+  "lon": 138.543888
+ },
+ "range_km": 20,
+ "zoom": 15,
+ "canopy": false,
+ "buildings": false,
+ "observer_h_m": 1.5,
+ "k": 0.132,
+ "earth_radius_m": 6371000,
+ "reff_m": 7339861.751152074,
+ "summit_mode": "region",
+ "summit_area": {
+  "drop_m": 300,
+  "drop_requested_m": 300,
+  "search_m": 3000,
+  "px": 278905,
+  "far_m": 2684.7,
+  "other_peaks_in_search": [],
+  "how": "山頂から300m以内の高さで山頂につながる画素(探索半径3000m。別の山の山頂を含まない高さまで)"
+ },
+ "excl_target_m": 15,
+ "excl_target_how": "山頂部の画素そのもの(中心・半径なし)+半径15m(アプリの既定と同じ最小値)",
+ "summit_elev_how": "3×3画素のDEM最大",
+ "excl_observer_m": 10,
+ "grid": {
+  "w": 5139,
+  "h": 5139,
+  "x0": 7420041,
+  "y0": 3308281,
+  "mpp_center": 3.8934,
+  "note": "1画素の大きさは中心緯度の値で一定とした(窓の中で約±0.4%の差)"
+ },
+ "dem": {
+  "sources": "cyberjapandata.gsi.go.jp dem5a_png/dem5b_png/dem5c_png(z15)→dem_png(z14, 最近傍で2倍)",
+  "tiles": 462,
+  "from5a": 461,
+  "from5b": 0,
+  "from5c": 0,
+  "from14": 1,
+  "missing": 0,
+  "data_px": 25979021
+ },
+ "method": "R2: 山頂から窓の縁の全画素へ光線。見かけ高度角=(h−d²/(2Reff)−hS)/d の最大を更新。観測者=地上+observer_h。除外=目的点側(山頂部・上記)・観測点側10m(式と観測点側はアプリの統一可視判定と同じ。目的点側はアプリの15mを山頂部へ一般化)",
+ "outline": {
+  "tol_px": 0,
+  "edges": 460008,
+  "rings": 10051,
+  "holes": 9132,
+  "vertices_raw": 284816,
+  "vertices": 284816,
+  "encoding": "outline.json: 島ごとに[項番,画素数,外周,穴…]。各環は画素の角の整数座標(窓の左上が0,0)を先頭=絶対・以降=差分でGoogle polyline符号(倍率なし)"
+ },
+ "result": {
+  "visible_px": 10587148,
+  "visible_km2": 160.482,
+  "islands": 919,
+  "rays": 20552,
+  "check": {
+   "n": 300,
+   "agree": 295,
+   "agree_pct": 98.33,
+   "tool_only_visible": 5,
+   "app_only_visible": 0
+  }
+ },
+ "timing_s": {
+  "tiles": 2.1,
+  "viewshed": 1.4,
+  "islands": 0.1,
+  "outline": 0.2,
+  "total": 4.2
+ },
+ "attribution": "国土地理院 標高タイル(DEM5A/5B/5C/10B)を加工して作成。日本の主な山岳標高(国土地理院)を加工して作成"
+}

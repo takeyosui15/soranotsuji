@@ -4,10 +4,9 @@
 # SYNOPSIS
 #   python3 tests/harness/sync-apptest.py <apptestディレクトリ>
 # DESCRIPTION
-#   リポジトリのアプリ一式を<apptestディレクトリ>へコピーし、index.htmlと各ワーカーの
-#   CDN参照をローカルのvendor/パスへ書き換える。verify96〜のローカル検証(実ネットワーク遮断)は
+#   リポジトリのアプリ一式(vendor/ を含む)を<apptestディレクトリ>へコピーし、vendor/ の中身が
+#   MANIFEST.json の指紋と一致することを確かめる(第159から第三者ライブラリは自前配信)。verify96〜のローカル検証(実ネットワーク遮断)は
 #   このディレクトリをHTTPサーバで配信して行う。何度でも再実行できる(変更ファイルの再同期)。
-#   vendor/の中身が無い場合は、入手コマンド(curl)を表示して案内する。
 # HISTORY
 #   第22ラウンドでセッション作業領域に生まれ、第41ラウンドでリポジトリへ昇格
 #   (セッション初期化でハーネス構築の知識が消える問題への対処。スキル kaiki から使う)。
@@ -25,16 +24,16 @@ os.makedirs(APP, exist_ok=True)
 
 # アプリの配信面(テストが読み込むファイル)。docs/tests/reviews等の開発文書は含めない
 FILES = [
-    'index.html', 'script.js', 'style.css', 'forecast-features.html', 'reset.html',
+    'index.html', 'script.js', 'sora-constants.js', 'style.css', 'forecast-features.html', 'reset.html', 'reset.js', 'three-global.js',
     'privacy.html', 'terms.html',
     'dp-line-worker.js', 'sora-mov-worker.js', 'sora-terrain-worker.js',
-    'tm-vis-worker.js', 'tsuji-search-worker.js', 'tsujimesh-search-worker.js',
+    'tm-vis-worker.js', 'tsuji-search-worker.js', 'tsujimesh-search-worker.js', 'kashimap-worker.js',
     'celestial_db.json', 'constellations.borders.json', 'constellations.lines.json',
     'constellation_bounds_skymap_4k_print.webp', 'constellation_figures_skymap_4k_print.webp',
     'milkyway-skymap.webp', 'milkyway-skymap_4k.webp', 'milkyway-skymap_print.webp',
     'muni.js', 'muni.json', 'logo.png', 'favicon.ico', 'apple-touch-icon.png',
 ]
-DIRS = ['fonts', 'data']
+DIRS = ['fonts', 'data', 'vendor']   # vendor/ は第159からリポジトリ同梱(第三者ライブラリの自前配信)。指紋は MANIFEST.json と照合(下)。CDN→vendor の書き換えは不要になったので無い
 
 for f in FILES:
     src = os.path.join(REPO, f)
@@ -45,65 +44,17 @@ for d in DIRS:
     if os.path.isdir(src):
         shutil.copytree(src, os.path.join(APP, d), dirs_exist_ok=True)
 
-# CDN参照→vendor/ の書き換え(index.html)。パターンは現行index.htmlの参照と一致させて保守する
-SUBS = [
-    (r"https://geographiclib\.sourceforge\.io/scripts/geographiclib-geodesic\.min\.js", "vendor/geographiclib-geodesic.min.js"),
-    (r"https://geographiclib\.sourceforge\.io/scripts/geographiclib-dms\.min\.js", "vendor/geographiclib-dms.min.js"),
-    (r"https://cdn\.jsdelivr\.net/npm/mathjax@3/es5/tex-mml-chtml\.js", "vendor/mathjax-stub.js"),
-    (r"https://cdn\.jsdelivr\.net/npm/astronomy-engine@2\.1\.19/astronomy\.browser\.min\.js", "vendor/astronomy.browser.min.js"),
-    (r"https://cdn\.jsdelivr\.net/npm/three@0\.160\.0/build/three\.min\.js", "vendor/three.min.js"),
-    (r"https://unpkg\.com/maplibre-gl@4\.7\.1/dist/maplibre-gl\.css", "vendor/maplibre-gl.css"),
-    (r"https://unpkg\.com/maplibre-gl@4\.7\.1/dist/maplibre-gl\.js", "vendor/maplibre-gl.js"),
-    (r"https://cdn\.jsdelivr\.net/npm/qrcode-generator@1\.4\.4/qrcode\.min\.js", "vendor/qrcode.min.js"),
-]
-idx = os.path.join(APP, 'index.html')
-s = open(idx, encoding='utf-8').read()
-n = 0
-for pat, rep in SUBS:
-    s, c = re.subn(pat, rep, s)
-    n += c
-open(idx, 'w', encoding='utf-8').write(s)
-
-# ワーカーのCDN参照(astronomy-engine)もvendorへ
-wn = 0
-for w in ['dp-line-worker.js', 'sora-mov-worker.js', 'tsuji-search-worker.js', 'tsujimesh-search-worker.js']:
-    p = os.path.join(APP, w)
-    if os.path.exists(p):
-        t = open(p, encoding='utf-8').read()
-        t, c = re.subn(r"https://cdn\.jsdelivr\.net/npm/astronomy-engine@2\.1\.19/astronomy\.browser\.min\.js",
-                       "vendor/astronomy.browser.min.js", t)
-        open(p, 'w', encoding='utf-8').write(t)
-        wn += c
-
-# script.jsのCDN参照(Dracoデコーダ=都市モードのPLATEAU建物レイヤ)もvendorへ
-sp = os.path.join(APP, 'script.js')
-if os.path.exists(sp):
-    t = open(sp, encoding='utf-8').read()
-    t, c = re.subn(r"https://cdn\.jsdelivr\.net/npm/three@0\.160\.0/examples/jsm/libs/draco/", "vendor/draco/", t)
-    open(sp, 'w', encoding='utf-8').write(t)
-    wn += c
-
-# vendor/ の充足チェック(無ければ入手コマンドを案内。mathjax-stubはここで生成する)
-VENDOR = os.path.join(APP, 'vendor')
-os.makedirs(VENDOR, exist_ok=True)
-stub = os.path.join(VENDOR, 'mathjax-stub.js')
-if not os.path.exists(stub):
-    open(stub, 'w', encoding='utf-8').write('// MathJax stub (ローカル検証用: 数式表示は検証対象外)\n')
-NEED = {
-    'maplibre-gl.js':  'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js',
-    'maplibre-gl.css': 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css',
-    'astronomy.browser.min.js': 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js',
-    'three.min.js':    'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js',
-    'geographiclib-geodesic.min.js': 'https://geographiclib.sourceforge.io/scripts/geographiclib-geodesic.min.js',
-    'geographiclib-dms.min.js':      'https://geographiclib.sourceforge.io/scripts/geographiclib-dms.min.js',
-    'qrcode.min.js': 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js',
-    'draco/draco_wasm_wrapper.js': 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js',
-    'draco/draco_decoder.wasm':    'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/draco_decoder.wasm',
-}
-os.makedirs(os.path.join(VENDOR, 'draco'), exist_ok=True)
-missing = [(f, u) for f, u in NEED.items() if not os.path.exists(os.path.join(VENDOR, f))]
-print(f'synced (index.html {n}refs / workers {wn}refs rewritten) -> {APP}')
-if missing:
-    print('vendor/ に不足があります。以下で入手してください(プロキシ環境ではcurlがそのまま通ります):')
-    for f, u in missing:
-        print(f"  curl -sL -o '{VENDOR}/{f}' '{u}'")
+# vendor/ はリポジトリ同梱(第159)。コピーした中身が vendor/MANIFEST.json の指紋(sha256)と一致することを確かめる(違えば中断=検証対象のライブラリが本物であることの前提)
+import json, hashlib
+man = json.load(open(os.path.join(APP, 'vendor', 'MANIFEST.json'), encoding='utf-8'))
+bad = []
+for f in man['files']:
+    p = os.path.join(APP, 'vendor', f['path'])
+    if not os.path.exists(p):
+        bad.append(f['path'] + ': 無い'); continue
+    if hashlib.sha256(open(p, 'rb').read()).hexdigest() != f['sha256']:
+        bad.append(f['path'] + ': 指紋が台帳と違う')
+if bad:
+    print('vendor/ の中身が台帳(MANIFEST.json)と合いません:'); [print('  ' + b) for b in bad]
+    sys.exit(2)
+print(f'synced -> {APP} (vendor {len(man["files"])} files verified against MANIFEST.json)')

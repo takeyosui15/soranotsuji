@@ -15,7 +15,7 @@ const begin = src.indexOf('const _QP_B64');
 const end = src.indexOf('function buildBaseUrl');
 const qp = {};
 new Function('exports', src.slice(begin, end) +
-  '\nexports.KEYS=_QP_KEYS_V12; exports.VALUES=_QP_VALUES_V12; exports.SEEDS12=_QP_SEEDS_V12; exports.SEEDS13=_QP_SEEDS_V13; exports.SEEDS14=_QP_SEEDS_V14; exports.SEEDS15=_QP_SEEDS_V15; exports.SEEDS16=_QP_SEEDS_V16; exports.SEEDS17=_QP_SEEDS_V17; exports.SEEDS18=_QP_SEEDS_V18; exports.SEEDS19=_QP_SEEDS_V19; exports.SEEDS20=_QP_SEEDS_V20; exports.SEEDS21=_QP_SEEDS_V21;' +
+  '\nexports.KEYS=_QP_KEYS_V12; exports.VALUES=_QP_VALUES_V12; exports.SEEDS12=_QP_SEEDS_V12; exports.SEEDS13=_QP_SEEDS_V13; exports.SEEDS14=_QP_SEEDS_V14; exports.SEEDS15=_QP_SEEDS_V15; exports.SEEDS16=_QP_SEEDS_V16; exports.SEEDS17=_QP_SEEDS_V17; exports.SEEDS18=_QP_SEEDS_V18; exports.SEEDS19=_QP_SEEDS_V19; exports.SEEDS20=_QP_SEEDS_V20; exports.SEEDS21=_QP_SEEDS_V21; exports.SEEDS22=_QP_SEEDS_V22;' +
   'exports.VERSIONS=_QP_SEED_VERSIONS; exports.PRIME_FROM=_QP_PRIME_FROM;' +
   'exports.enc=encodeQueryParam; exports.dec=decodeQueryParam;')(qp);
 
@@ -70,7 +70,8 @@ const lintCoverage = (dictKeys) => [...EMIT].filter(k => !dictKeys.includes(k));
   const v19Keys = qp.SEEDS19.filter(x => !qp.SEEDS18.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
   const v20Keys = qp.SEEDS20.filter(x => !qp.SEEDS19.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
   const v21Keys = qp.SEEDS21.filter(x => !qp.SEEDS20.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));
-  const DICT_KEYS = qp.KEYS.concat(v14Keys, v15Keys, v16Keys, v17Keys, v18Keys, v19Keys, v20Keys, v21Keys);
+  const v22Keys = qp.SEEDS22.filter(x => !qp.SEEDS21.includes(x)).map(x => x.replace(/^&/, '').replace(/=.*$/, ''));   // 第158: astroRefraction(+refractionEnabled=true の既定値ペア)
+  const DICT_KEYS = qp.KEYS.concat(v14Keys, v15Keys, v16Keys, v17Keys, v18Keys, v19Keys, v20Keys, v21Keys, v22Keys);
   const missing = lintCoverage(DICT_KEYS);
   check('L2 URLビルダーが出力する全キーが辞書(v12キー+v14〜v20追加)にある(キー追加の入れ忘れ検知)',
     missing.length === 0, missing.length ? '辞書漏れ: ' + missing.join(', ') : `emit=${EMIT.size}keys v14=${v14Keys.length} v15=${v15Keys.length} v16=${v16Keys.length} v17=${v17Keys.length} v18=${v18Keys.length} v19=${v19Keys.length} v20=${v20Keys.length} v21=${v21Keys.length}`);

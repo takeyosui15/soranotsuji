@@ -17,6 +17,9 @@ GNU General Public License for more details.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 読み込み元の許可リスト(CSP)。スクリプトは自サイトとGoogleのログイン/ピッカーだけ・通信先は使うAPIだけ・埋め込み/プラグインは不可。変えるときは tests/verify184.js も直す -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client https://apis.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob: https://cyberjapandata.gsi.go.jp https://tile.openstreetmap.org https://s3.amazonaws.com; font-src 'self'; connect-src 'self' https://cyberjapandata.gsi.go.jp https://tile.openstreetmap.org https://s3.amazonaws.com https://msearch.gsi.go.jp https://nominatim.openstreetmap.org https://api.open-meteo.com https://archive-api.open-meteo.com https://air-quality-api.open-meteo.com https://www.googleapis.com https://sheets.googleapis.com https://oauth2.googleapis.com https://accounts.google.com/gsi/ https://script.google.com https://script.googleusercontent.com https://assets.cms.plateau.reearth.io; frame-src https://accounts.google.com/gsi/ https://docs.google.com; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="description" content="宙の辻 - Sora no Tsuji: 天の川/太陽/月/天体の位置を検索して、狙った構図の日時・場所まで逆算して確認できる。天の川富士/ダイヤモンド富士/パール富士のみならず、天の川槍ヶ岳/ダイヤモンド槍ヶ岳/パール槍ヶ岳から天の川百名山/ダイヤモンド百名山/パール百名山も可能かも。">
     <meta property="og:title" content="宙の辻 - Sora no Tsuji">
     <meta property="og:description" content="天の川/太陽/月/天体の位置を検索して、狙った構図の日時・場所まで逆算して確認できる。天の川富士/ダイヤモンド富士/パール富士のみならず、天の川槍ヶ岳/ダイヤモンド槍ヶ岳/パール槍ヶ岳から天の川百名山/ダイヤモンド百名山/パール百名山も可能かも。">
@@ -37,28 +40,19 @@ GNU General Public License for more details.
 
     <link rel="stylesheet" href="style.css">
 
-    <script
-      type="text/javascript"
-      src="https://geographiclib.sourceforge.io/scripts/geographiclib-geodesic.min.js">
-    </script>
-    <script
-      type="text/javascript"
-      src="https://geographiclib.sourceforge.io/scripts/geographiclib-dms.min.js">
-    </script>
-    
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- 第三者ライブラリは自前配信(vendor/。版は固定・内容の指紋は vendor/MANIFEST.json)。CDNや外部ホストにスクリプトの読み込みを頼らない(改ざん・停止・版の勝手な変化への備え) -->
+    <script src="vendor/geographiclib-geodesic.min.js"></script>
+    <script src="vendor/astronomy.browser.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
-
-    <!-- 天体儀(3D)用。グローバル THREE を公開する UMD 最終版(r161でUMD廃止のため0.160.0に固定) -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <!-- 天体儀(3D)用。three.js は ES Modules 版(r161でUMD廃止のため0.160.0に固定)。three-global.js がグローバル THREE を公開する -->
+    <script type="module" src="three-global.js"></script>
 
     <!-- 地図ライブラリ MapLibre GL JS(本体地図+宙断面ビュー。地図全面移行計画の手順4でLeafletを撤去し一本化) -->
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <link rel="stylesheet" href="vendor/maplibre-gl.css">
+    <script src="vendor/maplibre-gl.js"></script>
 
     <!-- QRコード生成(URL取得ダイアログの「:QRコード」。MIT・生成はローカル処理で通信なし) -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="vendor/qrcode.js"></script>
 </head>
 <body>
 
@@ -140,9 +134,9 @@ GNU General Public License for more details.
                 <input type="checkbox" id="chk-tsujires-acc-dash" class="body-checkbox" disabled> <label class="tsuji-acc-label">:-</label>
             </div>
             <hr class="tsujisearch-separator">
-            <div class="control-row left-row" title="標高フィルタをオンにして検索した場合のみ有効です">
+            <div class="control-row left-row" title="可視フィルタをオンにして検索した場合のみ有効です">
                 <input type="checkbox" id="chk-tsujires-elev-filter" class="body-checkbox">
-                <label for="chk-tsujires-elev-filter">標高フィルタ</label>
+                <label for="chk-tsujires-elev-filter">可視フィルタ</label>
             </div>
             <div class="control-row left-row">
                 <input type="checkbox" id="chk-tsujires-elev-ok" class="body-checkbox" disabled> <label class="tsuji-acc-label">:OK</label>
@@ -151,6 +145,69 @@ GNU General Public License for more details.
             <div class="control-row">
                 <button id="btn-tsujires-file" class="nav-btn main-btn" title="現在の再適用フィルタを適用した結果をCSVでFile出力します">File出力</button>
             </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="kashimap-panel" class="hidden">
+        <div id="kashimap-header"><button id="btn-kashimap-max" title="可視マップの表示領域を最大化">⛶</button> 可視マップ <span id="kashimap-status"></span><button id="btn-kashimap-close" class="panel-close-btn" title="可視マップを閉じる">✕</button></div>
+        <div id="kashimap-progress" class="tsuji-progress-bar hidden"><div id="kashimap-progress-fill"></div></div>
+        <div id="kashimap-toolbar">
+            <button id="btn-kashimap-select-all" class="nav-btn small" title="表示中の山を全て選択">全て選択</button>
+            <button id="btn-kashimap-select-none" class="nav-btn small" title="選択を全て解除">全て解除</button>
+            <span id="kashimap-toolbar-note" class="kashimap-note">行のチェックで山を選択(地図に島の輪郭と塗り・山頂にマーカー)、行クリックでその山頂へ移動</span>
+        </div>
+        <div id="kashimap-content"></div>
+        <div id="kashimap-detail" class="hidden">
+            <div id="kashimap-detail-header"><span id="kashimap-detail-title">島リスト(0件)</span> <span id="kashimap-detail-note" class="kashimap-note"></span></div>
+            <div id="kashimap-detail-toolbar">
+                <input type="checkbox" id="chk-kashimap-stripe-only" class="body-checkbox"> <label for="chk-kashimap-stripe-only" class="tsuji-acc-label" title="縞島(2つ以上の山が見える場所)だけに絞る">:縞島のみ</label>
+                <button id="btn-kashimap-island-all" class="nav-btn small" title="表示中の島を全て選択(輪郭が点滅)">全て選択</button>
+                <button id="btn-kashimap-island-none" class="nav-btn small" title="島の選択を全て解除">全て解除</button>
+                <span class="kashimap-note">行のチェックで輪郭が点滅、行クリックでその島へ移動</span>
+            </div>
+            <div id="kashimap-detail-body"></div>
+        </div>
+        <div id="kashimap-ctrl">
+            <div id="kashimap-ctrl-header" title="コントロールメニューを開閉"><span>コントロール</span><span id="kashimap-ctrl-arrow">▼</span></div>
+            <div id="kashimap-ctrl-body" class="hidden">
+                <div class="control-row left-row">
+                    <label class="baseopt-group-label" title="表示する範囲(推し山を中心にした四方の幅)。計算済みの範囲だけ選べます">範囲</label>
+                </div>
+                <div class="control-row left-row">
+                    <label class="baseopt-radio" title="100km四方"><input type="radio" name="kashimap-range" value="100" checked>:100km</label>
+                    <label class="baseopt-radio" title="300km四方"><input type="radio" name="kashimap-range" value="300">:300km</label>
+                    <label class="baseopt-radio" title="700km四方"><input type="radio" name="kashimap-range" value="700">:700km</label>
+                </div>
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-kashimap-tiles" class="body-checkbox" checked><label for="chk-kashimap-tiles" title="見える場所の塗り(可視辻マーカー。重なるほど濃い金)の表示/非表示">:可視タイル</label>
+                </div>
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-kashimap-canopy" class="body-checkbox" checked><label for="chk-kashimap-canopy" title="木の高さ(樹冠)を入れて計算した資産を使います(無い山は地形だけの資産)">:樹冠</label>
+                </div>
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-kashimap-building" class="body-checkbox" checked><label for="chk-kashimap-building" title="建物(構造物)を入れて計算した資産を使います(無い山は地形だけの資産)">:構造物</label>
+                </div>
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-kashimap-summit" class="body-checkbox" checked><label for="chk-kashimap-summit" title="選んだ山の山頂マーカー(山色のピン)の表示/非表示">:山頂マーカー</label>
+                </div>
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-kashimap-zen" class="body-checkbox" checked><label for="chk-kashimap-zen" title="重なりがいちばん多い縞島の代表点に立てるマーカーの表示/非表示">:全展望マーカー</label>
+                </div>
+                <div class="control-row left-row">
+                    <span class="kashimap-note">山リストは百名山・二百名山・三百名山・日本百高山と、国土地理院「日本の主な山岳標高(1003山)」を元にしています。それ以外の山は、My目的点に登録してご利用ください。</span>
+                </div>
+                <div class="control-row left-row">
+                    <span class="kashimap-note">標高・建物・木の高さからの概算です。現地では見えないこともあります。</span>
+                </div>
+                <div class="control-row left-row">
+                    <span class="kashimap-note">この機能はPC向け機能なので、スマートフォンでは動作が重たく感じる場合があります。</span>
+                </div>
+                <div class="control-row center-row">
+                    <button id="btn-kashimap-export" class="nav-btn" title="選んだ山の資産(計算条件・島の索引・島の輪郭)を1つのJSONファイルに出力します。File読込で別の端末でも使えます">File出力</button>
+                    <button id="btn-kashimap-import" class="nav-btn" title="File出力したJSONファイルを端末に保存して、山リストから使えるようにします(可視マップ節の「端末に保存した資産」に並びます)">File読込</button>
+                    <input type="file" id="input-kashimap-import" accept=".json,application/json" class="hidden" multiple>
+                </div>
             </div>
         </div>
     </div>
@@ -293,9 +350,9 @@ GNU General Public License for more details.
                 <input type="checkbox" id="chk-tsujimeshres-acc-dash" class="body-checkbox" disabled> <label class="tsuji-acc-label" title="読み取り専用(常時オフ)。メッシュマーカーは精度フィルタオプション以内のヒットのみ保持するため、-精度のデータはありません">:-</label>
             </div>
             <hr class="tsujisearch-separator">
-            <div class="control-row left-row" title="標高フィルタをオンにして検索した場合のみ有効です">
+            <div class="control-row left-row" title="可視フィルタをオンにして検索した場合のみ有効です">
                 <input type="checkbox" id="chk-tsujimeshres-elev-filter" class="body-checkbox">
-                <label for="chk-tsujimeshres-elev-filter">標高フィルタ</label>
+                <label for="chk-tsujimeshres-elev-filter">可視フィルタ</label>
             </div>
             <div class="control-row left-row">
                 <input type="checkbox" id="chk-tsujimeshres-elev-ok" class="body-checkbox" disabled> <label class="tsuji-acc-label">:OK</label>
@@ -468,6 +525,18 @@ GNU General Public License for more details.
         <div id="soramado-ctrl">
             <div id="soramado-ctrl-header" title="コントロールメニューを開閉"><span>コントロール</span><span id="soramado-ctrl-arrow">▼</span></div>
             <div id="soramado-ctrl-body" class="hidden">
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-sora-ctrl-drag-frame" class="body-checkbox" checked title="オン: プレビューをドラッグ(スマホは二本指)すると、画面中心(+)はそのままで目的点(+)と検索中心(×)が動く=カメラオフセット方位角/視高度が変わる。オフ: カメラオフセット方位角/視高度を0に戻す">
+                    <label class="input-label tsujisearch-label" for="chk-sora-ctrl-drag-frame">:構図をドラッグ(二本指)で変更</label>
+                </div>
+                <div class="control-row left-row">
+                    <input type="checkbox" id="chk-sora-ctrl-drag-tsuji" class="body-checkbox" title="オン: プレビューをドラッグ(スマホは二本指)すると、画面中心(+)と目的点(+)はそのままで検索中心(×)だけが動く=辻オフセット方位角/視高度が変わる(辻検索メニューと連動)。オフ: 辻オフセット方位角/視高度を動かす前の値に戻す">
+                    <label class="input-label tsujisearch-label" for="chk-sora-ctrl-drag-tsuji">:辻オフセット点をドラッグ(二本指)で変更</label>
+                </div>
+                <div class="control-row main-buttons-row sora-ctrl-search-row">
+                    <button id="btn-sora-ctrl-tsuji-search" class="nav-btn main-btn" title="この構図(辻オフセット点)で辻検索(位置情報メニューの「辻検索」と同じ)">辻検索</button>
+                    <button id="btn-sora-ctrl-tsujimesh" class="nav-btn main-btn" title="この構図(辻オフセット点)で辻メッシュ検索(位置情報メニューの「辻メッシュ」と同じ)">辻メッシュ</button>
+                </div>
                 <div class="control-row">
                     <label class="input-label tsujisearch-label" title="カメラを縦位置(縦向き)か横位置(横向き)かで構えます(宙の窓メニューと連動)">カメラ位置:</label>
                     <label class="baseopt-radio"><input type="radio" name="sora-orient-ctrl" value="landscape" checked>横</label>
@@ -801,7 +870,7 @@ GNU General Public License for more details.
     </div>
 
     <div id="control-panel" class="control-panel minimized">
-        <div class="panel-header" onclick="togglePanel()">
+        <div class="panel-header" data-click="togglePanel">
             <span id="header-title">
                 <img src="logo.png" alt="ロゴ" class="header-logo">
                 宙の辻<span class="header-subtitle"> - Sora no Tsuji</span>
@@ -816,7 +885,7 @@ GNU General Public License for more details.
         <div id="panel-content" class="panel-content">
             
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-location')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-location">
                     <span>位置情報</span> <span id="icon-sec-location">▲</span>
                 </div>
                 <div id="sec-location" class="section-content">
@@ -891,14 +960,17 @@ GNU General Public License for more details.
                     <div class="control-row main-buttons-row">
                         <button id="btn-tsuji-search" class="nav-btn main-btn">辻検索</button>
                         <button id="btn-tsujimesh" class="nav-btn main-btn" title="観測点付近のDEM標高タイルの全画素で辻検索(辻メッシュ検索)">辻メッシュ</button>
-                        <button id="btn-soramado" class="nav-btn main-btn">宙の窓</button>
+                        <button id="btn-soramado" class="nav-btn main-btn" title="観測点から目的点を見た構図(ファインダー)を描き、構図を見ながら辻オフセット点を決めて辻検索・辻メッシュ検索へ(宙の窓検索)">宙の窓検索</button>
+                    </div>
+                    <div class="control-row main-buttons-row" id="row-kashimap-btn">
+                        <button id="btn-kashimap" class="nav-btn main-btn" title="推し山がどこから見えるかを地図に塗る可視マップ(計算済みの山は島の輪郭と塗り・島リスト。資産のFile出力/File読込。山リストに無い山や構造物は「目的点で計算」「My目的点で計算」でその場で計算)">可視マップ</button>
                     </div>
                     <div id="ff-slot-soradanmen-btn" class="hidden"></div>
                 </div>
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-baseoption')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-baseoption">
                     <span>基本オプション</span>
                     <span id="icon-sec-baseoption">▼</span>
                 </div>
@@ -947,11 +1019,25 @@ GNU General Public License for more details.
                         <label class="input-label tsujisearch-label" title="観測点の半径○m以内は可視判定のNGを無視する(初期値10m=観測点自身のDEM画素の自己遮蔽を吸収)">観測点側(半径,m):</label>
                         <input type="number" id="input-baseopt-elev-exclude-obs" placeholder="0〜10000m" step="1" min="0" max="10000">
                     </div>
+                    <div class="control-row left-row">
+                        <label class="baseopt-radio" title="目的点の山頂部(目的点の標高から帯の高さ以内で目的点につながる範囲。探索半径3km)の地形は遮蔽に数えない。火口の縁や山頂直下の斜面で山頂が隠れる誤判定を防ぐ(別の山の山頂を含む時は自動で縮める)"><input type="checkbox" id="chk-baseopt-summit-band" checked>:山頂部</label>
+                        <label class="baseopt-radio" title="目的点の山頂部の範囲を地図に描く(薄い赤の塗り。目的点を動かすと描き直す)。この山ではこの帯でよいかを目で確かめるため"><input type="checkbox" id="chk-baseopt-summit-preview">:プレビュー</label>
+                    </div>
+                    <div class="control-row">
+                        <label class="input-label tsujisearch-label" title="山頂部の帯の高さ(m)。初期値300=山頂の肩まで。120=火口の縁まで・500=山頂直下の斜面まで">山頂部(帯,m):</label>
+                        <input type="number" id="input-baseopt-summit-band" placeholder="0〜2000m" step="10" min="0" max="2000">
+                    </div>
+                    <div class="control-row left-row">
+                        <span id="baseopt-summit-preview-info" class="kashimap-note"></span>
+                    </div>
+                    <div class="control-row center-row">
+                        <button id="btn-baseopt-excl-reset" class="nav-btn small" title="除外範囲の値(目的点側15m・観測点側10m・山頂部300m・チェック)を初期値に戻す">除外範囲をリセット</button>
+                    </div>
                 </div>
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-tsujisearch')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-tsujisearch">
                     <span>辻検索</span>
                     <span id="icon-sec-tsujisearch">▼</span>
                 </div>
@@ -1089,11 +1175,15 @@ GNU General Public License for more details.
                     <hr class="tsujisearch-separator">
                     <div class="control-row left-row">
                         <input type="checkbox" id="chk-tsuji-elev-option" class="body-checkbox">
-                        <label for="chk-tsuji-elev-option">標高フィルタ</label>
+                        <label for="chk-tsuji-elev-option" title="検索結果の各行で観測点→目的点の可視判定(OK/NG)を行います(標高グラフと同じ判定)">可視フィルタ</label>
                     </div>
                     <div class="control-row left-row">
                         <input type="checkbox" id="chk-tsuji-elev-ok" class="body-checkbox" disabled> <label class="tsuji-acc-label">:OK</label>
                         <input type="checkbox" id="chk-tsuji-elev-ng" class="body-checkbox" disabled> <label class="tsuji-acc-label">:NG</label>
+                    </div>
+                    <div class="control-row left-row" title="樹冠(木の高さ)・構造物(建物)を入れた可視判定(準備中)">
+                        <input type="checkbox" id="chk-tsuji-vis-canopy" class="body-checkbox" disabled> <label class="km-label">:樹冠</label>
+                        <input type="checkbox" id="chk-tsuji-vis-building" class="body-checkbox" disabled checked> <label class="km-label">:構造物</label>
                     </div>
                     <div class="control-row">
                         <button id="btn-url-tsuji" class="nav-btn main-btn" title="現在の辻検索を開くURLをクリップボードにコピー">URL取得</button>
@@ -1102,7 +1192,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-tsujimesh')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-tsujimesh">
                     <span>辻メッシュ検索</span>
                     <span id="icon-sec-tsujimesh">▼</span>
                 </div>
@@ -1248,11 +1338,15 @@ GNU General Public License for more details.
                     <hr class="tsujisearch-separator">
                     <div class="control-row left-row" title="検索前に全画素の可視(OK)/不可視(NG)を判定し、選んだ対象の画素だけを検索します">
                         <input type="checkbox" id="chk-tsujimesh-elev-option" class="body-checkbox">
-                        <label for="chk-tsujimesh-elev-option">標高フィルタ</label>
+                        <label for="chk-tsujimesh-elev-option">可視フィルタ</label>
                     </div>
                     <div class="control-row left-row" title="OKのみ=可視画素だけ / NGのみ=不可視画素だけ / 両方またはどちらもオフ=全画素を検索">
                         <input type="checkbox" id="chk-tsujimesh-elev-ok" class="body-checkbox" disabled> <label class="tsuji-acc-label">:OK</label>
                         <input type="checkbox" id="chk-tsujimesh-elev-ng" class="body-checkbox" disabled> <label class="tsuji-acc-label">:NG</label>
+                    </div>
+                    <div class="control-row left-row" title="樹冠(木の高さ)・構造物(建物)を入れた可視判定(準備中)">
+                        <input type="checkbox" id="chk-tsujimesh-vis-canopy" class="body-checkbox" disabled> <label class="km-label">:樹冠</label>
+                        <input type="checkbox" id="chk-tsujimesh-vis-building" class="body-checkbox" disabled checked> <label class="km-label">:構造物</label>
                     </div>
                     <hr class="tsujisearch-separator">
                     <div class="control-row left-row"><label class="baseopt-group-label" title="辻メッシュ検索のDEM標高タイルの範囲(検索中は変更で再計算)">検索エリア</label></div>
@@ -1268,16 +1362,147 @@ GNU General Public License for more details.
                 </div>
             </div>
 
+            <div class="section" id="section-kashimap">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-kashimap">
+                    <span>可視マップ</span>
+                    <span id="icon-sec-kashimap">▼</span>
+                </div>
+                <div id="sec-kashimap" class="section-content closed">
+                    <div class="control-row">
+                        <input type="text" id="input-kashimap-query" class="km-query" placeholder="推し山名、読み、都道府県名" maxlength="150" autocomplete="off" title="推し山: スペース区切りで複数指定できます。各語は山名・読み・別名・都道府県名のどれかに部分一致します(150字まで)">
+                    </div>
+                    <div class="control-row left-row">
+                        <label class="baseopt-group-label km-sub" title="推し山の語の当て方">検索条件:</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="radio" name="kashimap-andor" id="radio-kashimap-and" value="and" class="body-checkbox" checked> <label for="radio-kashimap-and" class="tsuji-acc-label" title="全部の語に当たる山">:AND</label>
+                        <input type="radio" name="kashimap-andor" id="radio-kashimap-or" value="or" class="body-checkbox"> <label for="radio-kashimap-or" class="tsuji-acc-label" title="どれかの語に当たる山(例:「長野 山梨」で両県の山)">:OR</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <label class="baseopt-group-label km-sub" title="山リストの絞り込み(リストの印)">山リスト:</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-100" class="body-checkbox" checked> <label for="chk-kashimap-100" class="km-label" title="日本百名山(深田久弥)">:百名山</label>
+                        <input type="checkbox" id="chk-kashimap-200" class="body-checkbox"> <label for="chk-kashimap-200" class="km-label" title="日本二百名山(深田クラブ。百名山を含む200座)">:二百名山</label>
+                        <input type="checkbox" id="chk-kashimap-300" class="body-checkbox"> <label for="chk-kashimap-300" class="km-label" title="日本三百名山(日本山岳会。百名山を含む300座)">:三百名山</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-high" class="body-checkbox"> <label for="chk-kashimap-high" class="km-label" title="日本百高山(標高順上位100)">:百高山</label>
+                        <input type="checkbox" id="chk-kashimap-other" class="body-checkbox"> <label for="chk-kashimap-other" class="km-label" title="国土地理院「日本の主な山岳標高(1003山)」のうち、上の4つのリストに入らない山">:その他</label>
+                        <input type="checkbox" id="chk-kashimap-device" class="body-checkbox"> <label for="chk-kashimap-device" class="km-label" title="端末に保存した可視タイル(資産)がある山と目的点だけに絞る">:端末保存</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <label class="baseopt-group-label km-sub" title="表示する範囲(計算済みの範囲だけ選べます。コントロールと連動)">最大表示範囲:</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <label class="baseopt-radio" title="100km四方(表示する範囲。計算済みの範囲だけ選べます。コントロールと連動)"><input type="radio" name="kashimap-range-menu" value="100" checked>:100km</label>
+                        <label class="baseopt-radio" title="300km四方"><input type="radio" name="kashimap-range-menu" value="300">:300km</label>
+                        <label class="baseopt-radio" title="700km四方"><input type="radio" name="kashimap-range-menu" value="700">:700km</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <label class="baseopt-group-label km-sub" title="見える/見えないの判定に入れる遮るもの(その種類の資産があればそちらを使う)">障害物オプション:</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-menu-canopy" class="body-checkbox" checked> <label for="chk-kashimap-menu-canopy" class="km-label" title="木の高さ(樹冠)を入れて計算した資産があればそちらを使う(無い山は地形だけの資産。コントロールと連動)">:樹冠</label>
+                        <input type="checkbox" id="chk-kashimap-menu-building" class="body-checkbox" checked> <label for="chk-kashimap-menu-building" class="km-label" title="建物(構造物)を入れて計算した資産があればそちらを使う(無い山は地形だけの資産。コントロールと連動)">:構造物</label>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-kashimap-search" class="nav-btn main-btn" title="山リストを検索して結果パネルに表示します(推し山の欄が空ならチェックしたリストの山を全部)。山リストの範囲・樹冠・構造物・サイズの列に、上の条件で選ばれる資産が出ます">計算済み可視マップを検索</button>
+                    </div>
+                    <div class="control-row">
+                        <span class="kashimap-note">山リストは百名山・二百名山・三百名山・日本百高山と、国土地理院「日本の主な山岳標高(1003山)」を元にしています。それ以外の山は、My目的点に登録してご利用ください。</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="kashimap-note">標高・建物・木の高さからの概算です。現地では見えないこともあります。</span>
+                    </div>
+                    <div class="control-row left-row">
+                        <span class="kashimap-note">この機能はPC向け機能なので、スマートフォンでは動作が重たく感じる場合があります。</span>
+                    </div>
+                    <hr class="tsujisearch-separator km-hr">
+                    <div class="control-row left-row">
+                        <label class="baseopt-radio" title="今の目的点(位置情報メニューの目的点。標高+構造物の高さ)を対象に、下の計算範囲でその場で可視マップを計算して端末に保存します(山リストに無い地元の山や、東京タワーなどの構造物向け。同じ範囲の資産が端末にあればそれを使います)"><input type="radio" name="kashimap-compute-target" id="radio-kashimap-tgt" value="tgt" checked>:目的点</label>
+                        <label class="baseopt-radio" title="今のMyセットのMy目的点を対象に、下の計算範囲で順にその場で可視マップを計算して端末に保存します(山リストに無い地元の複数の山向け)"><input type="radio" name="kashimap-compute-target" id="radio-kashimap-mytgt" value="mytgt">:My目的点</label>
+                    </div>
+                    <div class="control-row">
+                        <label class="input-label tsujisearch-label" for="sel-kashimap-tgt-range" title="その場計算の範囲(目的点を中心にした四方の幅)。60kmまでは1画素約4m(DEM5A/5B/5C)、100kmは約8m、300kmは約30m、700kmは約60m(DEM10B)の解像度で計算します。広いほど標高タイルの取得と計算に時間がかかり、60km四方以上はメモリも多く使います(PC向け)">計算範囲リスト:</label>
+                        <select id="sel-kashimap-tgt-range" title="その場計算の範囲(目的点を中心にした四方の幅)と解像度(1画素の大きさ)">
+                            <option value="24" selected>24km (1画素≈4m)</option>
+                            <option value="36">36km (1画素≈4m)</option>
+                            <option value="48">48km (1画素≈4m)</option>
+                            <option value="60">60km (1画素≈4m)</option>
+                            <option value="100">100km (1画素≈8m)</option>
+                            <option value="300">300km (1画素≈30m)</option>
+                            <option value="700">700km (1画素≈60m)</option>
+                        </select>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-fine" class="body-checkbox"> <label for="chk-kashimap-fine" class="km-label" title="300kmと700kmの範囲を1段細かい解像度で計算します(300km=1画素約15m、700km=約30m)。標高タイルの枚数と格子が約4倍になり、メモリを1〜1.6GB使います(PC向け。100km以下は変わりません)">:精細(300km以上を1段細かく)</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-finest" class="body-checkbox"> <label for="chk-kashimap-finest" class="km-label" title="700kmの範囲を2段細かい解像度(1画素約15m)で計算します。標高タイル約31,000枚・格子約20億画素・メモリ6GB以上を使い、取得に5分前後、島の数と輪郭も数倍になります。16GB以上のPC向けで、ブラウザが落ちることがあります(700km以外は「:精細」と同じ)">:最高精細(700kmを2段細かく)</label>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-kashimap-compute" class="nav-btn main-btn" title="選んだ対象(目的点/My目的点)を、計算範囲リストの範囲と精細の設定でその場で計算して端末に保存します。標高タイルの取得に時間がかかります。計算中に押すと中止">範囲を計算</button>
+                    </div>
+                    <div class="control-row left-row">
+                        <span class="kashimap-note">富士山で範囲を計算する場合は、「火口」を中心とする場合と、「剣ヶ峯」を中心とする場合では、結果が異なります。宙の辻では、「剣ヶ峯」(標高:3771.3m)を推奨します。</span>
+                    </div>
+                    <hr class="tsujisearch-separator km-hr">
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-menu-tiles" class="body-checkbox" checked> <label for="chk-kashimap-menu-tiles" class="km-label" title="見える場所の塗り(可視辻マーカー。重なるほど濃い金)の表示/非表示(コントロールと連動)">:可視タイル</label>
+                        <input type="checkbox" id="chk-kashimap-menu-summit" class="body-checkbox" checked> <label for="chk-kashimap-menu-summit" class="km-label" title="選んだ山の山頂マーカーの表示/非表示(コントロールと連動)">:山頂マーカー</label>
+                    </div>
+                    <div class="control-row left-row">
+                        <input type="checkbox" id="chk-kashimap-menu-zen" class="body-checkbox" checked> <label for="chk-kashimap-menu-zen" class="km-label" title="重なりがいちばん多い縞島の代表点のマーカーの表示/非表示(コントロールと連動)">:全展望マーカー</label>
+                    </div>
+                    <hr class="tsujisearch-separator km-hr">
+                    <div class="control-row left-row">
+                        <label class="baseopt-group-label km-sub" title="その場で計算するために端末に貯めた国土地理院の標高タイル(次の計算では取りに行きません)">標高タイル:</label>
+                    </div>
+                    <div class="control-row left-row km-stat-row">
+                        <span class="km-stat">合計件数: <span id="kashimap-tiles-count">0</span>枚</span>
+                        <span class="km-stat">合計容量: <span id="kashimap-tiles-size">0.0 MB</span></span>
+                    </div>
+                    <div class="control-row left-row">
+                        <span class="kashimap-note">可視タイル作成後は、標高タイルは不要です。いつでも、全削除可能です。</span>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-kashimap-tiles-clear" class="nav-btn main-btn" title="端末に貯めた標高タイルをまとめて削除します(可視タイル=資産は残ります)">標高タイルを全削除</button>
+                    </div>
+                    <hr class="tsujisearch-separator km-hr">
+                    <div class="control-row left-row">
+                        <label class="baseopt-group-label km-sub" title="計算済みの可視マップ(山リストで選んでサーバーから読んだもの・File読込・その場で計算したもの)">可視タイル:</label>
+                    </div>
+                    <div class="control-row left-row km-stat-row">
+                        <span class="km-stat">合計件数: <span id="kashimap-store-count">0</span>件</span>
+                        <span class="km-stat">合計容量: <span id="kashimap-store-total">0.0 MB</span></span>
+                    </div>
+                    <div class="control-row">
+                        <button id="btn-kashimap-store-selall" class="nav-btn main-btn" title="一覧のチェックを全て付ける(全部付いていれば全て外す)">一括選択</button>
+                    </div>
+                    <div class="control-row km-store-actions">
+                        <button id="btn-kashimap-store-dl" class="nav-btn main-btn" title="チェックした可視タイルを1つのJSONファイルにFile出力します(別の端末でFile読込できます)" disabled>⬇DL</button>
+                        <button id="btn-kashimap-store-del" class="nav-btn main-btn" title="チェックした可視タイルを端末から削除します(サーバーの資産は消えません)" disabled>削除</button>
+                        <button id="btn-kashimap-store-apply" class="nav-btn main-btn" title="目的点名の変更を端末の資産に反映します(変更があると赤い太字になります)">全て登録</button>
+                    </div>
+                    <div id="kashimap-store">
+                        <div id="kashimap-store-empty" class="kashimap-note">保存した可視タイルはありません(山リストで山を選ぶ・「範囲を計算」・コントロールの「File読込」で増えます)</div>
+                        <table id="kashimap-store-table" class="hidden"><tbody></tbody></table>
+                    </div>
+                </div>
+            </div>
+
             <div class="section">
                 <div id="ff-slot-sorasearch-menu" class="hidden"></div>
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-soramado')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-soramado">
                     <span>宙の窓</span>
                     <span id="icon-sec-soramado">▼</span>
                 </div>
                 <div id="sec-soramado" class="section-content closed">
+                    <div class="control-row left-row"><span class="menu-note">プレビュー下のコントロールメニューから構図を見ながら辻オフセット点を変更できます。</span></div>
                     <div class="control-row">
                         <label class="input-label tsujisearch-label">センサーサイズ:</label>
                         <select id="input-sora-sensor" title="カメラのセンサーサイズ"></select>
@@ -1570,7 +1795,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-datetime')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-datetime">
                     <span>日時情報</span> <span id="icon-sec-datetime">▲</span>
                 </div>
                 <div id="sec-datetime" class="section-content">
@@ -1660,7 +1885,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-twilight')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-twilight">
                     <span>薄明</span>
                     <span id="icon-sec-twilight">▼</span>
                 </div>
@@ -1821,7 +2046,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-myset')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-myset">
                     <span id="myset-header-label">Myセット</span> <span id="icon-sec-myset">▼</span>
                 </div>
                 <div id="sec-myset" class="section-content closed">
@@ -1833,7 +2058,7 @@ GNU General Public License for more details.
                         <button id="btn-myset-switch" class="nav-btn main-btn" title="選択中のMyセットの内容にMy辻検索/My観測点/My目的点/My天体を切り替えます">切り替え表示</button>
                     </div>
                     <div class="control-row">
-                        <button id="btn-myset-open" class="nav-btn main-btn" title="選択中のMyセットのGoogleスプレッドシートを開きます">開く</button>
+                        <button id="btn-myset-open" class="nav-btn main-btn" title="選択中のMyセットのGoogleスプレッドシートを新しいタブで開きます(ブラウザのGoogleアカウントで開く。宙の辻のログインとは別で、宙の辻のトークンは使いません)">開く</button>
                         <button id="btn-myset-copy" class="nav-btn main-btn" title="選択中のMyセットを複製します">複製</button>
                     </div>
                     <div class="control-row">
@@ -1867,7 +2092,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-mytsuji')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-mytsuji">
                     <span>My辻検索</span> <span id="icon-sec-mytsuji">▼</span>
                 </div>
                 <div id="sec-mytsuji" class="section-content closed">
@@ -1908,7 +2133,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-myobs')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-myobs">
                     <span>My観測点</span> <span id="icon-sec-myobs">▼</span>
                 </div>
                 <div id="sec-myobs" class="section-content closed">
@@ -1943,7 +2168,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-mytgt')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-mytgt">
                     <span>My目的点</span> <span id="icon-sec-mytgt">▼</span>
                 </div>
                 <div id="sec-mytgt" class="section-content closed">
@@ -1978,7 +2203,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-starsearch')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-starsearch">
                     <span>天体検索/登録</span> <span id="icon-sec-starsearch">▼</span>
                 </div>
                 <div id="sec-starsearch" class="section-content closed">
@@ -2010,7 +2235,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-bodies')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-bodies">
                     <span>表示天体</span> <span id="icon-sec-bodies">▲</span>
                 </div>
                 <div id="sec-bodies" class="section-content">
@@ -2019,7 +2244,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-mystars')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-mystars">
                     <span>My天体</span> <span id="icon-sec-mystars">▲</span>
                 </div>
                 <div id="sec-mystars" class="section-content">
@@ -2040,16 +2265,16 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-settings')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-settings">
                     <span>設定</span>
                     <span id="icon-sec-settings">▼</span>
                 </div>
                 <div id="sec-settings" class="section-content closed">
                     
                     <div class="control-row refraction-row">
-                        <input type="checkbox" id="chk-refraction" class="body-checkbox">
+                        <input type="checkbox" id="chk-refraction" class="body-checkbox" title="大気差補正(地形の見通しの気差係数K)。オン=気象条件から算出した値で計算(既定)・オフ=K=0(気差なし)">
                         <label class="input-label meteo-label" for="chk-refraction">気差係数 K:</label>
-                        <input type="number" id="input-refraction-k" class="meteo-input elev-readonly" readonly step="0.001"  placeholder="標準値 0.132" readonly>
+                        <input type="number" id="input-refraction-k" class="meteo-input elev-readonly" readonly step="0.001"  placeholder="標準値 0.132" readonly title="いま使っている気差係数K。チェックオン=下の気象条件から算出した値(既定)、オフ=0(気差なし。地球の丸みだけの見え方を確かめる時に)。気象条件を入力している間は仮の値(「設定登録」で確定)。標高グラフ・辻検索・辻メッシュ・辻ライン・宙の窓の見通しは全てこの値で計算します">
                     </div>
                     
                     <div class="meteo-box">
@@ -2066,7 +2291,7 @@ GNU General Public License for more details.
                         </div>
                         
                         <div class="control-row">
-                            <label class="input-label meteo-label" title="高さ1mあたりの気温低下量 (通常は 0.0065)">気温減率 Γ (°C/m):</label>
+                            <label class="input-label meteo-label" title="高さ1mあたりの気温低下量 (既定は 0.0125=測量標準の K=0.132 になる値。国際標準大気は 0.0065)">気温減率 Γ (°C/m):</label>
                             <input type="number" id="input-meteo-l" class="meteo-input" step="0.0001" placeholder="0 〜 0.0125">
                         </div>
                         
@@ -2075,6 +2300,10 @@ GNU General Public License for more details.
                         </div>
                     </div>
 
+                    <div class="control-row left-row refraction-row">
+                        <input type="checkbox" id="chk-astro-refraction" class="body-checkbox" title="Astronomy Engineの大気差補正(天体の見かけ高度)。オン=地平線近くで天体が浮き上がって見える効果を入れる(既定)・オフ=幾何学的な高度。地上の気差係数Kとは別の光線なので二重にはかかりません">
+                        <label class="input-label meteo-label" for="chk-astro-refraction">:気差オプション(Astronomy Engine気差補正)</label>
+                    </div>
                     <div class="action-area">
                         <button id="btn-reg-settings" class="nav-btn small">登録</button>
                     </div>
@@ -2082,7 +2311,7 @@ GNU General Public License for more details.
             </div>
 
             <div class="section">
-                <div class="section-header" onclick="toggleSection('sec-backup')">
+                <div class="section-header" data-click="toggleSection" data-arg="sec-backup">
                     <span>バックアップ/インポート</span>
                     <span id="icon-sec-backup">▼</span>
                 </div>
@@ -2115,6 +2344,18 @@ GNU General Public License for more details.
                     <div class="control-row left-row"><label class="mypoint-label">Googleドライブ最終更新日時:</label></div>
                     <div class="control-row left-row"><span id="gdrive-modified" class="mypoint-label">-</span></div>
                     <div class="control-row left-row"><span id="gdrive-size" class="mypoint-label">ローカルストレージ: -</span></div>
+                    <hr class="tsujisearch-separator km-hr">
+                    <div class="control-row left-row"><label class="baseopt-group-label km-sub" title="地図に使う国土地理院の地図タイル(標準・淡色・写真・ベクトル)の端末の控え。地図を表示すると自動で貯まり、次からは端末の控えを先に読み、無いものだけ国土地理院へ取りに行きます(控えのある範囲はオフラインでも表示できます)">地理タイル:</label></div>
+                    <div class="control-row left-row km-stat-row"><span class="km-stat">合計件数: <span id="backup-maptiles-count">-</span></span><span class="km-stat">合計容量: <span id="backup-maptiles-size">-</span></span></div>
+                    <div class="control-row left-row"><span class="km-stat">最終更新日時: <span id="backup-maptiles-updated">-</span></span></div>
+                    <div class="control-row left-row"><span class="menu-note">自動キャッシュなので、定期的に全削除してください。</span></div>
+                    <div class="control-row"><button id="btn-backup-maptiles-clear" class="nav-btn main-btn" title="端末に貯めた地理タイル(地図)を全て削除します(地図は次に表示した時にまた取りに行きます)">地理タイルを全削除</button></div>
+                    <hr class="tsujisearch-separator km-hr">
+                    <div class="control-row left-row"><label class="baseopt-group-label km-sub" title="標高グラフ・辻検索・辻メッシュ・宙の窓が使う国土地理院の標高タイルの端末の控え(1つの店を全部で共有。控えのある範囲はオフラインでも計算できます)">標高タイル:</label></div>
+                    <div class="control-row left-row km-stat-row"><span class="km-stat">合計件数: <span id="backup-demtiles-count">-</span></span><span class="km-stat">合計容量: <span id="backup-demtiles-size">-</span></span></div>
+                    <div class="control-row left-row"><span class="km-stat">最終更新日時: <span id="backup-demtiles-updated">-</span></span></div>
+                    <div class="control-row left-row"><span class="menu-note" id="backup-demtiles-note">可視タイル作成後は、標高タイルは不要です。いつでも、全削除可能です。</span></div>
+                    <div class="control-row"><button id="btn-backup-demtiles-clear" class="nav-btn main-btn" title="端末に貯めた標高タイルを全て削除します(可視タイル=資産は残ります)">標高タイルを全削除</button></div>
                 </div>
             </div>
 
@@ -2128,8 +2369,8 @@ GNU General Public License for more details.
                         <td>昨日: <span id="cnt-yesterday">-</span></td>
                     </tr>
                     <tr>
-                        <td><span class="clickable-stat" onclick="showGraph('current')">今年: <span id="cnt-year">-</span></span></td>
-                        <td><span class="clickable-stat" onclick="showGraph('last')">昨年: <span id="cnt-last">-</span></span></td>
+                        <td><span class="clickable-stat" data-click="showGraph" data-arg="current">今年: <span id="cnt-year">-</span></span></td>
+                        <td><span class="clickable-stat" data-click="showGraph" data-arg="last">昨年: <span id="cnt-last">-</span></span></td>
                     </tr>
                 </table>
             </div>
@@ -2145,7 +2386,7 @@ GNU General Public License for more details.
     <div id="location-picker" class="location-picker hidden">
         <div class="picker-header">
             <span id="picker-title">地名検索結果</span>
-            <span class="close-picker" onclick="closeLocationPicker()">×</span>
+            <span class="close-picker" data-click="closeLocationPicker">×</span>
         </div>
         <div id="picker-list" class="picker-list"></div>
     </div>
@@ -2153,7 +2394,7 @@ GNU General Public License for more details.
     <div id="url-picker" class="location-picker hidden">
         <div class="picker-header">
             <span id="url-picker-title">URL取得</span>
-            <span class="close-picker" onclick="closeUrlPicker()">×</span>
+            <span class="close-picker" data-click="closeUrlPicker">×</span>
         </div>
         <div class="picker-list">
             <div class="picker-item" id="url-picker-fixed">
@@ -2175,7 +2416,7 @@ GNU General Public License for more details.
     <div id="gdrive-sync-dialog" class="location-picker hidden">
         <div class="picker-header">
             <span>どのように更新しますか？</span>
-            <span class="close-picker" onclick="closeGdriveSyncDialog()">×</span>
+            <span class="close-picker" data-click="closeGdriveSyncDialog">×</span>
         </div>
         <div class="picker-list">
             <div class="gdrive-sync-info">ローカルストレージ</div>
@@ -2202,21 +2443,21 @@ GNU General Public License for more details.
 
 
     <div id="style-palette" class="style-palette hidden">
-        <div class="palette-header">スタイル設定 <span class="close-palette" onclick="closePalette()">×</span></div>
+        <div class="palette-header">スタイル設定 <span class="close-palette" data-click="closePalette">×</span></div>
         <div class="palette-colors" id="palette-colors"></div>
         <div class="palette-lines" id="palette-lines">
-            <div class="line-option" onclick="applyLineStyle('solid')">実線 <span class="line-preview solid"></span></div>
-            <div class="line-option" onclick="applyLineStyle('dashed')">破線 <span class="line-preview dashed"></span></div>
+            <div class="line-option" data-click="applyLineStyle" data-arg="solid">実線 <span class="line-preview solid"></span></div>
+            <div class="line-option" data-click="applyLineStyle" data-arg="dashed">破線 <span class="line-preview dashed"></span></div>
         </div>
         <div class="palette-reset-area">
-            <button class="nav-btn palette-reset-btn" onclick="resetBodyStyle()">リセット</button>
+            <button class="nav-btn palette-reset-btn" data-click="resetBodyStyle">リセット</button>
         </div>
     </div>
 
     <div id="starsearch-popup" class="starsearch-popup hidden">
         <div class="starsearch-popup-header">
             <span id="starsearch-popup-title">天体名検索結果</span>
-            <span class="close-starsearch-popup" onclick="closeStarSearchPopup()">×</span>
+            <span class="close-starsearch-popup" data-click="closeStarSearchPopup">×</span>
         </div>
         <div id="starsearch-popup-content" class="starsearch-popup-content"></div>
     </div>
@@ -2225,7 +2466,7 @@ GNU General Public License for more details.
         <div class="help-content formal-style">
             <div class="help-header">
                 <h2>宙の辻 - ヘルプ</h2>
-                <span class="close-help" onclick="toggleHelp()">×</span>
+                <span class="close-help" data-click="toggleHelp">×</span>
             </div>
             <div class="help-body">
                 <section class="help-section">
@@ -2274,7 +2515,7 @@ GNU General Public License for more details.
                     <ul class="help-list">
                         <li><strong>天の川の基準点</strong>: 辻ラインを引くための天の川の基準点を「中心座標 (いて座付近)」か「オフセット点」から選択。<strong>オフセット中心角 (°)</strong> で基準点を環の方向にずらせます (-360〜+360。天体儀・辻検索と連動)。</li>
                         <li><strong>表示天体 / 表示天体名 / 星座線 / 星座領域 / 星座名称</strong>: 天体儀と宙の窓プレビューへの表示/非表示を切り替えます (宙の窓メニューのチェックと双方向連動)。<strong>星座名称の表示順</strong>は50音順/座標順から選べます。</li>
-                        <li><strong>除外範囲 (標高グラフ)</strong>: 可視判定で目的点側/観測点側それぞれの半径○m以内のNGを無視するオプション (初期値: オン・目的点側15m・観測点側10m)。マーカー地点自身のDEM画素による自己遮蔽を吸収します。</li>
+                        <li><strong>除外範囲 (標高グラフ)</strong>: 可視判定で目的点側/観測点側それぞれの半径○m以内のNGを無視するオプション (初期値: オン・目的点側15m・観測点側10m)。マーカー地点自身のDEM画素による自己遮蔽を吸収します。<strong>「:山頂部」</strong> (初期値オン・帯300m) は、目的点の標高から帯の高さ以内で目的点につながる範囲 (探索半径3km) の地形を遮るものに数えません。火口の縁や山頂直下の斜面が目的点そのものを隠す誤判定 (富士山を北から見ると剣ヶ峯が北側の縁に隠れる、など) を防ぎます。目的点の標高 (位置情報の目的点の標高。構造物の高さは含めません) がその場所のDEMより高い時は、目的点の標高を山頂部の基準にします (富士山の初期の目的点は火口の中心で、DEMは火口の底、標高は剣ヶ峯の3776mのため)。別の山の山頂を含む時は含まない高さまで自動で縮め、目的点が山頂でない時 (目的点より100mを超えて高い地形が続く谷や山腹の地点、別の山の山腹) は山頂部なしで従来どおり判定します。帯の高さは山ごとに変えられ、「:プレビュー」でその範囲を地図に描いて確かめられます。「除外範囲をリセット」で初期値に戻ります。標高グラフ・辻検索・辻メッシュ検索の可視フィルタに共通で効きます。</li>
                     </ul>
                 </section>
 
@@ -2291,7 +2532,7 @@ GNU General Public License for more details.
 
                 <section class="help-section">
                     <h3>辻ライン</h3>
-                    <p>「辻ライン」ボタンON時に、目的点の背後に天体が重なって見える観測位置の軌跡 (当日 + 前日 + 翌日) を地図上に描画します。線の範囲は<strong>目的点から300km以内</strong>、かつ当日線=<strong>その天体の「現在の日時に最も近い南中」から前後12時間</strong>、翌日線/前日線=その南中の24時間後/24時間前から前後12時間です (3本で連続72時間をカバーするので、月のように南中が毎日約50分ずれる天体でも辻ラインが日付を跨いで連続し、南中が23時頃で辻時刻が翌未明になる場合も当日線=実線側に乗ります)。</p>
+                    <p>「辻ライン」ボタンON時に、目的点の背後に天体が重なって見える観測位置の軌跡 (当日 + 前日 + 翌日) を地図上に描画します。線の範囲は<strong>目的点から400km以内</strong>、かつ当日線=<strong>その天体の「現在の日時に最も近い南中」から前後12時間</strong>、翌日線/前日線=その南中の24時間後/24時間前から前後12時間です (3本で連続72時間をカバーするので、月のように南中が毎日約50分ずれる天体でも辻ラインが日付を跨いで連続し、南中が23時頃で辻時刻が翌未明になる場合も当日線=実線側に乗ります)。</p>
                     <ul class="help-list">
                         <li><strong>実線 ───</strong>: 天体の中心が目的点に**完全に**重なる位置 (当日)。5分刻みの●マーカーと時刻表示付き。</li>
                         <li><strong>破線 - - -</strong>: ◎精度の境界 (±0.125°、視半径以内)。</li>
@@ -2299,7 +2540,7 @@ GNU General Public License for more details.
                         <li><strong>二点鎖線 -··-··-</strong>: △精度の境界 (±1°、視直径×4以内)。</li>
                         <li><strong>点線 · · ·</strong>: 前日・翌日の辻ライン。</li>
                     </ul>
-                    <p>表示中の天体ごとに色分けされます。線は5秒間隔で計算され、100km地点で約30m刻み・200km地点で約60m刻みの曲線になります。位置精度は WGS84 楕円体ベースで概ね数m以内 (子午線収差・気差・月の視差を補正済)。</p>
+                    <p>表示中の天体ごとに色分けされます。線は5秒間隔で計算され、100km地点で約30m刻み・200km地点で約60m刻みの曲線になります。線の端は、目的点が見かけの地平線に沈む高度 (観測点の標高で決まります) か400kmのどちらか近い方で、その時刻を1秒まで詰めて揃えています (辻ライン365の1分刻みでも端が揃います)。位置精度は WGS84 楕円体ベースで概ね数m以内 (子午線収差・気差・月の視差を補正済)。</p>
                     <p><strong>辻ラインと辻検索の精度記号の違い:</strong> 辻ラインの◎/○/△バンドは「<strong>方位角のオフセット</strong>のみ」で定義されていますが、辻検索の精度角距離は「方位差²+高度差²の合成 (球面角距離)」です。辻ラインは観測位置の<strong>目安</strong>としてご活用ください。正確な判定は辻検索の精度角距離に基づきます。</p>
                 </section>
 
@@ -2327,7 +2568,7 @@ GNU General Public License for more details.
                         <li><strong>月齢フィルタ</strong>: 月齢で結果を絞り込み (満月 ≈ 14.8、新月 = 0)。</li>
                         <li><strong>時間フィルタ</strong>: 辻時刻を「開始時刻〜終了時刻」で絞り込み。各時刻は固定時刻 or 日の出/日の入/各薄明から選べ、前後オフセットも指定可。開始 &gt; 終了 は夜間 (日付をまたぐ範囲) として扱います。</li>
                         <li><strong>精度フィルタ ◎/○/△/-</strong>: 精度記号で結果を絞り込み。</li>
-                        <li><strong>標高フィルタ</strong>: ONで観測点→目的点の地形可視判定 (OK/NG) を結果リストの「標高グラフ」列に表示。OK/NGで絞り込み可。判定は標高グラフ・辻メッシュ検索と共通の統一可視判定 (ズーム15半画素≒約2m刻み・DEM5A/5B/5C→DEM10B) です。</li>
+                        <li><strong>可視フィルタ</strong>: ONで観測点→目的点の地形可視判定 (OK/NG) を結果リストの「標高グラフ」列に表示。OK/NGで絞り込み可。判定は標高グラフ・辻メッシュ検索と共通の統一可視判定 (ズーム15半画素≒約2m刻み・DEM5A/5B/5C→DEM10B) です。</li>
                         <li><strong>URL取得</strong>: 現在の検索条件で開くURLをコピー。</li>
                         <li><strong>最大化ボタン (⛶)</strong>: 結果リストのタイトルのボタンで、検索結果表示領域を画面の2/3に最大化できます (もう一度押すと通常の1/3に戻ります。辻メッシュ検索結果と同じ)。My辻検索の結果リストは同じパネルを共有するため、同じボタンで最大化できます。</li>
                     </ul>
@@ -2367,26 +2608,42 @@ GNU General Public License for more details.
                         <li><strong>行選択後表示オプション</strong>: 行選択後の選択マーカーを選べます。<strong>「:辻時刻の優辻マーカー」(初期値)</strong> = 行の辻時刻での最良画素 (優辻マーカー) を選択します。<strong>「:辻時刻の最近傍の辻マーカー」</strong> = 観測点に最も近い最高精度の辻マーカーを選択し、辻時刻コントロールもその画素の辻時刻に移動します (≠行の辻時刻)。</li>
                         <li><strong>辻時刻コントロール</strong>: 「辻日時」表示 (日付+曜日+時刻。<strong>時刻は0.01秒表示</strong>) と秒スライダー (範囲は<strong>その行の全ヒット画素の辻時刻の範囲</strong>に自動調整・1秒刻み・◀▶で1秒ずつ) で辻時刻を指定。行選択やポップアップの行クリックの直後は行と同じ精細化時刻 (サブ秒付き。例 16:36:07.93) になり、スライダーを手動で動かすと秒単位 (サブ秒0) になります。スライダーに追従してライブ再計算します。「辻時刻の幅(s)±」(0〜86400秒・初期値0=指定した1秒のみ)で前後の秒も含めた集合にできます (最大で丸1日分。幅が大きいほど再計算に時間がかかります)。<strong>精度フィルタオプションは ◎(±0.125°)/◎×2(±0.0625°)/◎×4(±0.03125°)/◎×8(±0.015625°)/◎×16(±0.0078125°)/◎×32(±0.00390625°)/◎×64(±0.001953125°)/◎×128(±0.0009765625°) の8段階</strong>で判定の厳しさを変えられます。</li>
                         <li><strong>行の選択</strong>: 結果リストの行クリックで選択。選択のたびに行選択後表示オプションに従って辻時刻コントロールが初期化され、優辻マーカーが立ちます (行選択でのズーム・センタリングはしません。検索直後に一度ズームしています)。</li>
-                        <li><strong>標高フィルタ</strong>: ONにすると、検索前に許容範囲内の対象画素それぞれを観測点として、<strong>標高グラフと同一のアルゴリズム</strong>で可視 (OK) / 不可視 (NG) を判定し、チェックで選んだ対象の画素だけを辻メッシュ検索します: <strong>OKのみ=可視画素だけ / NGのみ=不可視画素だけ / 両方またはどちらもオフ=全画素</strong>。判定は<strong>統一可視判定 (標高グラフの可視判定・辻検索の標高フィルタと共通のコア)</strong> で、画素→目的点の経路を<strong>DEM分解能固定のズーム15半画素 (約2m) 刻み</strong>で歩き (点数固定ではないので経路長に関わらずDEM画素を取りこぼしません)、各点の標高を<strong>DEM5A/5B/5C (ズーム15・5mメッシュ) → DEM10B (ズーム14)</strong> の順で参照して見通し線 (画素の標高+観測点高→目的点標高。地球の丸みと大気差を考慮) と比較します。除外範囲 (チェックで有効。目的点側/観測点側それぞれの半径○m以内の遮蔽を無視) も標高グラフと同じ規則で適用されるため、<strong>その画素を観測点に設定して標高グラフを実行した時と同じ判定</strong>になります (除外範囲0で目的点直近の点が遮ってNGになる挙動も同一。判定中は「標高タイル取得中…」「可視判定中… i/N画素」の進捗を表示)。判定は<strong>ワーカープール (CPU数+1) で並列実行</strong>され、経路を帯域に分割して各ワーカーが担当分を判定するため、判定結果は従来の逐次処理と完全に同一のまま、コア数分高速になります (再検索やトグルオフで実行中の判定はキャンセルされます)。結果リストの「標高グラフ」列は、その行の表示値を出した地点=<strong>その日の最良画素の位置の可視判定</strong>を表示します。</li>
+                        <li><strong>可視フィルタ</strong>: ONにすると、検索前に許容範囲内の対象画素それぞれを観測点として、<strong>標高グラフと同一のアルゴリズム</strong>で可視 (OK) / 不可視 (NG) を判定し、チェックで選んだ対象の画素だけを辻メッシュ検索します: <strong>OKのみ=可視画素だけ / NGのみ=不可視画素だけ / 両方またはどちらもオフ=全画素</strong>。判定は<strong>統一可視判定 (標高グラフの可視判定・辻検索の可視フィルタと共通のコア)</strong> で、画素→目的点の経路 (大円) を<strong>DEM分解能固定のズーム15半画素 (約2m) 刻み</strong>で歩き (点数固定ではないので経路長に関わらずDEM画素を取りこぼしません)、各点の標高を<strong>DEM5A/5B/5C (ズーム15・5mメッシュ) → DEM10B (ズーム14)</strong> の順で参照して (日本域で標高タイルの無い所=海は海面0m) 見通し線 (画素の標高+観測点高→目的点標高。地球の丸みと大気差を考慮。気差係数は設定メニューに表示されている値) と比較します。除外範囲 (チェックで有効。目的点側/観測点側それぞれの半径○m以内の遮蔽を無視) も標高グラフと同じ規則で適用されるため、<strong>その画素を観測点に設定して標高グラフを実行した時と同じ判定</strong>になります (除外範囲0で目的点直近の点が遮ってNGになる挙動も同一。判定中は「標高タイル取得中…」「可視判定中… i/N画素」の進捗を表示)。判定は<strong>ワーカープール (CPU数+1) で並列実行</strong>され、経路を帯域に分割して各ワーカーが担当分を判定するため、判定結果は従来の逐次処理と完全に同一のまま、コア数分高速になります (再検索やトグルオフで実行中の判定はキャンセルされます)。結果リストの「標高グラフ」列は、その行の表示値を出した地点=<strong>その日の最良画素の位置の可視判定</strong>を表示します。</li>
+                    </ul>
+                </section>
+
+                <section class="help-section" id="help-kashimap">
+                    <h3>可視マップ</h3>
+                    <p>推し山が「どこから見えるか」を地図に塗る機能です。計算済みの山 (山リストの「静的」欄に「静」が付く山) を選ぶと、地上1.5mに立った人から山頂が見える場所の<strong>島</strong> (見える画素のつながり) を地図に描きます。それ以外の山や構造物は、<strong>「目的点で計算」「My目的点で計算」</strong>でその場で計算できます (下記)。</p>
+                    <ul class="help-list">
+                        <li><strong>山リスト</strong>: 国土地理院「日本の主な山岳標高 (1003山)」の全山頂に、日本百名山・日本二百名山・日本三百名山・日本百高山 (標高順上位100) の印を付けたものです。「:百名山」〜「:百高山」「:その他」のチェックで絞り込み、推し山の欄にスペース区切りで語を入れると、山名・読み・別名・都道府県名への部分一致で検索します (「:AND」=全部の語に当たる山、「:OR」=どれかの語に当たる山。「:端末保存」=端末に資産がある山だけ)。「島の数」「静的/動的」「範囲」「樹冠」「構造物」「ズーム」「サイズ」欄は、今の最大表示範囲・樹冠・構造物の条件で選ばれる資産を示します (「静」=サーバーにある資産、「静(端末)」=サーバーの資産を端末にも保存済み、「動」=端末だけにある資産 [File読込・その場計算]。端末にある時はサーバーに取りに行きません。「ズーム」は標高タイルの粒度で、z15(1画素≈4m・DEM5A/5B/5C) のように出ます。資産が無い山は空欄。最大表示範囲より広い資産しか無い山は範囲に「▲」が付き、選ぶと最大表示範囲がその資産まで広がります)。</li>
+                        <li><strong>結果パネル</strong>: 「計算済み可視マップを検索」または位置情報メニューの「可視マップ」ボタンで開きます。見出しクリックで列毎にソート、行のチェックで山を選択 (「全て選択」「全て解除」)、行クリックでその山頂へ地図を移動します。選んだ山の山頂には色付きのマーカーが立ち、計算済みの山は島の輪郭を山色の線で、見える場所を金色の塗り (<strong>可視辻マーカー</strong>。複数の山が見える場所ほど濃い金) で描きます (色は選んだ順に表示天体のスタイル設定の16色)。</li>
+                        <li><strong>島リスト</strong>: 選んだ山の島と、2つ以上の山が見える場所の<strong>縞島</strong> (「縞」印・重複数=見える山の数) を一つに並べます。初期の並びは重複数の多い順→面積の大きい順。行クリックでその島へ地図を移動、行のチェックで輪郭が点滅します (「:縞島のみ」で縞島だけに絞れます)。重複数がいちばん多い縞島は地図に金と赤の縞で塗り、「:全展望マーカー」でその代表点にマーカーを立てられます。地図の塗りにマウスを乗せると「可視辻 (重複数N): 山名」を表示し、クリックで固定します (「観測点に設定」でその場所を観測点に)。</li>
+                        <li><strong>コントロール</strong>: 範囲 (100/300/700km四方。計算済みの範囲だけ選べます)・「:可視タイル」(塗りの表示/非表示)・「:樹冠」「:構造物」(木の高さ・建物を入れた資産があればそちらを使う)・「:山頂マーカー」・「:全展望マーカー」・「File出力」(選んだ山の資産=計算条件・島の索引・島の輪郭を1つのJSONファイルに)・「File読込」(File出力したファイルを端末に保存して使う)。範囲と4つのチェックは可視マップ節にも同じものがあり、どちらを操作しても連動します。</li>
+                        <li><strong>その場で計算 (「:目的点」「:My目的点」+「範囲を計算」)</strong>: 山リストに無い地元の山や、東京タワーなどの構造物 (目的点の標高+構造物の高さ) を対象に、その端末で可視マップを計算します。「:目的点」は位置情報メニューの今の目的点、「:My目的点」は今のMyセットのMy目的点を順に。先に端末の資産を探し、同じ範囲の資産があればそれを使うか聞きます (キャンセルで計算し直し)。範囲は「計算範囲リスト」の 24/36/48/60/100/300/700km四方 (目的点を中心にした四方の幅) から選びます。60km四方までは1画素約4m (DEM5A/5B/5C)、100kmは約8m、300kmは約30m、700kmは約60m (DEM10B) の解像度で計算します (広い範囲ほど粗く、遠くの山の見え方は目安です)。「:精細」をオンにすると300kmは約15m、700kmは約30mの1段細かい解像度で計算します (タイルの枚数と格子が約4倍。メモリ1〜1.6GB。PC向け)。「:最高精細」は700kmを約15m (標高タイル約31,000枚・格子約20億画素・メモリ6GB以上。16GB以上のPC向けで、ブラウザが落ちることがあります) で計算します。国土地理院の標高タイルを目的点に近い順に取ってから計算するため時間がかかります (24km四方で約600枚、60kmで約3,700枚。取ったタイルは端末に貯めて次からは取りに行きません。1枚の中で無い画素は次の種類の標高タイルで埋めます)。計算中は、見える場所の広がりが薄い金の経過表示として地図に描かれ、輪郭ができると置き換わります。計算のしかたと目的点側の除外 (山頂部の帯・基準の標高) は計算済みの資産およびアプリの可視判定と同じです。大気差の係数 K は設定メニューに表示されている値 (オンなら気象条件から算出した値、オフなら 0=気差なし) で、標高グラフ・辻検索・辻メッシュ検索と同じ1つの値です (使った K は資産の計算条件と一覧のツールチップに残ります)。富士山は「火口」の中心と「剣ヶ峯」で結果が異なるので、剣ヶ峯を目的点にすることをおすすめします。結果は資産として端末に保存され (「端末に保存した資産」の可視タイルの一覧に並びます)、山リストに所属「My」・種別「目的点」の行で並んで選択・描画できます。計算した範囲が表示範囲より広い時は、表示範囲もそこまで広がります。File出力でほかの端末へ渡せます。計算中はボタンが「計算を中止」になります。60km四方以上はメモリを多く使う (60kmで約0.8GB) ためPC向けです。</li>
+                        <li><strong>端末に保存した資産</strong>: サーバーから一度読んだ資産・File読込で取り込んだ資産・その場で計算した資産 (まとめて「可視タイル」) は端末 (ブラウザのIndexedDB) に保存され、可視マップ節の下部に並びます。次からはサーバーに取りに行かず端末の資産を使います (山リストの列は「静(端末)」)。「標高タイル:」にはその場計算のために貯めた国土地理院の標高タイルの件数と容量 (「標高タイルを全削除」で削除。可視タイルは残ります。可視タイル作成後は標高タイルは不要です)、「可視タイル:」には資産の件数と容量が出ます。一覧は資産ごとに3行で、1行目はチェックと目的点名 (書き換えて「全て登録」を押すと端末の資産に反映され、File出力にも載ります。空のまま離れると元の名前に戻ります)、2行目は範囲・樹冠・構造物、3行目は島数・サイズです。「一括選択」で全部にチェック (全部付いていると「一括解除」)、「⬇DL」でチェックした資産を1つのJSONにFile出力、「削除」でチェックした資産を削除します。すべてのデータの消去は <a href="reset.html">reset.html</a> から。</li>
+                        <li><strong>PC向けの機能です</strong>: 島の輪郭は間引かずにそのまま (富士山60kmで約330万頂点) 描くため、スマートフォンでは動作が重たく感じる場合があります。</li>
+                        <li><strong>計算のしかた</strong>: 国土地理院の標高タイル (DEM5A/5B/5C、無い所はDEM10B) を1画素≒4mで読み、山頂から放射状に光線を伸ばして、地球の丸みと大気差 (測量標準の K=0.132) を入れた見通しで「見える/見えない」を全画素で判定します。島の輪郭はその画素の縁をそのまま (間引かずに) 持ちます。山頂は1点ではなく<strong>山頂部</strong> (山頂から300m以内の高さで山頂につながる山の体。別の山の山頂を含まない高さまで) として扱い、その中の地形 (火口の縁や山頂直下の斜面) は遮るものに数えません。建物・木の高さは今は入っていません。標高からの概算ですので、現地では見えないこともあります。</li>
+                        <li><strong>出典</strong>: 山の位置・標高は国土地理院「日本の主な山岳標高一覧 (1003山)」(2026年3月31日版) を加工して作成。名山の選定は深田久弥 (日本百名山)・深田クラブ (日本二百名山)・日本山岳会 (日本三百名山)。地理院の一覧に無い三百名山4座 (二岐山・諏訪山・藤原岳・吾妻山[広島]) は、地理院の標高データから山頂の位置を求めています。</li>
                     </ul>
                 </section>
 
                 <section class="help-section">
                     <h3>標高グラフ</h3>
                     <p>「標高グラフ」ボタンON時に、観測点〜目的点の地形断面を表示。国土地理院のDEM標高タイルから2000地点で標高を取得します。縦軸=標高・横軸=直線距離の目盛を表示します。</p>
-                    <p>取得完了後、観測点高・目的点高を加えた見通し線 (赤線) に対して地形が遮らないかを判定し、可視なら「OK」、不可視なら「NG」をポップアップで通知します。<strong>可視判定はグラフ描画用の2000点とは独立</strong>で、辻検索・辻メッシュ検索の標高フィルタと共通の統一可視判定 (経路をズーム15半画素≒約2m刻みで歩き、DEM5A/5B/5C→DEM10Bの順で参照。除外範囲=チェックで有効。目的点側/観測点側それぞれの半径○m以内のNGは無視) を使います。判定と赤線は<strong>地球の丸みと大気差を考慮</strong>します (:大気差チェックと気象値に連動。大気差オフの時は丸みのみ)。遠距離では丸みのぶん見通しが厳しくなり、実際の見え方に合った判定になります (赤線も丸みを反映した曲線で描画されます)。</p>
+                    <p>取得完了後、観測点高・目的点高を加えた見通し線 (赤線) に対して地形が遮らないかを判定し、可視なら「OK」、不可視なら「NG」をポップアップで通知します。<strong>可視判定はグラフ描画用の2000点とは独立</strong>で、辻検索・辻メッシュ検索の可視フィルタと共通の統一可視判定 (経路をズーム15半画素≒約2m刻みで歩き、DEM5A/5B/5C→DEM10Bの順で参照。除外範囲=チェックで有効。目的点側/観測点側それぞれの半径○m以内のNGは無視) を使います。判定と赤線は<strong>地球の丸みと大気差を考慮</strong>します (気差係数 K は設定メニューに表示されている値。チェックオンなら気象条件から算出した値、オフなら 0=気差なし)。経路は観測点と目的点を結ぶ<strong>大円</strong> (視線が通る鉛直面) に沿って歩き、日本域で標高タイルの無い所 (海) は<strong>海面0m</strong>として遮ります。遠距離では丸みのぶん見通しが厳しくなり、実際の見え方に合った判定になります (赤線も丸みを反映した曲線で描画されます)。</p>
                 </section>
 
                 <section class="help-section">
-                    <h3>宙の窓</h3>
-                    <p>「宙の窓」ボタンON時に、観測点から目的点方向を撮影するカメラのファインダーをシミュレーションします。センサー(機種名リストから選択可)・焦点距離・F値・アスペクト比から画角(水平/垂直/対角)を計算し、実際の星景写真の構図をプレビューできます。</p>
+                    <h3>宙の窓検索</h3>
+                    <p>「宙の窓検索」ボタンON時に、観測点から目的点方向を撮影するカメラのファインダーをシミュレーションします。センサー(機種名リストから選択可)・焦点距離・F値・アスペクト比から画角(水平/垂直/対角)を計算し、実際の星景写真の構図をプレビューできます。</p>
                     <ul class="help-list">
                         <li><strong>カメラの向き</strong>: 基準方位角・基準視高度 (初期値=観測点→目的点の方向)。<strong>カメラオフセット方位角/視高度</strong>で向きをずらせます (プレビューのドラッグパンと連動)。<strong>辻オフセット6項目</strong>は辻検索メニューと双方向連動します。</li>
                         <li><strong>プレビューの内容</strong>: 天の川の写真 (明るさスライダー)・表示天体のマーカーと中心十字・軌跡 (前日/当日/翌日)・DEM標高タイルの3D地形 (ヒルシェード適用度スライダー)・目的点の赤十字・検索中心の×。基本オプションのチェックで<strong>表示天体名・星座線・星座領域・星座名称</strong>もプレビューに表示されます (宙の窓メニューにも同じチェックがあり双方向連動。星座名称・表示天体名の文字の向き: 通常・四角=水平、円形フィッシュアイ=画面中心から同心円状。<strong>文字サイズスライダー</strong> (0〜1000%・プレビュー基準100%) で大きさを調整できます)。</li>
                         <li><strong>:写真テクスチャ</strong>: 山肌に国土地理院の「全国最新写真 (シームレス)」を貼り付けます (メインメニューの宙の窓グループ内のチェック。初期値オフ。オンにすると地形を取得し直します)。地形の頂点単位の彩色のため近景はぼかし気味になり、遠景の山並みの確認に向いています。太陽光ヒルシェードの陰影は写真の色に重なります。対象は日本国内のみで、域外と取得できなかった部分は従来の標高グレーのままです。出典: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">国土地理院 (地理院タイル・全国最新写真 (シームレス))</a>。このタイルは電子国土基本図 (オルソ画像)・森林 (国有林・民有林) の空中写真 (林野庁)・地方公共団体等の空中写真・簡易空中写真・国土画像情報などから作成されており、一部にLandsat-8画像 (NASA/USGS)、GRUS画像 (© Axelspace) を含みます。</li>
                         <li><strong>フィッシュアイ</strong>: 歪みスライダー0〜99%は魚眼風の樽歪み (近似・画角も連動して拡大)。<strong>歪み100%+画面形状:円形のときは「等距離射影の全天表示」</strong>に切り替わります — 画面中心=基準方位角+基準視高度 (カメラの向き)、円周=中心から90°、像高は中心からの角度に比例 (実際の魚眼レンズ・星座盤と同じ投影)。<strong>基準視高度を90°にすると天頂中心の星座盤の見え方</strong>になります (そのとき円の下方向=基準方位角)。全天表示の視野は焦点距離・センサーに依らず常に直径180°です。</li>
                         <li><strong>パノラマ</strong>: 水平画角を最大360°までアスペクト比可変でシミュレーション (円筒投影。フィッシュアイとは併用不可)。</li>
-                        <li><strong>コントロールメニュー</strong>: プレビュー内下部の「コントロール」から焦点距離・日付/時刻・インターバルMov (タイムラプス再生: アニメ/動画) を操作できます。</li>
+                        <li><strong>コントロールメニュー</strong>: プレビュー内下部の「コントロール」から焦点距離・日付/時刻・インターバルMov (タイムラプス再生: アニメ/動画) を操作できます。先頭の2つのチェックでプレビューのドラッグ (スマホは二本指) の対象を選べます: <strong>:構図をドラッグ(二本指)で変更</strong> (初期値オン) は画面中心(+)を据えて目的点(+)と検索中心(×)を動かします=カメラオフセット方位角/視高度が変わります (オフにするとカメラオフセットを0に戻します)。<strong>:辻オフセット点をドラッグ(二本指)で変更</strong> は画面中心(+)と目的点(+)を据えて検索中心(×)だけを動かします=辻オフセット方位角/視高度が変わり、辻検索メニューと連動します (オフにすると動かす前の値に戻します。両方オンのときは辻オフセット点が優先)。その下の<strong>「辻検索」「辻メッシュ」</strong>ボタンは、位置情報メニューの同名ボタンと同じで、構図を見ながら決めた辻オフセット点で検索を始めます。</li>
                         <li><strong>書き出し</strong>: 静止画 (JPEG/PNG)・動画 (MP4/WebM) をファイル出力。出力画像サイズ (pixel・1〜8192) を指定でき、右下に日時+クレジットが入ります。全天表示・パノラマ・フィッシュアイもそのまま出力され、<strong>表示天体名・星座名称の文字は出力サイズに比例してプレビューと同じ相対サイズ</strong>になります。</li>
                         <li><strong>URL/最大化</strong>: 「URL取得」で現在の宙の窓の状態を開くURLをコピー。⛶ボタンでプレビューを最大化できます。</li>
                         <li><strong>都市モード (都市ビル)</strong>: 都市部のビル群をプレビューに表示します (宙の窓メニュー内。コントロールメニューにも同じ項目があり双方向連動)。ビルは地形と同じ実寸配置なので、ビルの稜線に沈む月やビルの谷間から上がる花火も構図どおりに写ります。
@@ -2469,8 +2726,9 @@ GNU General Public License for more details.
                 <section class="help-section">
                     <h3>設定メニュー</h3>
                     <ul class="help-list">
-                        <li><strong>気差係数 K</strong>: 先頭のチェックで気差補正の有効/無効を切替 (無効時は入力が読み取り専用)。係数欄は常に読み取り専用で、標準値は 0.132 です。</li>
-                        <li><strong>気象条件からの算出</strong>: 気圧 P (hPa)・気温 T (°C)・気温減率 Γ (°C/m。高さ1mあたりの気温低下量、通常は0.0065) を入力するとKを算出します。「登録」で保存・反映、「リセット」で初期状態に戻します。係数の意味と目安は下の「気差係数(K)について」をご覧ください。</li>
+                        <li><strong>気差係数 K (大気差補正)</strong>: 係数欄に表示されている値で、標高グラフ・辻検索・My辻検索・辻メッシュ検索・辻ライン・宙の窓の地形の見通しを計算します (全て同じ1つの値)。先頭のチェックがオンのときは下の気象条件から算出した値 (既定。標準の気象条件で K=0.132)、オフのときは 0 (気差なし=地球の丸みだけ。K=0 の見え方を確かめるためのスイッチです)。気象条件を入力している間は、係数欄にその値から算出した仮のKが出ます (「設定登録」で確定し、それ以降の計算に使われます)。係数欄は常に読み取り専用です。</li>
+                        <li><strong>気差オプション (Astronomy Engine気差補正)</strong>: 天体の見かけ高度の大気差 (地平線近くで天体が浮き上がって見える効果。Astronomy Engineの標準大気で、設定の気圧・気温は反映されません)。辻検索・辻メッシュ検索・My辻検索・辻ライン・宙の窓の天体の見かけ高度と、天体リストの高度・恒星 (My天体) の出没時刻・日の出入り/月の出入りの高度に効きます。太陽・月・惑星の出没時刻 (Astronomy Engineが常に標準の大気差つきで求めます) と天体儀の向きは、このチェックでは変わりません。地上の気差係数Kは「目的点から目へ届く光」、こちらは「天体から目へ届く光」の曲がりなので、両方オンでも二重にはかかりません (既定は両方オン)。オフにすると幾何学的な高度になります。</li>
+                        <li><strong>気象条件からの算出</strong>: 気圧 P (hPa)・気温 T (°C)・気温減率 Γ (°C/m。高さ1mあたりの気温低下量。既定は0.0125で、測量標準の K=0.132 になります。国際標準大気の0.0065では K≒0.169) を入力するとKを算出します。「登録」で保存・反映、「リセット」で初期状態に戻します。係数の意味と目安は下の「気差係数(K)について」をご覧ください。</li>
                     </ul>
                 </section>
 
@@ -2485,6 +2743,7 @@ GNU General Public License for more details.
                     <h3>地図上の線について</h3>
                     <p>地図上には3種類の線が描画されます。距離が遠いと、地球の曲率と地図の平面表現の違いで、見た目に少しズレて見えることがありますが、これは描画の都合です。</p>
                     <ul class="help-list">
+                        <li><strong>地理タイル / 標高タイル (端末の控え)</strong>: 地図に使う国土地理院のタイル (標準・淡色・写真・ベクトル) と、標高グラフ・辻検索・辻メッシュ・宙の窓が使う標高タイルは、一度読んだものをブラウザの中 (IndexedDB) に控えて、次からは控えを先に読み、無いものだけ国土地理院へ取りに行きます。控えのある範囲は電波の無い所でも地図と計算が使えます。控えはこの端末の中だけにあり、どこにも送られません。件数・容量・最終更新日時をここに表示し、「全削除」でいつでも空にできます (次に表示した時にまた取りに行くだけです)。地理タイルの控えは合計1GBまでで、それを超えると新しくは貯めません。出典: <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地理院タイル</a>。</li>
                         <li><strong>方位線 (色付き)</strong>: 観測点から各天体方向の方位 (WGS84 楕円体)。</li>
                         <li><strong>黒い線</strong>: 観測点〜目的点の大圏航路 (実線) と等角航路 (破線)。</li>
                         <li><strong>辻ライン</strong>: 目的点の背後に天体が重なる観測位置の軌跡 (時間軸の曲線)。方位を表すものではありません。</li>
@@ -2493,23 +2752,23 @@ GNU General Public License for more details.
                 </section>
 
                 <div class="k-knowledge-section-formal">
-                    <h3>気差係数(\( K \))について</h3>
+                    <h3>気差係数(<i>K</i>)について</h3>
                     <p>
                         遠くの景色を見たとき、光は空気の層を通ることで少し曲がります(レンズ効果)。
-                        この「曲がり具合」を表すのが<b>気差係数 \( K \)</b>です。<br>
-                        天気や気温の変化によって \( K \) の値が変わると、山の見え方も変わります。
+                        この「曲がり具合」を表すのが<b>気差係数 <i>K</i></b>です。<br>
+                        天気や気温の変化によって <i>K</i> の値が変わると、山の見え方も変わります。
                     </p>
 
-                    <h4>\( K \) が決まる仕組み(計算式)</h4>
+                    <h4><i>K</i> が決まる仕組み(計算式)</h4>
                     <div class="formula-box-formal">
-                        <p>気差係数 \( K \) は、以下の要素で決まります。</p>
+                        <p>気差係数 <i>K</i> は、以下の要素で決まります。</p>
                         <p class="formula-formal">
-                            \[ K \approx 503 \frac{P}{T^2} \left( 0.034 - \Gamma \right) \]
+                            <span class="formula"><i>K</i> ≈ 503 × <i>P</i> / <i>T</i><sup>2</sup> × (0.034 − <i>Γ</i>)</span>
                         </p>
                         <ul class="formula-list">
-                            <li>\( P \) : 気圧 (hPa)</li>
-                            <li>\( T \) : 気温 (ケルビン)</li>
-                            <li>\( \Gamma \) : <strong>気温減率</strong> (1m上昇あたりの気温低下量、正値)</li>
+                            <li><i>P</i> : 気圧 (hPa)</li>
+                            <li><i>T</i> : 気温 (ケルビン)</li>
+                            <li><i>Γ</i> : <strong>気温減率</strong> (1m上昇あたりの気温低下量、正値)</li>
                         </ul>
                         <p class="note-formal">※ 特に「気温減率(地面と上空の温度差)」が大きく影響します。</p>
                     </div>
@@ -2520,7 +2779,7 @@ GNU General Public License for more details.
                             <tr>
                                 <th>天気・状況</th>
                                 <th>空気の状態</th>
-                                <th>\( K \) の値</th>
+                                <th><i>K</i> の値</th>
                                 <th>見え方</th>
                             </tr>
                         </thead>
@@ -2533,11 +2792,11 @@ GNU General Public License for more details.
                                 <td>
                                     地面が焼けて、下層の空気が膨張。<br>
                                     <b>下が熱く、上が涼しい。</b><br>
-                                    (\( \Gamma \): \(0.01\) 〜)
+                                    (<i>Γ</i>: 0.01 〜)
                                 </td>
                                 <td>
                                     <strong>小さい</strong><br>
-                                    \( 0.13 \) 〜 \( 0.1 \)
+                                    0.13 〜 0.1
                                 </td>
                                 <td>
                                     <b>あまり浮き上がらない</b><br>
@@ -2552,11 +2811,11 @@ GNU General Public License for more details.
                                 <td>
                                     日差しがなく、風で空気が混ざる。<br>
                                     <b>温度差が少ない。</b><br>
-                                    (\( \Gamma \): \(0.0065\) 付近)
+                                    (<i>Γ</i>: 0.0065 付近)
                                 </td>
                                 <td>
                                     <strong>標準的</strong><br>
-                                    \( 0.15 \) 〜 \( 0.17 \)
+                                    0.15 〜 0.17
                                 </td>
                                 <td>
                                     <b>標準的な見え方</b><br>
@@ -2571,11 +2830,11 @@ GNU General Public License for more details.
                                 <td>
                                     地面が冷え切る。<br>
                                     <b>地面より上空の方が暖かい！</b><br>
-                                    (\( \Gamma \): マイナスになる)
+                                    (<i>Γ</i>: マイナスになる)
                                 </td>
                                 <td>
                                     <strong>大きい</strong><br>
-                                    \( 0.3 \) 〜 \( 0.5 \)
+                                    0.3 〜 0.5
                                 </td>
                                 <td>
                                     <b>すごく浮き上がる！</b><br>
@@ -2585,8 +2844,8 @@ GNU General Public License for more details.
                         </tbody>
                     </table>
                     <div class="advice-formal">
-                        <strong>ヒント:</strong> ダイヤモンド富士のラインが実測と合わないときは、この表を参考に \( K \) の値や気温減率を調整してみてください。
-                        (日中なら気温減率を <b>\(0.0125\)</b> 程度にすると、測量標準の \( K=0.132 \) に近づきます)
+                        <strong>ヒント:</strong> ダイヤモンド富士のラインが実測と合わないときは、この表を参考に <i>K</i> の値や気温減率を調整してみてください。
+                        (既定の気温減率 <b>0.0125</b> で測量標準の <i>K</i> = 0.132 になります。国際標準大気の 0.0065 では <i>K</i> ≈ 0.169 と大きめです)
                     </div>
                 </div>
                 
@@ -2626,7 +2885,7 @@ GNU General Public License for more details.
         <div class="help-content graph-content">
             <div class="help-header">
                 <h2 id="graph-title">訪問者数推移</h2>
-                <span class="close-help" onclick="closeGraph()">×</span>
+                <span class="close-help" data-click="closeGraph">×</span>
             </div>
             <div class="help-body">
                 <canvas id="visitor-canvas" height="300"></canvas>
@@ -2634,6 +2893,7 @@ GNU General Public License for more details.
         </div>
     </div>
 
+    <script src="sora-constants.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -247,7 +247,7 @@ const check=(n,ok,d)=>{ console.log(`${ok?'PASS':'FAIL'} ${n}${d?'  '+d:''}`); o
         baseAlt:Float64Array.from(dOff.map(()=>hor.altitude)),
         dE:new Float64Array(N), dN:new Float64Array(N), tanLat:Math.tan(obs.lat*Math.PI/180),
         offsetAz:0, offsetAlt:0, centerMode:'point',
-        observerData:obs, refractionEnabled:false,
+        observerData:obs, astroRefraction:false,
       };
       _tsujiMeshPix={
         lat:[35.501,35.502,35.503,35.504],

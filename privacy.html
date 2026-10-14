@@ -87,11 +87,15 @@ GNU General Public License for more details.
         <h2>4. 外部サービスへの通信</h2>
         <p>本アプリは、機能の提供のために次の外部サービスと通信します。各サービスの利用には、それぞれの提供者のプライバシーポリシーが適用されます。</p>
         <ul>
-            <li>地図タイル・標高データ(国土地理院、OpenStreetMap等): 地図の表示範囲に応じたタイル画像・標高の取得</li>
-            <li>Googleのサービス(ログイン・ドライブ・スプレッドシート): 上記2.の連携を利用する場合のみ</li>
-            <li>ライブラリ配信(CDN): アプリの動作に必要なプログラムの取得</li>
+            <li>本サイトの配信(GitHub Pages): ページ・プログラム(ライブラリを含む)・データの取得(ホスティング提供者はGitHub)</li>
+            <li>地図タイル・標高データ(国土地理院、OpenStreetMap、Terrain Tiles(AWS S3)): 地図の表示範囲に応じた地図タイルと、観測点・目的点とその間・周辺の地形計算(標高グラフ・辻検索・辻メッシュ・宙の窓)に使う標高タイル・写真タイルの取得</li>
+            <li>標高・気象(Open-Meteo): 観測点・目的点(とその間の地点)の緯度経度を送信して、標高(国土地理院の標高データが無い地点のみ)・天気・大気の情報を取得</li>
+            <li>地名検索(国土地理院、Nominatim(OpenStreetMap)): 入力した地名を送信</li>
+            <li>建物データ(Project PLATEAU): 宙の窓で都市モードがオンの時(初期設定ではオン。宙の窓のメニューで切れます)、観測点の周辺の建物データを取得</li>
+            <li>Googleのサービス(ログイン・ドライブ・スプレッドシート・ピッカー): 上記2.の連携を利用する場合のみ</li>
+            <li>アクセス数の集計(Google Apps Script): 上記3.</li>
         </ul>
-        <p>これらの通信には、技術的な仕組み上、IPアドレス等が各サービス提供者へ伝わります。</p>
+        <p>アプリの動作に必要なプログラム(ライブラリ)は当サイトから配信し、外部の配信網(CDN)は使いません。これらの通信には、技術的な仕組み上、IPアドレス等が各サービス提供者へ伝わります。</p>
 
         <h2>5. Cookie・トラッキング</h2>
         <p>本アプリ自体は、Cookieを使った利用者の追跡や、広告・アクセス解析サービスを使用していません。</p>
@@ -102,7 +106,7 @@ GNU General Public License for more details.
         <h2>7. お問い合わせ</h2>
         <p>本ポリシーに関するお問い合わせは、<a href="https://github.com/takeyosui15/soranotsuji" target="_blank" rel="noopener">GitHubリポジトリ</a>までお願いします。</p>
 
-        <p class="date">制定日: 2026年7月15日<br>改定日: 2026年8月23日<br>Sora no Tsuji Project</p>
+        <p class="date">制定日: 2026年7月15日<br>改定日: 2026年10月14日<br>Sora no Tsuji Project</p>
     </div>
 
     <a href="index.html" class="back-link">トップページへ戻る</a>

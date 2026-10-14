@@ -110,12 +110,12 @@ const check=(n,ok,d)=>{ console.log(`${ok?'PASS':'FAIL'} ${n}${d?'  '+d:''}`); o
       // 期間clamp
       appState.tsujiSearchDays=999999; normalizeAppState();
       return { fpStable:f1===f2, fpChanges:f2!==f3, localNew, driveNew, blocked, noWrite:wrote===0,
-               guardMsg:/読み込み/.test(alerted), soraKept:fetched.data.mySoraSearches.length===1,
+               guardMsg:/切り替え表示/.test(alerted), soraKept:fetched.data.mySoraSearches.length===1,
                clamped:appState.tsujiSearchDays===36500 };
     });
     check('Z3 指紋はシート同期簿記に依存せず内容変更のみで変わる', r.fpStable&&r.fpChanges);
     check('Z3 [New]判定=前回同期からの変更(簿記保存でローカルに付かない/Drive側更新で付く)', !r.localNew&&r.driveNew);
-    check('Z3 空データのシート上書きを書込API到達前にガード(読み込みを案内)', r.blocked&&r.noWrite&&r.guardMsg);
+    check('Z3 空データのシート上書きを書込API到達前にガード(「切り替え表示で表示中にしてから保存」を案内。第164で案内文を直した=以前の「読み込みを」では解決しなかった)', r.blocked&&r.noWrite&&r.guardMsg);
     check('Z3 機能封鎖中のシート読込でMy宙検索が温存される', r.soraKept);
     check('Z3 辻検索期間がnormalizeで1..36500へ丸められる', r.clamped);
   }

@@ -21,8 +21,12 @@ check('V0 版数の形+Version Historyに第117/118の追補', /APP_VERSION = '\
 
 // ---- S1: ポップアップ注記に版数表記なし(リリースノートが持ち場=依頼者指摘)。
 // noteの代入行そのものを検査する(Version Historyの経緯文が旧文言を引用しても引っかからない形) ----
-check('S1 可視判定ポップアップの注記が版数なし',
-  /const note = '\\n\\n※ 地球の丸みと大気差\(:大気差設定・気象値に連動\)を考慮した判定です';/.test(src));
+{
+  // 第157: 注記は「大円に沿う経路・気差係数K=設定メニューの値・海は海面0m」の文になった(可視判定の3つの統一)。版数の表記が無いことは変わらず見張る
+  const noteLine = (src.split('\n').find(l => l.includes('const note = ') && l.includes('地球の丸み')) || '');
+  check('S1 可視判定ポップアップの注記が版数なし(第157: 大円・K=設定メニューの値・海面0mの文)',
+    noteLine.includes('※ 地球の丸み(大円に沿う経路)と大気差(気差係数K=${refractionKInUse().toFixed(3)}。設定メニューの値)を考慮し、${seaRule}') && src.includes("? '海は海面0mとして遮る判定です' : '標高データの無い所は判定しません(日本域の外)'") && !/[vV]?\d+\.\d+\.\d+/.test(noteLine.replace(/toFixed\(3\)/, '')));
+}
 
 // ---- S2: 全天儀軌跡の静的な形(トーラス=方位線と同じ0.0025R・旧_mwFrontBackLine廃止) ----
 check('S2 _mwTrajCircle(トーラス0.005R=方位線の2倍+破線3本)+方位線は0.0025R+旧ヘルパー廃止',

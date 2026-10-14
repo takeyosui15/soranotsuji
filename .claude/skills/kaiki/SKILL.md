@@ -14,8 +14,8 @@ description: 宙の辻の回帰テスト(verify群)をローカルハーネス�
 作業領域(スクラッチパッド)を `$SP` とする。
 
 ```bash
-python3 tests/harness/sync-apptest.py $SP/apptest   # アプリ一式コピー+CDN→vendor書き換え
-# vendor/が空なら、上のコマンドが表示するcurl一覧を実行して入手する(プロキシ環境でそのまま通る)
+python3 tests/harness/sync-apptest.py $SP/apptest   # アプリ一式コピー(vendor/ もリポジトリから。第159から第三者ライブラリは自前配信で同梱)
+# 第159より前の作業領域に古い vendor/ (mathjax-stub.js・three.min.js)が残っていても害は無い(index.html が参照しない)
 ```
 
 Playwright(playwright-core)が無ければ(jsqrはverify160のQRコード復号検査で使う):
@@ -45,7 +45,9 @@ export NODE_PATH=$SP/harness/node_modules
 node tests/verifyNNN.js          # 単発
 # スモーク(毎ラウンドの定番)= この7本79チェック+そのラウンドで追加した最新verify:
 for n in 96 117 123 124 125 126 127; do node tests/verify$n.js; done
-# 全回帰は tests/ のverify全部(節目のみ。verify102だけ実ネットワーク用のため常用しない)
+# 全回帰は tests/ のverify全部(節目のみ。verify102だけ実ネットワーク用のため常用しない)。
+# 必ずディレクトリから列挙する(番号を手で並べると抜ける。第164: 第157〜159の「全走」は 96〜184 のうち31本を回していなかった):
+for f in tests/verify*.js; do case $f in *verify102.js) continue;; esac; node $f; done
 ```
 
 - 各verifyの対象と注意は `tests/README.md`(封鎖機能は`?forecast=1`、フレークの扱い等)。

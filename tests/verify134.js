@@ -23,7 +23,7 @@ check('V1 3D風ビル: 最適化ベクトルタイルXYZ+BldA+種別擬似高さ
     const c1 = (src.match(/function _syntheticElevAtPix15\(/g) || []).length;
     const c2 = (src.match(/= _syntheticElevAtPix15;/g) || []).length;
     const c3 = (src.match(/window\._tmSyntheticElev\(gx >> 1, gy >> 1\)/g) || []).length;
-    check('V1 合成標高分岐の実体は_syntheticElevAtPix15の1箇所のみ(定義1+代入2)', c1 === 1 && c2 === 2 && c3 === 1, `def=${c1} assign=${c2} body=${c3}`);
+    check('V1 合成標高分岐の実体は_syntheticElevAtPix15の1箇所のみ(定義1+代入3=標高グラフ/辻メッシュ/山頂部[第152])', c1 === 1 && c2 === 3 && c3 === 1, `def=${c1} assign=${c2} body=${c3}`);
 }
 
 // ============================================================

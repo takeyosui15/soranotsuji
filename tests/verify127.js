@@ -21,9 +21,10 @@ check('O0 Version Historyに最新版の行がある', /Version \d+\.\d+\.\d+ - 
   const nReader = (src.match(/new FileReader/g) || []).length;
   check('O2 FileReaderはpickTextFileの1箇所のみ', nReader === 1, `count=${nReader}`);
   const nUrl = (src.match(/URL\.createObjectURL/g) || []).length;
-  // 許容4箇所: downloadTextFile(テキスト)・soraExportDownload(動画/画像Blob・遅延revoke)・
-  // 動画プレビューと画像プレビューのsrc用(ダウンロードではない)
-  check('O3 createObjectURLは4箇所(テキストDL/宙の窓DL/動画src/画像src)のみ', nUrl === 4, `count=${nUrl}`);
+  // 許容5箇所: downloadTextFile(テキスト)・soraExportDownload(動画/画像Blob・遅延revoke)・
+  // 動画プレビューと画像プレビューのsrc用(ダウンロードではない)・
+  // 第158: 標高タイルの店の復号の予備 _demDecode(createImageBitmap が無いブラウザ向け。finally で即 revoke)
+  check('O3 createObjectURLは5箇所(テキストDL/宙の窓DL/動画src/画像src/標高タイル復号の予備)のみ', nUrl === 5, `count=${nUrl}`);
   const nSplit = (src.match(/replace\(\/\\r\\n\/g/g) || []).length;
   check('O4 CSV行分割の正規表現はsplitCsvLinesの1箇所のみ', nSplit === 1, `count=${nSplit}`);
 }

@@ -24,7 +24,7 @@ check('T0 Version Historyに最新版の行がある', /Version \d+\.\d+\.\d+ - 
     check('T1 riseSetCacheの独自実装は0(キャッシュは_makeRiseSetForDayが所有)', c2 === 0, `count=${c2}`);
     const c3 = (src.match(/_makeElevAtPix15\(/g) || []).length;
     const c4 = (src.match(/_makeRiseSetForDay\(/g) || []).length;
-    check('T1 工場関数は定義1+呼出2(elevAtPix15/riseSetForDay共に3箇所)', c3 === 3 && c4 === 3, `elev=${c3} rise=${c4}`);
+    check('T1 工場関数は定義1+呼出(elevAtPix15=3箇所[標高グラフ/辻メッシュ/山頂部(第152)]・riseSetForDay=2箇所)', c3 === 4 && c4 === 3, `elev=${c3} rise=${c4}`);
 }
 
 // ============================================================

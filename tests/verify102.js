@@ -39,11 +39,10 @@ const check = (n, ok, d) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${d ? '  
   {
     const hosts = [...netOk.keys()];
     const hit = (s) => hosts.some(u => u.includes(s) && netOk.get(hosts.find(h => h === u)) === 200);
-    check('R1 unpkg(Leaflet)', hit('unpkg.com'), hosts.filter(u => u.includes('unpkg')).map(u => netOk.get(u)).join(','));
-    check('R1 jsDelivr(astronomy-engine等)', hit('cdn.jsdelivr.net'));
-    check('R1 geographiclib(sourceforge)', hit('geographiclib.sourceforge.io'));
-    const libs = await p.evaluate(() => ({ L: typeof L, Astronomy: typeof Astronomy, geod: typeof geodesic }));
-    check('R1 ライブラリ実体(L/Astronomy/GeographicLib)', libs.L === 'object' && libs.Astronomy === 'object' && libs.geod === 'object', JSON.stringify(libs));
+    // 第159: 第三者ライブラリは自前配信(vendor/)。CDNへは一切アクセスしない(サプライチェーン対策)
+    check('R1 CDNに頼らない(unpkg/jsDelivr/sourceforge/mathjax へのアクセス無し)', !hit('unpkg.com') && !hit('cdn.jsdelivr.net') && !hit('geographiclib.sourceforge.io'), hosts.filter(u => /unpkg|jsdelivr|sourceforge/.test(u)).join(','));
+    const libs = await p.evaluate(() => ({ maplibre: typeof maplibregl, Astronomy: typeof Astronomy, geod: typeof geodesic }));
+    check('R1 ライブラリ実体(maplibregl/Astronomy/GeographicLib)', libs.maplibre === 'object' && libs.Astronomy === 'object' && libs.geod === 'object', JSON.stringify(libs));
   }
 
   // R2: 地理院タイルが実サーバから取得できた
@@ -98,15 +97,18 @@ const check = (n, ok, d) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${d ? '  
     check('R4 キャッシュヒットで実コール0', r.omCalls === 0 && r.nRows > 0, `calls=${r.omCalls} rows=${r.nRows}`);
   }
 
-  // R5: 地理院の標高API・地名検索が実サーバで動く(位置情報メニューの実データ経路)
+  // R5: 標高API(Open-Meteo=アプリが実際に使う経路。第159: CSPの許可リストにある先だけ叩く)・地理院の地名検索が実サーバで動く
   {
-    const r = await p.evaluate(async () => {
-      const el = await (await fetch('https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=138.7274&lat=35.3606&outtype=JSON')).json();
-      const ms = await (await fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent('富士山'))).json();
-      return { elev: el.elevation, n: Array.isArray(ms) ? ms.length : 0 };
-    });
-    check('R5 地理院標高API(富士山頂≒3776m)', Math.abs(r.elev - 3776) < 30, `elev=${r.elev}`);
-    check('R5 地理院地名検索(候補あり)', r.n > 0, `candidates=${r.n}`);
+    let r = { elev: NaN, n: 0, err: null };
+    try {
+      r = await p.evaluate(async () => {
+        const el = await (await fetch('https://api.open-meteo.com/v1/elevation?latitude=35.3606&longitude=138.7274')).json();
+        const ms = await (await fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent('富士山'))).json();
+        return { elev: Array.isArray(el.elevation) ? el.elevation[0] : el.elevation, n: Array.isArray(ms) ? ms.length : 0, err: null };
+      });
+    } catch (e) { r.err = String(e).slice(0, 200); }
+    check('R5 標高API(Open-Meteo・富士山頂≒3776m)', Math.abs(r.elev - 3776) < 60, `elev=${r.elev} ${r.err || ''}`);
+    check('R5 地理院地名検索(候補あり)', r.n > 0, `candidates=${r.n} ${r.err || ''}`);
   }
 
   const unexpected = netFail.filter(u => !u.includes('script.google.com'));

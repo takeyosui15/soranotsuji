@@ -2517,3 +2517,198 @@ input[type="range"] {
 /* 結果コントロール内の時間フィルタ群と水平線は宙の窓ctrlと同じ中央寄せ(第63ラウンド・依頼者指摘) */
 #tsujires-ctrl-body .tsuji-time-group, #tsujimesh-ctrl-body .tsuji-time-group { max-width: 360px; margin: 4px auto; box-sizing: border-box; }
 #tsujires-ctrl-body hr.tsujisearch-separator, #tsujimesh-ctrl-body hr.tsujisearch-separator { max-width: 360px; margin: 6px auto; }
+
+/* --- 可視マップの結果パネル(辻メッシュと同じ配置/最大化/積み上げ規則。デッサン05・段1) --- */
+#kashimap-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 33.33%;
+    background-color: rgba(30, 30, 30, 0.9);
+    border-top: 1px solid #8a7a2a;
+    z-index: 910;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+    color: #eee;
+}
+#kashimap-panel.hidden { display: none; }
+#kashimap-panel.with-elevation,
+#kashimap-panel.with-milkyway,
+#kashimap-panel.with-soramado { bottom: 33.33%; }
+#kashimap-panel.with-soramado-max,
+#kashimap-panel.with-milkyway-max { bottom: 66.67%; }
+#kashimap-panel.with-soradanmen { bottom: 33.33%; }
+#kashimap-panel.with-soradanmen-max { bottom: 66.67%; }
+#kashimap-panel.maximized { height: 66.67%; }
+#kashimap-panel.maximized.with-elevation,
+#kashimap-panel.maximized.with-milkyway,
+#kashimap-panel.maximized.with-soramado { height: 33.33%; }
+#kashimap-header {
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #ffd700;
+    border-bottom: 1px solid #444;
+    flex-shrink: 0;
+}
+#btn-kashimap-max {
+    padding: 0 6px;
+    margin-right: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: #fff;
+    background: rgba(70, 70, 70, 0.7);
+    border: 1px solid #777;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#btn-kashimap-max.active { background: #b8860b; border-color: #ffd700; }
+#kashimap-toolbar {
+    flex: 0 0 auto;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #ccc;
+    border-bottom: 1px solid #333;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#kashimap-content {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 10px;
+    font-size: 14px;
+}
+#kashimap-content .td-table { width: 100%; border-collapse: collapse; }
+#kashimap-content .td-table th,
+#kashimap-content .td-table td { padding: 3px 6px; text-align: left; white-space: nowrap; }
+#kashimap-content .td-table th {
+    color: #aaa; font-weight: normal; font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky; top: 0; background: #2a2416; z-index: 1; cursor: pointer;
+}
+#kashimap-content .td-table th:hover { color: #fff; }
+#kashimap-content .td-table tr.td-data-row { cursor: pointer; }
+#kashimap-content .td-table tr.td-data-row:hover { background: rgba(255, 255, 255, 0.12); }
+#kashimap-content .td-table tr.td-data-row.selected { background: rgba(255, 215, 0, 0.22); }
+/* 島リスト(段3): 表示中はパネルを山リストと2分(コントロール開は3分)。辻メッシュの詳細リストと同じ骨組み */
+#kashimap-detail {
+    border-top: 1px solid #8a7a2a;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+#kashimap-detail.hidden { display: none; }
+#kashimap-detail-header { font-weight: bold; font-size: 12px; color: #ffd700; padding: 3px 0; flex-shrink: 0; }
+#kashimap-detail-toolbar { flex: 0 0 auto; font-size: 12px; color: #ccc; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding-bottom: 2px; }
+#kashimap-detail-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+#kashimap-detail-body .td-table { width: 100%; border-collapse: collapse; }
+#kashimap-detail-body .td-table th,
+#kashimap-detail-body .td-table td { padding: 2px 6px; text-align: left; white-space: nowrap; }
+#kashimap-detail-body .td-table th {
+    color: #aaa; font-weight: normal; font-size: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky; top: 0; background: #2a2416; z-index: 1; cursor: pointer;
+}
+#kashimap-detail-body .td-table th:hover { color: #fff; }
+#kashimap-detail-body .td-data-row { cursor: pointer; }
+#kashimap-detail-body .td-data-row:hover { background: rgba(255, 255, 255, 0.12); }
+#kashimap-detail-body .td-data-row.selected { background: rgba(255, 215, 0, 0.22); }
+#kashimap-detail-body .td-data-row.hover { background: rgba(255, 215, 0, 0.35); }
+#kashimap-detail-body .td-data-row.stripe td:nth-child(3) { color: #ff8a80; font-weight: bold; }
+/* コントロールメニュー(段3): 辻メッシュ検索のコントロールと同じ位置・同じ開閉 */
+#kashimap-ctrl {
+    flex: 0 0 auto;
+    width: 100%;
+    background: #3a3a3a;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+#kashimap-ctrl.open { flex: 0 0 50%; }
+#kashimap-panel.with-detail #kashimap-ctrl.open { flex: 0 0 33.33%; }
+#kashimap-ctrl-body.hidden { display: none; }
+#kashimap-ctrl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 10px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #eee;
+    border-top: 1px solid #555;
+    cursor: pointer;
+    user-select: none;
+    flex: 0 0 auto;
+    max-width: 360px; width: 100%; margin: 0 auto; box-sizing: border-box;
+}
+#kashimap-ctrl-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 6px;
+    border-top: 1px solid #4a4a4a;
+}
+#kashimap-ctrl-body .control-row { max-width: 360px; margin: 4px auto; }
+#kashimap-ctrl-body label { color: #eee; }
+#kashimap-ctrl-body .control-row.center-row { justify-content: center; }
+#kashimap-ctrl-body .baseopt-radio input:disabled + span,
+#kashimap-ctrl-body .baseopt-radio.disabled { color: #777; }
+/* 可視マップ節の「端末に保存した資産」の一覧(第151) */
+#kashimap-store { max-width: 360px; margin: 2px auto; }
+#kashimap-store-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+#kashimap-store-table th { color: #aaa; font-weight: normal; text-align: left; padding: 1px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
+#kashimap-store-table td { padding: 1px 4px; white-space: nowrap; }
+#kashimap-store-table.hidden { display: none; }
+#kashimap-store-table .kashimap-store-del { padding: 0 6px; line-height: 16px; }
+.kashimap-note, .menu-note { font-size: 11px; color: #aaa; }
+/* 可視マップ節の整列(第154・依頼者): チェックの文言は折り返さない・「目的点で計算」「My目的点で計算」は1段に・下のボタンは中央に1段ずつ */
+.km-label { white-space: nowrap; margin-right: 12px; }
+#sec-kashimap .control-row.center-row { justify-content: center; }
+#sec-kashimap select { max-width: 55%; }
+/* 可視マップ節(第155・デッサン05の新しい画面構成): 推し山の入力は横幅いっぱい・項目が入らない段は折り返す・資産の一覧は2行1組(薄い緑の背景)・全て登録は変更があると赤い太字 */
+#sec-kashimap .km-query { flex: 1 1 auto; min-width: 0; }
+#sec-kashimap .km-wrap-row { flex-wrap: wrap; row-gap: 4px; }
+#sec-kashimap .km-pair { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }   /* チェックと文言は一緒に折り返す */
+#sec-kashimap .km-sub { font-size: 13px; }
+#sec-kashimap .km-stat-row { gap: 16px; }
+#sec-kashimap .km-store-actions { gap: 8px; }
+/* 資産の一覧(3行1組=チェック[段抜き]+目的点名 / 範囲・樹冠・構造物 / 島数・サイズ)。背景色は付けず、Myセットと同じく水平線で区切る */
+#kashimap-store-table tr.km-store-row td { padding-top: 4px; }
+#kashimap-store-table tr.km-store-row3 td { border-bottom: 1px solid rgba(255, 255, 255, 0.35); padding-bottom: 4px; }
+#kashimap-store-table tr.km-store-row2 td, #kashimap-store-table tr.km-store-row3 td { font-size: 10px; color: #555; font-weight: normal; line-height: 1.3; }   /* 表示天体の天体名の下の詳細項目(.body-detail-text)と同じ */
+#kashimap-store-table tr.km-store-row3 td:first-child, #kashimap-store-table tr.km-store-row2 td:first-child { padding-left: 4px; }
+#kashimap-store-table td.km-store-chk { width: 22px; vertical-align: middle; }
+#kashimap-store-table .kashimap-store-name { width: 100%; box-sizing: border-box; font-size: 16px; padding: 2px 4px; }   /* My観測点などの入力欄と同じ文字サイズ */
+#sec-kashimap .km-stat { font-size: 13px; color: #000; font-weight: normal; }   /* 合計件数/合計容量: ラベルと同じ文字サイズで黒字細字 */
+#sec-kashimap hr.km-hr { margin: 6px 0; }   /* 色は辻検索の区切り線と同じ(currentColor) */
+#sec-kashimap .km-store-actions .nav-btn { flex: 1 1 0; min-width: 0; }
+#sec-kashimap .control-row > .nav-btn.main-btn:only-child { width: 100%; }
+.kashimap-swatch { display: inline-block; width: 10px; height: 10px; border: 1px solid #222; margin-left: 4px; vertical-align: middle; }
+/* 全展望マーカー(重複数がいちばん多い縞島の代表点): 金地に赤枠の丸 */
+.kashimap-zen { width: 22px; height: 22px; border-radius: 50%; background: #ffd700; border: 2px solid #c00; color: #600; font-size: 12px; font-weight: bold; line-height: 18px; text-align: center; box-sizing: border-box; box-shadow: 0 0 3px #000; }
+
+/* 宙の窓コントロールの「辻検索」「辻メッシュ」(2分割。第158) */
+#soramado-ctrl-body .sora-ctrl-search-row .nav-btn { flex: 1 1 0; min-width: 0; }
+
+/* バックアップメニューの地理タイル/標高タイル(第158・デッサン18): 可視マップ節と同じ見た目 */
+#sec-backup .km-sub { font-size: 13px; }
+#sec-backup .km-stat-row { gap: 16px; }
+#sec-backup .km-stat { font-size: 13px; color: #000; font-weight: normal; }
+#sec-backup hr.km-hr { margin: 6px 0; }
+#sec-backup .control-row > .main-btn { flex: 1 1 auto; width: 100%; }
+
+/* 機能封鎖(リリース方針。第158: 可視マップは ?kashimap=1 で開錠) */
+.feature-locked { display: none !important; }
+
+/* ヘルプの数式(第159: MathJax を撤去し、HTMLで書く) */
+.formula { display: block; margin: 6px 0; padding: 4px 8px; font-size: 1.05em; letter-spacing: 0.02em; }

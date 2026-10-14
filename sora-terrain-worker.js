@@ -23,6 +23,8 @@ GNU General Public License for more details.
 //   (欠損画素はチェーンの次のソース→最後にz14親タイル(fbX/fbY=親タイル内の小数画素座標)を参照)
 // 返信: { reqId, elevs: [{ idx, elev }] }   (取得/デコード失敗時は elev=0)
 
+importScripts('sora-constants.js');   // 数の単一情報源(端末の店の「無し」の印の寿命 TILE_STORE.MISS_TTL_MS。第158)
+
 const POW2_8 = Math.pow(2, 8);
 const POW2_16 = Math.pow(2, 16);
 const POW2_23 = Math.pow(2, 23);
@@ -91,6 +93,22 @@ function terrariumToGsi(data) {
 
 // タイル画像キャッシュ (ワーカーは再利用されるため、z14親タイル等の重複取得を避ける。上限8枚・先入れ先出し)
 const _tileCache = new Map();   // url -> Uint8ClampedArray(256×256×4) | null(取得失敗)
+// 標高タイルの端末の店(第158): 可視マップ・標高グラフと同じ IndexedDB 'soranotsuji-kashimap' の tiles(鍵 kind/z/x/y・PNGのバイト列)を先に読み、無ければ取って店へ
+const DEM_TILE_URL_RE = /\/xyz\/(dem5a_png|dem5b_png|dem5c_png|dem_png)\/(\d+)\/(\d+)\/(\d+)\.png$/;
+let _demDbP = null;
+function demDb() {
+    if (_demDbP) return _demDbP;
+    _demDbP = new Promise((ok) => {
+        try {
+            const req = indexedDB.open('soranotsuji-kashimap');   // 版は本体が作る(無ければ店は使わない)
+            req.onsuccess = () => { const db = req.result; ok(db.objectStoreNames.contains('tiles') ? db : null); };
+            req.onerror = () => ok(null); req.onblocked = () => ok(null);
+        } catch (_) { ok(null); }
+    });
+    return _demDbP;
+}
+const demGet = (db, key) => new Promise((ok) => { try { const r = db.transaction('tiles', 'readonly').objectStore('tiles').get(key); r.onsuccess = () => ok(r.result); r.onerror = () => ok(undefined); } catch (_) { ok(undefined); } });
+const demPut = (db, rec) => new Promise((ok) => { try { const tx = db.transaction('tiles', 'readwrite'); tx.objectStore('tiles').put(rec); tx.oncomplete = () => ok(true); tx.onerror = () => ok(false); } catch (_) { ok(false); } });
 async function loadTileData(url) {
     if (_tileCache.has(url)) return _tileCache.get(url);
     let data = null;
@@ -98,10 +116,25 @@ async function loadTileData(url) {
         _tileCache.set(url, null);
         return null;
     }
+    const m = url.match(DEM_TILE_URL_RE);
+    const key = m ? `${m[1]}/${m[2]}/${m[3]}/${m[4]}` : null;
+    const db = key ? await demDb() : null;
     try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const blob = await resp.blob();
+        let blob = null;
+        if (db) {
+            const rec = await demGet(db, key);
+            if (rec) {
+                if (rec.miss || !rec.buf) { if (rec.miss && (Date.now() - (Number(rec.savedAt) || 0)) < SORA.TILE_STORE.MISS_TTL_MS) throw new Error('HTTP 404(店の印)'); }   // 古い「無し」の印(30日)は取り直す
+                else blob = new Blob([rec.buf], { type: 'image/png' });
+            }
+        }
+        if (!blob) {
+            const resp = await fetch(url);
+            if (resp.status === 404 && db) await demPut(db, { key, kind: m[1], z: +m[2], x: +m[3], y: +m[4], size: 0, miss: true, savedAt: Date.now() });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            blob = await resp.blob();
+            if (db) { const buf = await blob.arrayBuffer(); await demPut(db, { key, kind: m[1], z: +m[2], x: +m[3], y: +m[4], size: buf.byteLength, buf, savedAt: Date.now() }); }
+        }
         const bmp = await createImageBitmap(blob);
         const canvas = new OffscreenCanvas(256, 256);
         const ctx = canvas.getContext('2d', { willReadFrequently: true });

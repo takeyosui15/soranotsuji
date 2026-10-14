@@ -2,3 +2,10 @@
 node_modules/
 playwright-report/ 
 test-results/
+
+# 可視マップの計算の道具(第148〜): 地理院タイルのキャッシュと大きな出力は置かない
+tools/kashimap/cache/
+tools/kashimap/out/*/visible.bin
+tools/kashimap/out/*/islands.geojson
+tools/kashimap/out/*/outline.json
+__pycache__/

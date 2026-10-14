@@ -53,8 +53,8 @@ const PHOTO_NE = buildExifJpeg({ little: true, latRef: 'N', lngRef: 'E', lat: [3
 const PHOTO_SW = buildExifJpeg({ little: false, latRef: 'S', lngRef: 'W', lat: [35, 21, 3870], lng: [138, 43, 3850] });
 const PHOTO_NOGPS = buildExifJpeg({ little: true, noGps: true });
 
-// ---- V0: 版数ピン(最新の検証が持つ。第132/133もリリース前の追補なので1.87.0のまま) ----
-check('V0 版数ピン 1.87.0+Version Historyに第132/133の追補4/5', /APP_VERSION = '1\.87\.0'/.test(src) && ((src.includes('第132ラウンド(リリース前の追補4') && src.includes('第133ラウンド(リリース前の追補5')) || !!process.argv[2]));
+// ---- V0: 版数の形(等価ピンは最新のverify174へ移譲。第148) ----
+check('V0 版数の形+Version Historyに第132/133の追補4/5', /APP_VERSION = '\d+\.\d+\.\d+'/.test(src) && ((src.includes('第132ラウンド(リリース前の追補4') && src.includes('第133ラウンド(リリース前の追補5')) || !!process.argv[2]));
 
 // ---- T1: UI文言(第133): ○ラジオのツールチップからデッサンの考え方を削除+reset.htmlのドライブ注記 ----
 check('T1 「:○」ラジオのtitleは±0.25°のみ(実用域の説明はデッサンへ)+reset.htmlにドライブは残る注記',
@@ -64,7 +64,7 @@ check('T1 「:○」ラジオのtitleは±0.25°のみ(実用域の説明はデ�
 // ---- F1/F2: 公開文書の明記(プライバシーポリシー+ヘルプ) ----
 check('F1 プライバシーポリシー: 写真は端末内処理のみ・送信/保存しない+改定日',
   privSrc.includes('「写真から追加」で選択した写真は、位置情報(Exif)を読み取るために利用者の端末内(ブラウザ内)でのみ処理されます') &&
-  privSrc.includes('改定日: 2026年8月23日'));
+  privSrc.includes('改定日: 2026年10月14日'));   // 第172: 4.外部サービスの節の差し替え(CDNを消し実際の通信先を列挙)で改定
 check('F2 ヘルプ: 宙の辻フォルダは名前変更・移動しても連携が保たれる+写真から追加の説明',
   idxSrc.includes('名前変更したり、別の場所へ移動したりしても、連携はそのまま保たれます') &&
   idxSrc.includes('<strong>写真から追加</strong>: 撮った写真の位置情報 (Exif) から観測点・目的点を追加できます'));

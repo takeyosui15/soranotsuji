@@ -80,10 +80,10 @@ check('T1 画素リストの行データにcenterMode(検索の選択値を正�
             baseAlt: Float64Array.from(dOff.map(() => hor.altitude)),
             dE: new Float64Array(N), dN: new Float64Array(N), tanLat: Math.tan(obs.lat * Math.PI / 180),
             offsetAz: 0, offsetAlt: 0, centerMode: 'point',
-            observerData: obs, refractionEnabled: false,
+            observerData: obs, astroRefraction: false,
             minAlt: hor.altitude, maxAlt: hor.altitude,
             binSize: 360, nBins: 1, binIndex: Uint32Array.from([0, N]), binPixels: Uint32Array.from([0, 1, 2, 3]),
-            grid: Int32Array.from([2]), gridW: 1, gxBase: gpx, gyBase: gpy,
+            grid: Int32Array.from([2]), gridW: 1, gridPos: Int32Array.from([0, 0, 0]), gxBase: gpx, gyBase: gpy,   // gridPos: 画素→オーバーレイ画像の位置(_tmBuildOverlay が読む。第158: 合成データに補った)
             bounds: { west: 138.8019, east: 138.8021, north: 35.5021, south: 35.5019 },
         };
         _tsujiMeshPix = { lat: [35.501, 35.502, 35.503, 35.504], lng: [138.801, 138.802, 138.803, 138.804], elev: [900, 910, 920, 930] };

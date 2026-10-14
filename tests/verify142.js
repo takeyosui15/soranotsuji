@@ -19,8 +19,8 @@ check('V0 Version Historyに1.59.0の行がある', src.includes('Version 1.59.0
 // ---- V1: 静的な形 ----
 check('V1 タイル予算の上限が既定値表のmaxを参照(二重定義の一元化)+LRU上限あり(値のピンは最新のverify143へ=第65で520)',
     src.includes('Math.min(APP_DEFAULTS.smBldgTiles.max, Math.round(Number(appState.smBldgTiles)') && /SM_BLDG_CACHE_MAX = \d+/.test(src));
-check('V1 メッシュのスナップショットFは精度を固定値で持つ(appState参照をやめた)',
-    src.includes('F.accDblCircle = true; F.accCircle = false;'));
+check('V1 メッシュのスナップショットFは精度を固定値で持つ(appState参照をやめた。第133から ○ も常時オン=第164でピン更新)',
+    src.includes('F.accDblCircle = true; F.accCircle = true;'));
 check('V1 index.html: メッシュ結果コントロールの精度フィルタと◎がchecked+disabled',
     html.includes('id="chk-tsujimeshres-acc-filter" class="body-checkbox" checked disabled') &&
     html.includes('id="chk-tsujimeshres-acc-dbl-circle" class="body-checkbox" checked disabled'));
@@ -104,8 +104,8 @@ check('V1 既定名の経路: 座標一致の自動記入(_locNameApplyDefaultIf
             };
         });
         const fresh = await read();
-        const fixedOk = (s) => s.filter === '1d' && s.dbl === '1d' && s.circle === '0d' && s.tri === '0d' && s.dash === '0d';
-        check('W4 初期状態: 精度フィルタ=オン読専・◎=オン読専・○△-=オフ読専', fixedOk(fresh), JSON.stringify(fresh));
+        const fixedOk = (s) => s.filter === '1d' && s.dbl === '1d' && s.circle === '1d' && s.tri === '0d' && s.dash === '0d';   // ○ は第133から常時オン(読専)。第164でピン更新
+        check('W4 初期状態: 精度フィルタ=オン読専・◎=オン読専・○=オン読専(第133〜)・△-=オフ読専', fixedOk(fresh), JSON.stringify(fresh));
         // スナップショット展開(全オフFを渡しても)固定が保たれ、読み値も◎のみ
         const after = await p.evaluate(() => {
             _resCtlSet('tsujimeshres', _resCtlAllOff(), false);
@@ -113,8 +113,8 @@ check('V1 既定名の経路: 座標一致の自動記入(_locNameApplyDefaultIf
             return { acc: F.accuracyFilter, dbl: F.accDblCircle, cir: F.accCircle };
         });
         const after2 = await read();
-        check('W4 全オフFを展開しても固定のまま+読み値は精度=オン/◎=オン/○=オフ',
-            fixedOk(after2) && after.acc === true && after.dbl === true && after.cir === false, JSON.stringify({ after, after2 }));
+        check('W4 全オフFを展開しても固定のまま+読み値は精度=オン/◎=オン/○=オン(第133〜)',
+            fixedOk(after2) && after.acc === true && after.dbl === true && after.cir === true, JSON.stringify({ after, after2 }));
     }
 
     // W5: 表示タイル数300が予算(fanKey)まで通る(修正前は|150に頭打ち)

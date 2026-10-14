@@ -37,7 +37,7 @@ check('S2 写真テクスチャの配線(発行URL・ワーカー相乗り・頂
   fs.readFileSync(path.join(path.dirname(target), 'sora-terrain-worker.js'), 'utf8').includes('samplePhoto'));
 check('S3 天体軌跡にマーカーと同じ大気差(+キャッシュ鍵に大気差設定)',
   src.includes('const hor = Astronomy.Horizon(t, observer, ra, dec, refr);') &&
-  /_smTrajKey[\s\S]{0,400}/.test(src) && /const key = `\$\{centerMs\}[^`]*refractionEnabled[^`]*`/.test(src));
+  /_smTrajKey[\s\S]{0,400}/.test(src) && /const key = `\$\{centerMs\}[^`]*astroRefraction[^`]*`/.test(src));   // 第158: 軌跡の鍵は天体の大気差(astroRefraction)
 
 (async()=>{
   const b=await chromium.launch({executablePath:EXE,headless:true,args:ARGS});
@@ -75,8 +75,8 @@ check('S3 天体軌跡にマーカーと同じ大気差(+キャッシュ鍵に�
       r.curved.visible===false && Math.abs(r.curved.blockingDist-60.2)<0.6, JSON.stringify(r.curved));
     check('J2 補正なし(旧来の直線判定=inv2R:0)なら同じ地形で見える(判定を変えたのは丸みの項)',
       r.flat.visible===true, JSON.stringify(r.flat));
-    check('J3 大気差オフでも隠れる+実効地球は大気差オンで大きくなる(k連動: 比が1-k≒0.8台)',
-      r.noRefr.visible===false && r.ratio>0.78 && r.ratio<0.9, `ratio=${r.ratio.toFixed(3)}`);
+    check('J3 大気差オフでも隠れる+実効地球はkに連動する(第158: オフ=0・オン[Γ0.0065]=0.169なので 比=1−0.169≒0.831)',
+      r.noRefr.visible===false && r.ratio>0.82 && r.ratio<0.84, `ratio=${r.ratio.toFixed(3)}`);
   }
 
   // T1: 写真テクスチャのUI・保存・URL往復

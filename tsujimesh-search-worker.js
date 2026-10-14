@@ -20,7 +20,7 @@ GNU General Public License for more details.
 // 方位角ビン索引で候補画素だけを引き、精度フィルタ(角距離≤ε)で判定する。
 // 秒精細化は天体の秒間位置を1回だけ計算して全ヒット画素で共有する(画素側は算術のみ)。
 
-importScripts('https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js');
+importScripts('vendor/astronomy.browser.min.js');   // 自前配信(vendor/。版は固定・指紋は vendor/MANIFEST.json)
 
 const A = (typeof Astronomy !== 'undefined') ? Astronomy
         : (typeof self !== 'undefined' && self.Astronomy) ? self.Astronomy
@@ -43,7 +43,7 @@ function angularDistance(az1, alt1, az2, alt2) {
     return Math.acos(Math.max(-1, Math.min(1, sinDelta))) / D2R;
 }
 
-function calcAzAlt(body, time, observer, refractionEnabled) {
+function calcAzAlt(body, time, observer, astroRefraction) {
     let ra, dec;
     if (body.fixed) {
         ra = body.ra;
@@ -53,7 +53,7 @@ function calcAzAlt(body, time, observer, refractionEnabled) {
         ra = eq.ra;
         dec = eq.dec;
     }
-    const hor = A.Horizon(time, observer, ra, dec, refractionEnabled ? 'normal' : null);
+    const hor = A.Horizon(time, observer, ra, dec, astroRefraction ? 'normal' : null);
     return { az: hor.azimuth, alt: hor.altitude };
 }
 
@@ -82,7 +82,7 @@ self.onmessage = (e) => {
     if (d.type !== 'search' || !P) return;
 
     const {
-        reqId, body, observerData, refractionEnabled,
+        reqId, body, observerData, astroRefraction,
         offsetAz, offsetAlt, centerMode, epsilon,
         searchStartMs, dayStart, dayEnd,
     } = d;
@@ -161,7 +161,7 @@ self.onmessage = (e) => {
         // Pass 1: 当日 0:00〜23:59 を 1分単位スキャン
         for (let s = 0; s < 1440; s++) {
             const t = dayBase + s * 60000;
-            const { az, alt } = calcAzAlt(body, new Date(t), observer, refractionEnabled);
+            const { az, alt } = calcAzAlt(body, new Date(t), observer, astroRefraction);
             // 全画素の視高度範囲の外なら即スキップ。さらに視高度の変化速度上限(日周運動+月の固有運動+
             // 視差/大気差の変動を含めても0.35°/分)から範囲外が確定する分数だけ先へ飛ばす。
             // 飛ばした標本はどのみち範囲外で不採用なので、評価結果は全標本評価と完全に同一(結果不変の高速化)
@@ -190,7 +190,7 @@ self.onmessage = (e) => {
                 const azs = new Float64Array(121), alts = new Float64Array(121);
                 const exs = new Float64Array(121), nys = new Float64Array(121), uzs = new Float64Array(121);
                 for (let i = 0; i <= 120; i++) {
-                    const { az, alt } = calcAzAlt(body, new Date(minuteMs + (i - 60) * 1000), observer, refractionEnabled);
+                    const { az, alt } = calcAzAlt(body, new Date(minuteMs + (i - 60) * 1000), observer, astroRefraction);
                     azs[i] = az; alts[i] = alt;
                     const e2 = dirENU(az, alt);
                     exs[i] = e2[0]; nys[i] = e2[1]; uzs[i] = e2[2];

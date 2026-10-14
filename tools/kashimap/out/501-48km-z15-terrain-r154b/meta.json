@@ -1,0 +1,91 @@
+{
+ "tool": "tools/kashimap/viewshed.js",
+ "version": 2,
+ "generated": "2026-10-01T02:33:13.991Z",
+ "mountain": {
+  "id": "501",
+  "name": "槍ヶ岳",
+  "peak": "",
+  "elev_list": 3180,
+  "elev_dem": 3178.6,
+  "lat": 36.342024,
+  "lon": 137.647643
+ },
+ "range_km": 48,
+ "zoom": 15,
+ "canopy": false,
+ "buildings": false,
+ "observer_h_m": 1.5,
+ "k": 0.132,
+ "earth_radius_m": 6371000,
+ "reff_m": 7339861.751152074,
+ "summit_mode": "region",
+ "summit_area": {
+  "drop_m": 170,
+  "drop_requested_m": 300,
+  "search_m": 3000,
+  "px": 8799,
+  "far_m": 424.5,
+  "other_peaks_in_search": [
+   "西岳",
+   "大喰岳",
+   "中岳",
+   "南岳"
+  ],
+  "how": "山頂から170m以内の高さで山頂につながる画素(探索半径3000m。別の山の山頂を含まない高さまで)"
+ },
+ "excl_target_m": 15,
+ "excl_target_how": "山頂部の画素そのもの(中心・半径なし)+半径15m(アプリの既定と同じ最小値)",
+ "summit_elev_how": "3×3画素のDEM最大",
+ "excl_observer_m": 10,
+ "grid": {
+  "w": 12475,
+  "h": 12475,
+  "x0": 7395489,
+  "y0": 3277976,
+  "mpp_center": 3.8481,
+  "note": "1画素の大きさは中心緯度の値で一定とした(窓の中で約±0.4%の差)"
+ },
+ "dem": {
+  "sources": "cyberjapandata.gsi.go.jp dem5a_png/dem5b_png/dem5c_png(z15)→dem_png(z14, 最近傍で2倍)。画素ごとに無い所を次の源で埋める",
+  "tiles": 2500,
+  "from5a": 2309,
+  "from5b": 0,
+  "from5c": 0,
+  "from14": 191,
+  "filled_from_next": 867,
+  "missing": 0,
+  "data_px": 155625625
+ },
+ "method": "R2: 山頂から窓の縁の全画素へ光線。見かけ高度角=(h−d²/(2Reff)−hS)/d の最大を更新。観測者=地上+observer_h。除外=目的点側(山頂部・上記)・観測点側10m(式と観測点側はアプリの統一可視判定と同じ。目的点側はアプリの15mを山頂部へ一般化)",
+ "outline": {
+  "tol_px": 0,
+  "edges": 976352,
+  "rings": 26394,
+  "holes": 18876,
+  "vertices_raw": 586835,
+  "vertices": 586835,
+  "encoding": "outline.json: 島ごとに[項番,画素数,外周,穴…]。各環は画素の角の整数座標(窓の左上が0,0)を先頭=絶対・以降=差分でGoogle polyline符号(倍率なし)"
+ },
+ "result": {
+  "visible_px": 11182003,
+  "visible_km2": 165.581,
+  "islands": 7518,
+  "rays": 49896,
+  "check": {
+   "n": 500,
+   "agree": 500,
+   "agree_pct": 100,
+   "tool_only_visible": 0,
+   "app_only_visible": 0
+  }
+ },
+ "timing_s": {
+  "tiles": 230.1,
+  "viewshed": 12.8,
+  "islands": 0.5,
+  "outline": 0.8,
+  "total": 245.2
+ },
+ "attribution": "国土地理院 標高タイル(DEM5A/5B/5C/10B)を加工して作成。日本の主な山岳標高(国土地理院)を加工して作成"
+}

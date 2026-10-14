@@ -1,0 +1,10 @@
+# 宙の辻 (Sora no Tsuji) — security contact / 脆弱性の報告の窓口 (RFC 9116)
+# 脆弱性や安全上の問題を見つけた方は、1つ目の連絡先 (GitHub の非公開の脆弱性報告) からお知らせください。
+# 2つ目は予備です。やむを得ず使う場合は、公開の Issue に脆弱性の中身は書かず、連絡先を尋ねるだけにしてください。
+# If you have found a security issue, please use the first contact (GitHub private vulnerability reporting).
+# The second contact is a fallback: if you must use it, please open an issue that only asks for a private contact, without any details.
+Contact: https://github.com/takeyosui15/soranotsuji/security/advisories/new
+Contact: https://github.com/takeyosui15/soranotsuji
+Expires: 2027-10-01T00:00:00.000Z
+Preferred-Languages: ja, en
+Canonical: https://soranotsuji.net/.well-known/security.txt

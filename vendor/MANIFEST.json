@@ -1,0 +1,102 @@
+{
+  "_comment": "宙の辻が自前で配信する第三者ライブラリの台帳。版は固定し、内容の指紋(sha384/sha256)を記録する。更新するときは npm の配布物(registry.npmjs.org の tgz、または cdn.jsdelivr.net/npm と unpkg.com の2か所で同じ指紋であること)から取り寄せ、指紋を書き直す(tests/verify184.js とハーネスの同期が指紋の一致を見張る)。",
+  "generated": "2026-10-12",
+  "files": [
+    {
+      "path": "maplibre-gl.js",
+      "package": "maplibre-gl",
+      "version": "4.7.1",
+      "license": "BSD-3-Clause",
+      "license_file": "licenses/maplibre-gl.LICENSE.txt",
+      "source": "https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js",
+      "use": "地図(MapLibre GL JS)",
+      "bytes": 803086,
+      "sha384": "sha384-SYKAG6cglRMN0RVvhNeBY0r3FYKNOJtznwA0v7B5Vp9tr31xAHsZC0DqkQ/pZDmj",
+      "sha256": "be9633c4d870e26fb37f1cfe5c5a77181667114003ea16207ac7850d8da8add1"
+    },
+    {
+      "path": "maplibre-gl.css",
+      "package": "maplibre-gl",
+      "version": "4.7.1",
+      "license": "BSD-3-Clause",
+      "license_file": "licenses/maplibre-gl.LICENSE.txt",
+      "source": "https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css",
+      "use": "地図のスタイル",
+      "bytes": 65534,
+      "sha384": "sha384-MinO0mNliZ3vwppuPOUnGa+iq619pfMhLVUXfC4LHwSCvF9H+6P/KO4Q7qBOYV5V",
+      "sha256": "576b085fdd9487a65a19215328c1e086c07ce5bf6da09b666b3806d3d008dae9"
+    },
+    {
+      "path": "astronomy.browser.min.js",
+      "package": "astronomy-engine",
+      "version": "2.1.19",
+      "license": "MIT",
+      "license_file": "licenses/astronomy-engine.LICENSE",
+      "source": "https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js",
+      "use": "天体計算(本体と4ワーカー)",
+      "bytes": 116424,
+      "sha384": "sha384-LTVHvxfbG3XHla4Lu0C0s9U18B2sBOuzJIeOoVHm2t05SOOORvMbBMEVjXrGau9g",
+      "sha256": "f41139a87941ea017ab902b954c9389fa27ea72083d7fab4971756d7769d14e6"
+    },
+    {
+      "path": "three.module.min.js",
+      "package": "three",
+      "version": "0.160.0",
+      "license": "MIT",
+      "license_file": "licenses/three.LICENSE",
+      "source": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+      "use": "天体儀・宙の窓の3D",
+      "bytes": 670681,
+      "sha384": "sha384-8/hf5tabFfIo0BPku31TKUvGIKpWGYaMwNtlSNqNyZzXgZCMd4lnOGWbJElML9dv",
+      "sha256": "3e690ac7d180b0aadf0891bea39eec643e29e2d3e75c99b18689518665f69ba6"
+    },
+    {
+      "path": "geographiclib-geodesic.min.js",
+      "package": "geographiclib-geodesic",
+      "version": "2.2.0",
+      "license": "MIT",
+      "license_file": "licenses/geographiclib-js.LICENSE",
+      "source": "https://cdn.jsdelivr.net/npm/geographiclib-geodesic@2.2.0/geographiclib-geodesic.min.js",
+      "use": "測地線(WGS84)",
+      "bytes": 32204,
+      "sha384": "sha384-Ndt8G0DBIkUH6PmgjKwnHEzIzfA8YgUlzonDVb4pZw7PHzi5D4iWebyA1XdPqdP0",
+      "sha256": "06e3512904b346575f475f14d0b27ea0979dbcd2b0eddebf5f1eeefd234395b5"
+    },
+    {
+      "path": "qrcode.js",
+      "package": "qrcode-generator",
+      "version": "1.4.4",
+      "license": "MIT",
+      "license_file": "licenses/qrcode-generator.LICENSE",
+      "source": "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js",
+      "use": "QRコード(URL取得)。npmの配布物そのまま(CDNが作る .min は使わない=出所の再現性)",
+      "bytes": 56694,
+      "sha384": "sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k",
+      "sha256": "18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780"
+    },
+    {
+      "path": "draco/draco_wasm_wrapper.js",
+      "package": "three (examples/jsm/libs/draco = Google Draco)",
+      "version": "0.160.0",
+      "license": "Apache-2.0",
+      "license_file": "licenses/draco.LICENSE",
+      "source": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/draco_wasm_wrapper.js",
+      "use": "都市モードの建物(Draco解凍)",
+      "bytes": 58763,
+      "sha384": "sha384-omhL1Vj0Gp0S1OtPFh1jdo0fXv+KQnJSbyL2Y15Nh57a1AnkQm4N4DeLvBH4Apcp",
+      "sha256": "e8049906ef3f8f75d3456c22a3f31bfdfe5b5b5bd09ccdec613b9e9a49d554d8"
+    },
+    {
+      "path": "draco/draco_decoder.wasm",
+      "package": "three (examples/jsm/libs/draco = Google Draco)",
+      "version": "0.160.0",
+      "license": "Apache-2.0",
+      "license_file": "licenses/draco.LICENSE",
+      "source": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/draco_decoder.wasm",
+      "use": "都市モードの建物(Draco解凍)",
+      "bytes": 285747,
+      "sha384": "sha384-RWzQ6S2mgcSVKbbYnF779QxAiSOCEVwe/0KdVTnF6QbrBGceORNZkwb2wgrumugr",
+      "sha256": "c55a594e8ffd18426d36b27fea9618af3df5e173640a3e56d46f09d76f0574f2"
+    }
+  ]
+}

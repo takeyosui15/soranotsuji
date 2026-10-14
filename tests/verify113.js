@@ -35,7 +35,7 @@ const SETUP=`(() => {
     baseAlt:Float64Array.from(dOff.map(()=>hor.altitude)),
     dE:new Float64Array(4), dN:new Float64Array(4), tanLat:Math.tan(obs.lat*Math.PI/180),
     offsetAz:0, offsetAlt:0, centerMode:'point',
-    observerData:obs, refractionEnabled:false,
+    observerData:obs, astroRefraction:false,
     grid, gridPos, gridW:W, gxBase, gyBase,
     bounds:{ west:nw.lng, east:se.lng, north:nw.lat, south:se.lat },
   };

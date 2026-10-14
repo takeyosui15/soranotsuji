@@ -120,8 +120,8 @@ check('K0 buildStateToSave/loadAppState/normalizeAppStateを発見(前提)',
   //  → 第79ラウンドの月間フィルタ26キー追加後: 115個 → 第85〜86ラウンドの
   //  tsujiLineIncludeOffset+Myセットフィルタ4キー追加後: 120個。
   //  いずれもbool/文字列・APP_DEFAULTSに既定あり=個別正規化は不要のため意図的な増加)
-  check('K3 正規化されない保存キーは既知の範囲(基準線: 123個以下)',
-    untouched.length <= 123, `未正規化=${untouched.length}個: ${untouched.slice(0, 8).join(', ')}…`);
+  check('K3 正規化されない保存キーは既知の範囲(基準線: 124個以下。第158: astroRefraction)',
+    untouched.length <= 124, `未正規化=${untouched.length}個: ${untouched.slice(0, 8).join(', ')}…`);
 }
 
 // ---- リント4(第41ラウンド・リファクタリングA): APP_DEFAULTSに無い保存スカラーキーの検査 ----
@@ -131,10 +131,10 @@ check('K0 buildStateToSave/loadAppState/normalizeAppStateを発見(前提)',
   const defs = appDefaultsEntries();
   if (defs) {
     const NOT_SCALAR_OK = new Set([
-      'appSchema', 'savedAt',                                     // メタ
+      'appSchema', 'savedAt', 'meteoDefaultsV2', 'refractionV3',   // refractionV3=気差の2本立て(v1.97.0)への移行済みの印。第158                  // メタ(meteoDefaultsV2=気温減率の既定0.0125への移行済みの印。第156)
       'start', 'end', 'homeStart', 'homeEnd',                     // 位置オブジェクト(既定はDEFAULT_START/END)
       'startApiElev', 'endApiElev', 'startHeight', 'endHeight',   // 位置の導出スカラー(同上)
-      'refractionEnabled', 'meteo',                               // 大気差(既定は標準大気STD_*から導出)
+      'refractionEnabled', 'astroRefraction', 'meteo',   // 第158: astroRefraction=天体の大気差(気差オプション)                               // 大気差(既定は標準大気STD_*から導出)
       'lastVisitDate',                                            // 訪問履歴
       // 注: refractionK(導出値)とmoonAge(計算値)は保存キーではないため例外に載せない。
       //     将来保存化されたらこのリンターが検出するので、その時に扱いを決める(事前免除にしない)

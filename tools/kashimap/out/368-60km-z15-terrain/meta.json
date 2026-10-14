@@ -1,0 +1,85 @@
+{
+ "tool": "tools/kashimap/viewshed.js",
+ "version": 2,
+ "generated": "2026-09-23T09:56:25.216Z",
+ "mountain": {
+  "id": "368",
+  "name": "富士山",
+  "peak": "剣ヶ峯",
+  "elev_list": 3776,
+  "elev_dem": 3772.7,
+  "lat": 35.360738,
+  "lon": 138.727373
+ },
+ "range_km": 60,
+ "zoom": 15,
+ "canopy": false,
+ "buildings": false,
+ "observer_h_m": 1.5,
+ "k": 0.132,
+ "earth_radius_m": 6371000,
+ "reff_m": 7339861.751152074,
+ "summit_mode": "region",
+ "summit_area": {
+  "drop_m": 300,
+  "drop_requested_m": 300,
+  "search_m": 3000,
+  "px": 132511,
+  "far_m": 1283.4,
+  "other_peaks_in_search": [],
+  "how": "山頂から300m以内の高さで山頂につながる画素(探索半径3000m。別の山の山頂を含まない高さまで)"
+ },
+ "excl_target_m": 15,
+ "excl_target_how": "山頂部の画素そのもの(中心・半径なし)+半径15m(アプリの既定と同じ最小値)",
+ "summit_elev_how": "3×3画素のDEM最大",
+ "excl_observer_m": 10,
+ "grid": {
+  "w": 15403,
+  "h": 15403,
+  "x0": 7419185,
+  "y0": 3304724,
+  "mpp_center": 3.896,
+  "note": "1画素の大きさは中心緯度の値で一定とした(窓の中で約±0.4%の差)"
+ },
+ "dem": {
+  "sources": "cyberjapandata.gsi.go.jp dem5a_png/dem5b_png/dem5c_png(z15)→dem_png(z14, 最近傍で2倍)",
+  "tiles": 3721,
+  "from5a": 3625,
+  "from5b": 0,
+  "from5c": 1,
+  "from14": 27,
+  "missing": 68,
+  "data_px": 227266237
+ },
+ "method": "R2: 山頂から窓の縁の全画素へ光線。見かけ高度角=(h−d²/(2Reff)−hS)/d の最大を更新。観測者=地上+observer_h。除外=目的点側(山頂部・上記)・観測点側10m(式と観測点側はアプリの統一可視判定と同じ。目的点側はアプリの15mを山頂部へ一般化)",
+ "outline": {
+  "tol_px": 0,
+  "edges": 5300488,
+  "rings": 113794,
+  "holes": 103665,
+  "vertices_raw": 3278413,
+  "vertices": 3278413,
+  "encoding": "outline.json: 島ごとに[項番,画素数,外周,穴…]。各環は画素の角の整数座標(窓の左上が0,0)を先頭=絶対・以降=差分でGoogle polyline符号(倍率なし)"
+ },
+ "result": {
+  "visible_px": 107939310,
+  "visible_km2": 1638.405,
+  "islands": 10129,
+  "rays": 61608,
+  "check": {
+   "n": 1000,
+   "agree": 993,
+   "agree_pct": 99.3,
+   "tool_only_visible": 7,
+   "app_only_visible": 0
+  }
+ },
+ "timing_s": {
+  "tiles": 38.4,
+  "viewshed": 18.7,
+  "islands": 1.8,
+  "outline": 3.9,
+  "total": 66.7
+ },
+ "attribution": "国土地理院 標高タイル(DEM5A/5B/5C/10B)を加工して作成。日本の主な山岳標高(国土地理院)を加工して作成"
+}

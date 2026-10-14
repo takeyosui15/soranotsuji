@@ -169,7 +169,7 @@ check('T2 結果コントロールの部品(tsujires/tsujimeshres)がindex.html�
                 baseAlt: Float64Array.from([hor.altitude, hor.altitude]),
                 dE: new Float64Array(N), dN: new Float64Array(N), tanLat: Math.tan(obs.lat * Math.PI / 180),
                 offsetAz: 0, offsetAlt: 0, centerMode: 'point',
-                observerData: obs, refractionEnabled: false,
+                observerData: obs, astroRefraction: false,
                 minAlt: hor.altitude, maxAlt: hor.altitude,
                 binSize: 360, nBins: 1, binIndex: Uint32Array.from([0, N]), binPixels: Uint32Array.from([0, 1]),
             };

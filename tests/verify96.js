@@ -120,7 +120,7 @@ const check=(name,ok,detail)=>{ console.log(`${ok?'PASS':'FAIL'} ${name}${detail
             return resp({}); }
           m=path.match(/^spreadsheets\/([^/]+)\/values:batchGet\?(.*)$/);
           if(m){ const st=gm.sheets[m[1]]||{};
-            const names=[...m[2].matchAll(/ranges=([^&]+)/g)].map(x=>decodeURIComponent(x[1]).replace(/'/g,''));
+            const names=[...m[2].matchAll(/ranges=([^&]+)/g)].map(x=>decodeURIComponent(x[1]).replace(/'/g,'').split('!')[0]);   // 第159から範囲に行数の上限('名前'!1:1100)が付くので、シート名だけに
             return resp({valueRanges:names.map(n=>({values:JSON.parse(JSON.stringify(st[n]||[]))}))}); }
           return resp({});
         }
